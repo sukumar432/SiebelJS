@@ -1,0 +1,1212 @@
+/*********************************************************************************************************
+Purpose: Added this following code for Common Markup Skeleton of Sales Order Create
+Author: Siva ADDALA (SADDALA) : Created on 20 NOV 2017.
+**********************************************************************************************************/
+if (typeof(SiebelApp.SCSalesOrderMarkup) === "undefined") {
+
+ SiebelJS.Namespace("SiebelApp.SCSalesOrderMarkup");
+ define("siebel/custom/SelectComfort/SCSalesOrderMarkup", ["siebel/jqgridrenderer","siebel/custom/SelectComfort/SC_OUI_Methods"],
+  function () {
+   SiebelApp.SCSalesOrderMarkup = (function () {
+	   
+	var markup="";
+	var SiebelConstant = SiebelJS.Dependency("SiebelApp.Constants");
+	var SCSalesOrderMarkupv=new SCSalesOrderMarkup();
+	var SC_OUI_Methods=SiebelJS.Dependency("SiebelApp.SC_OUI_Methods");
+	 function SCSalesOrderMarkup(pm) {}
+	
+		
+		SCSalesOrderMarkup.prototype.SalesOrderCreateMarkup = function() {
+			markup="";
+			markup+='<html>';
+			markup+='<body class="no-margin no-padding">';
+			markup+='    <!-- this is the starting point for making markup. -->';
+			markup+='    <div id="applet1">';
+			markup+='        <div class="container-fluid no-margin no-padding">';
+			markup+='            <!-- Header starts here/ make a common function for this header. so you can use anywhere in the app -->';
+			markup+='            <div class="main-header-container">';
+			markup+='                <div class="nav-header">';
+			markup+='				<!-- Header code comes here -->';
+			markup+='                </div>';
+			
+			markup+='                <div class="error-block" id="SC-error-block" style="display: none">';
+			markup+='                </div>';
+			
+			
+			markup+='            </div>';
+			markup+='            <!-- Header ends here -->';
+			
+			
+			
+			
+			markup+='            <div class="container-fluid no-margin sc-main-data-container SC-data-container no-recents white-bg">';
+			markup+='                <div class="SC-SO-main-block">';
+			
+			
+			
+			markup+='                    <div class="SC-SO-panel container no-padding" >';
+			markup+='                        <form id="sc-SalesOrder-Details" >';
+											/*--Form Applet Code Comes Here--*/
+			markup+='                    </form>';								
+			markup+='                    </div>';
+			
+			
+			markup+='                    <div class="SC-SO-panel container no-padding" id="scproductinfodiv">';
+				/*--products info---*/
+			markup+='                    </div>';
+			
+			
+			markup+='                    <div class="SC-SO-panel container not-collapsble clearfix" id="browsecatalogdiv">';
+			markup+='                        <div class="row no-margin">';
+			markup+='                            <div class="col-md-4 col-lg-4">';
+			markup+='                                <p class="no-margin SC-SO-common-title">';
+			markup+='                                    Product Catalog';
+			markup+='                                </p>';
+			markup+='                            </div>';
+			markup+='                            <div class="col-md-6 col-lg-6 col-sm-9">';
+			markup+='                                <div class="dropdown display-inline">';
+			markup+='                                <input type="text" name="" class="SC-SO-search-box dropdown-toggle SC-SO-width" id="sc_searchtext" placeholder="Enter SKU# or Description" aria-expanded="true" data-toggle="dropdown">';
+			markup+='                                <ul class="dropdown-menu" id="SC-prod-dropdown">';
+			markup+='                                        <li class="sc-dropdown" value="currentcatalog"><img src="images/custom/done-blue.png" style="display:none"><a href="javascript:void(0)">Current Catalog</a></li>';
+			markup+='                                        <li class="sc-dropdown" value="allcatalog"><img src="images/custom/done-blue.png"><a href="javascript:void(0)" class="selected">All Catalog</a></li>';
+			markup+='                                    </ul>';
+			markup+='                                </div>';
+			markup+='                                    <button class="SC-SO-search-button" type="button" id="SC_searchbutton">Search</button>';
+			markup+='                                  <button class="SC-SO-search-button SC-disabled" type="button" id="SC_addtoorder_button">Add to Order</button>';
+			markup+='                            </div>';
+			markup+='                            <div class="col-md-2 col-lg-2 col-sm-3">';
+			markup+='                                <button class="SC-SO-search-button proceed pull-right SC-disabled" id="sc-proceed">Next</button>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			
+			
+			markup+='                    <div class="SC-SO-panel container clearfix grey-bg no-tb-padding" id="sccataloguecategory">';
+			markup+='                        <div class="row no-margin no-padding">';
+			markup+='                            <div class="SC-SO-item-container">';
+			markup+='                                <select class="form-control SC-SO-item-box" id="Catalog_Name">';
+			markup+='                                    <option value="">Choose Catalogue</option>';
+			markup+='                                    <option value="">Option 1</option>';
+			markup+='                                    <option value="">Option 2</option>';
+			markup+='                                    <option value="">Option 3</option>';
+			markup+='                                </select>';
+			markup+='                                <img src="images/custom/book.png" class="item-box-icon">';
+			markup+='                            </div>';
+			markup+='                            <div class="SC-SO-item-container">';
+			markup+='                                <select class="form-control SC-SO-item-box" id="Category">';
+			markup+='                                    <option value="">Choose Category</option>';
+			markup+='                                    <option value="">Option 1</option>';
+			markup+='                                    <option value="">Option 2</option>';
+			markup+='                                    <option value="">Option 3</option>';
+			markup+='                                </select>';
+			markup+='                                <img src="images/custom/header.png" class="item-box-icon" id="Category_img">';
+			markup+='                            </div>';
+			markup+='                            <div class="SC-SO-item-container">';
+			markup+='                                <select class="form-control SC-SO-item-box" id="Sub_Category_1">';
+			markup+='                                    <option value="">Choose Sub_Category_1</option>';
+			markup+='                                    <option value="">Option 1</option>';
+			markup+='                                    <option value="">Option 2</option>';
+			markup+='                                    <option value="">Option 3</option>';
+			markup+='                                </select>';
+			markup+='                                <img src="images/custom/header.png" class="item-box-icon" id="Sub_Category_1_img">';
+			markup+='                            </div>';
+			markup+='                            <div class="SC-SO-item-container">';
+			markup+='                                <select class="form-control SC-SO-item-box" id="Sub_Category_2">';
+			markup+='                                    <option value="">Choose Sub_Category_2</option>';
+			markup+='                                    <option value="">Option 1</option>';
+			markup+='                                    <option value="">Option 2</option>';
+			markup+='                                    <option value="">Option 3</option>';
+			markup+='                                </select>';
+			markup+='                                <img src="images/custom/header.png" class="item-box-icon" id="Sub_Category_2_img">';
+			markup+='                            </div>';
+			markup+='                            <div class="SC-SO-item-container">';
+			markup+='                                <select class="form-control SC-SO-item-box" id="Sub_Category_3">';
+			markup+='                                    <option value="">Choose Sub_Category_3</option>';
+			markup+='                                    <option value="">Option 1</option>';
+			markup+='                                    <option value="">Option 2</option>';
+			markup+='                                    <option value="">Option 3</option>';
+			markup+='                                </select>';
+			markup+='                                <img src="images/custom/header.png" class="item-box-icon" id="Sub_Category_3_img">';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+
+			
+			markup+='                    <div class="container clearfix no-padding margin-top" id="scproductstable">';
+			markup+='                        <div class="SC-table-with-scroll-main minheight300">';
+			markup+='                            <table class="SC-table" id="SC-SO-product-list-table">';
+			markup+='                                <thead>';
+			markup+='                                    <tr>';
+			markup+='                                        <th class="so-add-to-order">ADD TO ORDER</th>';
+			markup+='                                        <th class="so-product-name">PRODUCT</th>';
+			markup+='                                        <th class="so-product-name">SIZE</th>';
+			markup+='                                        <th>SKU#</th>';
+			markup+='                                        <th>QTY</th>';
+			markup+='                                        <th>LIST PRICE</th>';
+			markup+='                                    </tr>';
+			markup+='                                </thead>';
+			markup+='                                <tbody id="SC_Products">';
+			markup+='			                                    <tr id="row1">';
+			markup+='                                        <td class="so-add-to-order-value" style="padding-top: 7px !important; padding-bottom: 5px !important;">';
+			markup+='                                            <div class="cart-img" id="cart">';
+			markup+='                                                <img src="images/custom/shopping_cart_plus_grey.png" class="sc-addcart" id="sc-change-img1"></div>';
+			markup+='                                        </td>';
+			markup+='                                        <td>Value 1</td>';
+			markup+='                                        <td>Value 1</td>';
+			markup+='                                        <td class="so-product-quantity">';
+			markup+='                                            <input type="text" name="">';
+			markup+='                                        </td>';
+			markup+='                                        <td>Value 1</td>';
+			markup+='                                    </tr>';
+			markup+='                                </tbody>';
+			markup+='                            </table>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                    <div class="container clearfix" style="display: none">';
+			markup+='                        <div class="pagination sc-pagination pull-right">';
+			markup+='                            <li><img src="images/custom/previous-set.png" /></li>';
+			markup+='                            <li><img src="images/custom/previous.png" /></li>';
+			markup+='                            <li><img src="images/custom/next.png" /></li>';
+			markup+='                            <li><img src="images/custom/next-set.png" /></li>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			//START --Shipping block's root elements
+			
+			
+			//Not Collapsible - ship_Option_Markup
+			markup+='<div class="SC-SO-panel container not-collapsble clearfix border-radius0" id="Ship-Option-Markup">';
+			markup+='</div>';
+			
+			//default shipping - 
+			markup+='<div class="SC-SO-panel container clearfix grey-bg no-tb-padding border-radius0 margin-top0" id="Default-Shipping">';
+			markup+='</div>';
+			
+			//shipping details
+			markup+='<div class="SC-SO-panel container not-collapsble no-bg clearfix border-radius0 no-padding" id="Shipping-Detils">';
+			markup+='</div>';
+			
+			//Start: Shiping Summary
+			markup += '			    <div class="SC-SO-panel container no-padding" id="SC-SO-ShippingSummary">';
+			markup += '             </div>';
+
+			//End: Shipping Summary
+			
+			//END --Shipping block's root elements
+			
+			markup+='				<div class="SC-SO-panel container not-collapsble clearfix border-radius0" id="SC_Order_ship_markup">';
+			markup+='                  	  <div class="shipping-header no-margin">';
+			markup+='                            <p class="SC-SO-common-title">Order Summary</p>';
+			markup+='                     </div>';
+			markup+='               </div>';
+			
+			
+			markup+='                <div class="SC-SO-panel container clearfix hex-bg no-tb-padding border-radius0 margin-top0" id="SC_Order_ship_markup1">';
+			markup+='                     <div class="SC-SO-panel-body  not-collapsble clearfix no-left-padding">';
+			markup+='                         <div class="SC-SO-Prod-info-main no-margin-top margin-left" id="SC-products-summary">';
+			markup+='                          </div>';
+			markup+='                     </div>';
+			markup+='                </div>';
+			
+			
+			markup+='                <div class="SC-SO-panel container clearfix no-padding-left-right  no-tb-padding border-radius0 margin-top0" id="SC_Order_ship_markup2">';
+			markup+='                    <div class="SC-SO-panel-body  not-collapsble  no-left-padding">';
+			markup+='  						<div class="SC-SO-Prod-info-main panel-bg no-margin-top clearfix" id="SC-all-products-total">';
+			markup+='						</div>';
+			markup+='                     </div>';
+			markup+='                </div>';
+			
+			
+			markup+='               <div class="SC-SO-panel container clearfix no-padding-left-right white-bg no-tb-padding footer-block border-radius0 margin-top0" id="footerbutton">';
+            markup+='        			 <div class="SC-SO-panel-body  not-collapsble clearfix no-left-padding">';
+            markup+='            			 <div class="SC-Order-footer-items">';
+            markup+='                 			<button class="hex-bg" id="backtoship"> Back</button>';
+            markup+='                			 <button class="blue-bg" id="createsalesquote">Create Quote</button>';
+			 markup+='                			 <button class="blue-bg" id="SC-Add-Referral" style="background: #9a1818;color: #fff!important;border: 1px solid #9a1818;display:none">Add Referral</button>';
+            markup+='                			 <button class="ora-bg" id="SC-proced-payments">Next</button>';
+            markup+='           			  </div>';;
+            markup+='        			 </div>';
+            markup+='    			 </div>';
+			
+			
+			markup+='                </div>';
+			markup+='            </div>';
+			
+			
+			markup+='            <div class="modal fade SC-SO-product-details" id="SC-SO-product-details" role="dialog">';
+			markup+='                <div class="modal-dialog">';
+			markup+='                    <!-- Modal content-->';
+			markup+='                    <div class="modal-content" id="scproductdetails">';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			
+			
+			markup+='            <div class="modal fade SC-SO-add-popup" id="SC-SO-Add-Product" role="dialog">';
+			markup+='                <div class="SC-modal">';
+			markup+='                    <div class="modal-dialog">';
+			markup+='                        <!-- Modal content-->';
+			markup+='                        <div class="modal-content">';
+			markup+='                            <div class="icon">';
+			markup+='                                <img src="images/custom/shopping_cart_plus.png">';
+			markup+='                            </div>';
+			markup+='                            <div class="text">';
+			markup+='                                <p id="productdetailstext">Queen size Bedsheets added</p>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			
+			markup+='            <div class="modal fade SC-SO-add-popup" id="SC-SO-GiftCard" role="dialog">';
+			markup+='                <div class="SC-modal modal-orange-bg">';
+			markup+='                    <div class="modal-dialog">';
+			markup+='                        <!-- Modal content-->';
+			markup+='                        <div class="modal-content  less-height">';
+			markup+='                           <div class="text">';
+            markup+='                              <span class="SC-span-width add-margin add-padding-bottom">Enter GiftCard Amount</span>';
+            markup+='                                <input type="text" name="" class="SC-SO-input-GC" >';
+            markup+='                                    <div class="SC-two-buttons">';
+            markup+='                                        <button id="sc-gc-ok">Ok</button>';
+            markup+='                                        <button id="sc-gc-cancel">Cancel</button>';
+            markup+='                                    </div>';
+            markup+='                             </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			
+			markup+='            <div class="modal fade SC-SO-add-popup" id="SC-SO-Coupon-popup" role="dialog">';
+			markup+='                <div class="SC-modal modal-orange-bg">';
+			markup+='                    <div class="modal-dialog">';
+			markup+='                        <div class="modal-content less-height">';
+			markup+='                           <div class="text">';
+            markup+='                              <span class="SC-span-width add-margin add-padding-bottom">Please enter coupon code</span>';
+            markup+='                                <input type="text" name="" class="SC-SO-input-CP" id="SC-Coupon-value">';
+            markup+='                                    <div class="SC-two-buttons">';
+            markup+='                                        <button id="sc-cp-cancel">Cancel</button>';
+            markup+='                                        <button id="sc-cp-apply">Apply</button>';
+            markup+='                                    </div>';
+            markup+='                             </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			
+			markup+='            <div class="modal fade SC-SO-add-popup" id="SC-SO-Coupon-lineitem-popup" role="dialog">';
+			markup+='                <div class="SC-modal modal-orange-bg">';
+			markup+='                    <div class="modal-dialog">';
+			markup+='                        <div class="modal-content less-height">';
+			markup+='                           <div class="text">';
+            markup+='                              <span class="SC-span-width add-margin add-padding-bottom">Please enter coupon code</span>';
+            markup+='                                <input type="text" name="" class="SC-SO-input-CP" id="SC-line-Coupon-value">';
+            markup+='                                    <div class="SC-two-buttons">';
+            markup+='                                        <button id="sc-line-cp-cancel">Cancel</button>';
+            markup+='                                        <button id="sc-line-cp-apply">Apply</button>';
+            markup+='                                    </div>';
+            markup+='                             </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			
+			
+			/* markup+='            <div class="modal fade SC-SO-add-popup" id="SC-SO-No-Results-found" role="dialog">';
+			markup+='                <div class="SC-modal">';
+			markup+='                    <div class="modal-dialog">';
+			markup+='                        <!-- Modal content-->';
+			markup+='                        <div class="modal-content">';
+			markup+='                            <div class="icon">';
+			markup+='                                <img src="images/custom/search_left.png">';
+			markup+='                            </div>';
+			markup+='                            <div class="text">';
+			markup+='                            <span id="scnore">NO RESULTS FOUND</span>';
+			markup+='                            <p>Try expanding Search by extending the number of catalogs you are searching for the requested item</p>';
+			markup+='                            </div>';
+			markup+='						 <button class="SC-ok-button" id="sc-no-results-ok">ok</button>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>'; */
+			
+			markup += '		<div class="modal fade SC-SO-add-popup" id="SC-SO-No-Results-found" role="dialog">';
+			markup += '           <div class="SC-modal">';
+			markup += '               <div class="modal-dialog">';
+			markup += '                    <div class="modal-content">';
+			markup += '                        <div class="icon" style="background:none">';
+			markup += '                           <img src="images/custom/search_left.png">';
+			markup += '                        </div>';
+			markup += '                       <div class="text">';
+			markup+='                            <p id="scnore" style="padding-bottom: 10%">NO RESULTS FOUND</p>';
+			markup+='                            <span>Try expanding Search by extending the number of catalogs you are searching for the requested item</span>';
+			markup+='							 <button class="SC-ok-button" id="SC-noresults-ok">Search again</button>';
+			markup += '                        </div>';
+			markup += '                   </div>';
+			markup += '                </div>';
+			markup += '            </div>';
+			markup += '       </div>';
+			
+			//markup+='        </div>';//removed after inbalance addala removed
+						
+						
+			//The Same contact search markup is used in Shipping also: HKOLLA 
+			markup+='         <!--SEARCH CONTACTS POPUP STARTS HERE-->';
+			markup+='            <div class="modal fade SC-add-table-popup" id="SC-search-contacts" role="dialog">';
+			markup+='                <div class="modal-dialog search-modal-width">';
+			markup+='                    <div class="modal-content" id="shipping-order-search">';
+			markup+='                    </div >';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='            <!--SEARCH CONTACTS POPUP ENDS HERE-->';
+			
+			markup+='         <!--SEARCH REFERRAL  CONTACTS POPUP STARTS HERE-->';
+			markup+='            <div class="modal fade SC-add-table-popup" id="SC-Referral-search-contacts" role="dialog">';
+			markup+='                <div class="modal-dialog search-modal-width">';
+			markup+='                    <div class="modal-content" id="Referral-Contact-search">';
+			markup+='                    </div >';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='            <!--SEARCH REFERRAL CONTACTS POPUP ENDS HERE-->';
+			
+			//START: - POP UP MARK UP ROOT ELEMENTS : Shipping -- HKOLLA
+			
+			//Start: Shipping - create new contact root
+			markup+='				<div class="modal fade SC-add-table-popup" id="SC-add-contact" role="dialog">';
+			markup+='				</div>';
+			//End: Shipping - create new contact root
+			
+			//Start: Shipping - create new Address root
+			markup += '            <div class="modal fade SC-add-table-popup" id="SC-add-address" role="dialog">';
+			markup+='				</div>';
+			//End: Shipping - create new Address root
+			
+			//Start: Shipping - Verify root
+			markup += '            <div class="modal fade SC-SO-add-popup" id="SC-SO-CF-verify" role="dialog">';
+			markup += '            </div>';
+			//End: Shipping - Verify root
+			//start: sale location popup
+			markup += '            <div class="modal fade SC-SO-add-popup" id="SC-SO-my-store" role="dialog">';
+			markup += '            </div>';
+			//End: sale location popup
+			//start:order location popup
+			markup += '            <div class="modal fade SC-SO-add-popup" id="SC-SO-store-location" role="dialog">';
+			markup += '            </div>';
+			//End:order location popup
+			//start:order Delivery Type popup
+			markup += '            <div class="modal fade sc-c-create-assets in" id="SC-Delivery-Type" role="dialog" >';
+			markup += '            </div>';
+			//End:order Delivery Type popup
+			
+			//start:shipping method popup
+			markup+= '<div class="modal fade SC-SO-add-popup" id="SC-Shipmethod-popup" role="dialog">';
+			markup+='	<div class="SC-modal modal-orange-bg">';
+			markup+='            <div class="modal-dialog">';
+			markup+='				<div class="modal-content less-height">';
+			markup+='                    <div class="text">';
+			markup+='                        <span class="SC-span-width add-margin">Shipping Method has not been selected in one or more lines</span>';
+			markup+='                        <button class="SC-ok-button" id="SC-shipmethod-ok">OK</button>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='	</div>';
+			markup+= '</div>';
+			//End:shipping method popup
+			//start:New Product Error Popup
+			markup+= '<div class="modal fade SC-SO-add-popup" id="SC-NewLineError-popup" role="dialog">';
+			markup+='	<div class="SC-modal modal-orange-bg">';
+			markup+='            <div class="modal-dialog">';
+			markup+='				<div class="modal-content less-height">';
+			markup+='                    <div class="text">';
+			markup+='                        <span class="SC-span-width add-margin">This order cannot accept new products.Please create a new order</span>';
+			markup+='                        <button class="SC-ok-button" id="SC-NewLineerror-ok">OK</button>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='	</div>';
+			markup+= '</div>';
+			//End:New Product Error Popup
+			
+			//Start: Shipping - Calculate Freight Success root
+			markup += '            <div class="modal fade SC-SO-add-popup" id="SC-SO-CF-success" role="dialog">';
+			markup += '            </div>';
+			//End: Shipping - Calculate Freight Success root
+			
+			//Start: Shipping - Calculate Freight Fail root
+			markup += '            <div class="modal fade SC-SO-add-popup" id="SC-SO-CF-failure" role="dialog">';
+			markup += '            </div>';
+			//End: Shipping - Calculate Freight Fail root
+			//Start: Request Referral Markup root
+			markup += '            <div class="modal fade SC-SO-add-popup" id="SC-SO-RR-popup" role="dialog">';
+			markup += '            </div>';
+			//End: Request Referral Markup root
+		//END: - POP UP MARK UP ROOT ELEMENTS : Shipping -- HKOLLA
+			
+			/*-- Refund Button Starts here-*/
+			markup+='        <div class="modal fade SC-add-table-popup" id="SC-refund-popup" role="dialog">';
+			markup+='        </div>';
+			/*Refund Button ends here-*/
+			//Accounts Change Contact popup
+			markup+='<div class="modal fade SC-S-sneakpeak" id="SC-Accsearch-contacts" role="dialog">';
+			markup+='                <div class="modal-dialog search-modal-width">';
+			markup+='                    <div class="modal-content">';
+			markup+='                        <div class="modal-header add-height">';
+			markup+='                        <button type="button" class="close" data-dismiss="modal" id="Acc-close-details">×</button>';
+			markup+='                        <div class="header-content SC-header-start">';
+			markup+='                            <div class="SC-S-image-container">';
+			markup+='                                <img src="images/custom/sc-logo.png">';
+			markup+='                            </div>';
+			markup+='                            <div class="SC-S-details-container">';
+			markup+='                                <p class="name no-margin">Select Contact</p>';
+			markup+='                           </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                        <div class="modal-body no-padding">';
+			markup+='                            <div class="SC-table-with-scroll-main" >';
+			markup+='                                <table class="SC-table" id="SC-table-search-Acc-contact">';
+			markup+='                                    <thead>';
+			markup+='                                        <tr>';
+			markup+='                                            <th>last name</th>';
+			markup+='                                            <th>first name</th>';
+			markup+='                                        </tr>';
+			markup+='                                    </thead>';
+			markup+='                                    <tbody id="SC-Acc-Contacts">';
+			markup+='                                    </tbody>';
+			markup+='                                </table>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                        <div class="modal-footer sn-footer">';
+			markup+='                            <div class="SC-button">';
+			markup+='                                <button id="SC-AccSelect-contact" class="">Select Contact</button>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			
+			markup+=' <div class="modal fade SC-SO-add-popup" id="SC-SO-Delete-order" role="dialog">';
+			markup+='            <div class="SC-modal">';
+			markup+='                <div class="modal-dialog">';
+			markup+='                    <div class="modal-content modal-red-bg">';
+			markup+='                        <div class="icon">';
+			markup+='                            <img src="images/custom/delete-box.png">';
+			markup+='                        </div>';
+			markup+='                        <div class="text">';
+			markup+='                            <p>Delete Order?</p>';
+			markup+='                            <span class="SC-span-width">Are you sure you want to delete this order? This action cannot be undone.</span>';
+			markup+='                            <div class="SC-two-buttons">';
+			markup+='                                <button id="SC-delete-no">No</button>';
+			markup+='                                <button id="SC-delete-yes">Yes</button>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='        </div>';
+			markup+=' <div class="modal fade SC-SO-add-popup" id="SC-SO-Delete-att" role="dialog">';
+			markup+='            <div class="SC-modal">';
+			markup+='                <div class="modal-dialog">';
+			markup+='                    <div class="modal-content modal-red-bg">';
+			markup+='                        <div class="icon">';
+			markup+='                            <img src="images/custom/delete-box.png">';
+			markup+='                        </div>';
+			markup+='                        <div class="text">';
+			markup+='                            <p>Delete attachment?</p>';
+			markup+='                            <span class="SC-span-width">Are you sure you want to delete this attachment? This action cannot be undone.</span>';
+			markup+='                            <div class="SC-two-buttons">';
+			markup+='                                <button id="SC-delete-no-att">No</button>';
+			markup+='                                <button id="SC-delete-yes-att">Yes</button>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='        </div>';
+			
+			/*-- coupon  success popup starts here*/
+             markup+='  <div class="modal fade SC-SO-add-popup" id="SC-SO-Coupon-success" role="dialog">';
+              markup+='    <div class="SC-modal modal-orange-bg">';
+             markup+='          <div class="modal-dialog">';
+             markup+='             <div class="modal-content modal-another-color">';
+             markup+='                 <div class="icon img-color">';
+             markup+='                      <img src="images/custom/done_orange.png">';
+             markup+='                 </div>';
+             markup+='                 <div class="text">';
+             markup+='                    <span class="SC-span-width">Coupon successfully applied.</span>';
+             markup+='                 </div>';
+             markup+='             </div>';
+             markup+='        </div>';
+             markup+='    </div>';
+             markup+='   </div>';
+            /* Coupon popup ends here */
+			
+			/*-- Cancel Order Starts here-*/
+			markup+='        <div class="modal fade SC-SO-add-popup" id="SC-SO-Cancel-order" role="dialog">';
+			markup+='        </div>';
+			/*Cancel Order ends here-*/
+			
+			/*-- Add Store Change Location Starts here-*/
+			markup+='        <div class="modal fade SC-add-storelocation" id="SC-add-storelocation" role="dialog">';
+			markup+='        </div>';
+			/*Add Store Change Location ends here-*/
+			
+			
+
+			/*-- Cancel line Starts here-*/
+			markup+='		<div class="modal fade SC-SO-add-popup" id="SC-SO-Cancel-item" role="dialog" style="display: none; justify-content: center; align-items: center;">';
+			markup+='            <div class="SC-modal">';
+			markup+='                <div class="modal-dialog cancel-popup">';
+			markup+='                    <!-- Modal content-->';
+			markup+='                    <div class="modal-content modal-orange-bg">';
+			markup+='                        <div class="icon">';
+			markup+='                            <img src="images/custom/minus-circle-orange.png">';
+			markup+='                        </div>';
+			markup+='                        <div class="text">';
+			markup+='                            <p id="cancelitemtext">Cancel Item?</p>';
+			markup+='                            <span class="SC-span-width">Please select the reason for cancelling this order before proceeding?</span>';
+			markup+='                            <select class="SC-select-box" id="SC-Cancel-item-SelectBox">';
+			markup+='                                <option value=""></option>';
+			//SNARRA 26-07-2018 Added for performance POC
+			if(localStorage.getItem('isNewSalesOrder')!="Y"){
+				var CancelReason=SC_OUI_Methods.SCGetOrderLoVs("[Active]='Y' AND [Type]='CANCEL_REASON_TYPE'");
+				for (var cr = 0; cr < CancelReason.length; cr++) {
+					markup += '<option>' + CancelReason[cr] + '</option>';
+				}
+		  }
+			markup+='                            </select>';
+			markup+='                            <div class="SC-two-buttons">';
+			markup+='                                <button id="SC-cancel-item-no-button">No</button>';
+			markup+='                                <button class="" id="SC-cancel-item-yes-button" type="button">Yes</button>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='        </div>';
+			/*Cancel line ends here-*/
+			
+			markup+='        <!--Details popup ENDS HERE-->';
+			//STARt:SPATIBAN:4/2/22: Added below code for #SFSTRY0001722
+			/*-- Disposal line Starts here-*/
+			markup+='		<div class="modal fade SC-SO-add-popup" id="SC-SO-Cancel-item-disposal" role="dialog" style="display: none; justify-content: center; align-items: center;">';
+			markup+='            <div class="SC-modal">';
+			markup+='                <div class="modal-dialog cancel-popup">';
+			markup+='                    <!-- Modal content-->';
+			markup+='                    <div class="modal-content less-height">';
+			markup+='                        <div class="icon" style="display: none;">';
+			markup+='                            <span id="SC-SO-Cancel-item-disposal-text"></span>';
+			markup+='                        </div>';
+			markup+='                        <div class="text">';
+			markup+='                            <span class="SC-span-width">Does the customer want to continue with the Disposal Service?</span>';
+			markup+='                            <div class="SC-two-buttons">';
+			markup+='                                <button id="SC-disposal-item-no-button">No</button>';
+			markup+='                                <button class="" id="SC-disposal-item-yes-button" type="button">Yes</button>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='        </div>';
+			markup+='		<div class="modal fade SC-SO-add-popup" id="SC-SO-Cancel-item-disposal2" role="dialog" style="display: none; justify-content: center; align-items: center;">';
+			markup+='            <div class="SC-modal">';
+			markup+='                <div class="modal-dialog cancel-popup">';
+			markup+='                    <!-- Modal content-->';
+			markup+='                    <div class="modal-content less-height">';
+			markup+='                        <div class="text">';
+			markup+='                            <span class="SC-span-width">The DISPOSAL Sku will now be cancelled. Would you like to proceed?</span>';
+			markup+='                            <div class="SC-two-buttons">';
+			markup+='                                <button id="SC-disposal-item-no-button2">No</button>';
+			markup+='                                <button class="" id="SC-disposal-item-yes-button2" type="button">Yes</button>';
+			markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='        </div>';
+			/*Disposal line ends here-*/
+			//END:SPATIBAN:4/2/22: Added below code for #SFSTRY0001722
+			markup+='        <div class="modal fade SC-S-sneakpeak" id="SC-line-details-hand" role="dialog">';
+			markup+='           <div class="modal-dialog">';
+			markup+='               <!-- Modal content-->';
+			markup+='               <div class="modal-content">';
+			markup+='                   <div class="modal-header detail-header">';
+			markup+='                       <button type="button" class="close" data-dismiss="modal" id="close-details">&times;</button>';
+			markup+='                       <div class="header-content SC-header-center">';
+			markup+='                           <div class="SC-S-image-container">';
+			markup+='                               <img src="images/custom/sc-logo.png">';
+			markup+='                           </div>';
+			markup+='                           <div class="SC-S-details-container sc-right">';
+			markup+='                               <p class="name no-margin">LINE DETAILS</p>';
+			markup+='                          </div>';
+			markup+='                       </div>';
+			markup+='                   </div>';
+			markup+='                   <div class="modal-body SC-S-details-body">';
+			markup+='                       <div class="SC-S-detail-item">';
+			markup+='                           <span class="SC-S-detail-item-label">Store OHQ :</span>';
+			markup+='                           <span class="SC-S-detail-item-value" id="schandstoreohq">1254254125</span>';
+			markup+='                       </div>';
+			markup+='                       <div class="SC-S-detail-item" style="display:none">';
+			markup+='                           <span class="SC-S-detail-item-label">Plant OHQ :</span>';
+			markup+='                           <span class="SC-S-detail-item-value" id="schandplantohq">Insider</span>';
+			markup+='                       </div>';
+			markup+='                       <div class="SC-S-detail-item">';
+			markup+='                           <span class="SC-S-detail-item-label">Status :</span>';
+			markup+='                           <span class="SC-S-detail-item-value" id="schandstatus">Success</span>';
+			markup+='                       </div>';
+			markup+='                   </div>';
+			markup+='               </div>';
+			markup+='           </div>';
+			markup+='       </div>';
+			markup+='       <!--Details popup ENDS HERE-->';
+			
+			markup+='       <!--Discounts Popup Starts HERE-->';
+			markup += '            <div class="modal fade SC-S-sneakpeak" id="SC-Discount-details" role="dialog">';
+			markup+='                <div class="modal-dialog">';
+			markup+='                    <!-- Modal content-->';
+			markup+='            <div class="modal-content">';
+			markup+='               <div class="modal-header detail-header">';
+            markup+='                           <button type="button" class="close" data-dismiss="modal" id="close-details">&times;</button>';
+			 markup+='                           <div class="header-content SC-header-center">';
+			  markup+='                              <div class="SC-S-image-container">';
+			  markup+='                                  <img src="images/custom/sc-logo.png">';
+			markup+='                                </div>';
+		   markup+='                                 <div class="SC-S-details-container sc-right">';
+			markup+='                                    <p class="name no-margin">DISCOUNTS</p>';
+			markup+='                                </div>';
+			 markup+='                           </div>';
+			 markup+='                       </div>';
+			  markup+='                      <div class="modal-body SC-S-details-body">';
+			 markup+='                           <div class="SC-S-detail-item sc-add-class">';
+			 markup+='                               <span class="SC-S-detail-item-label" style="position:relative">Product Coupon';
+			markup+='        						   <div class="SC-checkbox add-bottom" style="bottom: -4px;right: -42px;">';
+			 markup+='                                   <input class="scprodcoupon" type="checkbox" name="" id="Productcoupon">';	
+			 markup+='                                   <label class="scprodcouponlabel" for="Productcoupon" id="Productcouponlabel"></label>';
+			 markup+='                                 </div>';
+			markup+='        				    </span>';
+			 markup+='                            	<span class="SC-S-detail-item-value sc-product-coupon-value" id="scproductcouponvalue" style="display:none;width:50%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">Product-coupon-value</span>';
+			 markup+='                           </div>';
+			 markup+='                           <div class="SC-S-detail-item sc-add-class">';
+			 markup+='                               <span class="SC-S-detail-item-label" style="position:relative">Manual Discount';
+			markup+='        						 <div class="SC-checkbox add-bottom" style="bottom: -4px;right: -42px;">';
+			markup+='                                    <input class="scmanualdiscount" type="checkbox" name="" id="manualcoupon">';	
+			markup+='                                    <label class="scmanualdiscountlabel" for="manualcoupon" id="manualcouponlabel"></label>';
+			 markup+='                                 </div>';
+			 var Lov1 = SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_MANUAL_DISCOUNT_REASON' and [Active] = 'Y'");
+			var Lov2 = SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'DISCNT_PERCENT' and [Active] = 'Y'");
+			var divtype = SC_OUI_Methods.SCGetProfileAttrValue('SC Primary Division Type');
+			var divsubtype = SC_OUI_Methods.SCGetProfileAttrValue('SC Primary Division Sub Type');
+			markup+='                                                <div class="product-discount-block manualblock" style="display: none;">';
+			if((divtype == "STORE" && divsubtype == "STORE") || (divtype == "DIRECT" && divsubtype =="CSC"))
+			markup+='                                                    <select class="form-control SC-SO-item-box no-margin manual-discounts" id="prod-discounts" style="display: none;">';
+			else
+			markup+='                                                    <select class="form-control SC-SO-item-box no-margin manual-discounts" id="prod-discounts">';
+			markup+='                                                        <option value="" selected hidden>Manual discount reason</option>';
+			markup+='                                                        <option>Remove Manual Discount</option>';
+			for(var i=0;i<Lov1.length;i++){
+				markup+='                                                        <option>'+Lov1[i]+'</option>';
+			}
+			markup+='                                                    </select>';
+			if((divtype == "STORE" && divsubtype == "STORE") || (divtype == "DIRECT" && divsubtype =="CSC"))
+			markup+='                                                    <p class="discount-applied ManualDiscountRea" id="ManualDiscountRea" style="display:none">ManualDiscountReason</p>';
+			else
+			markup+='                                                    <p class="discount-applied ManualDiscountRea" id="ManualDiscountRea">ManualDiscountReason</p>';
+			markup+='                                                    <select class="form-control SC-SO-item-box no-margin SC-manual-discount-per" id="SC-manual-discount">';
+			markup+='                                                        <option value="" selected hidden>% Manual discount</option>';
+			for(var i=0;i<Lov2.length;i++){
+				markup+='                                                        <option>'+Lov2[i]+'</option>';
+			}
+			markup+='                                                    </select>';
+			markup+='                                                    <p class="discount-applied-percentage ManualDiscountper" id="ManualDiscountper" style="display:none">DiscountPercent</p>';
+			markup+='                                                    <p class="discount-amount">Manual discount amount</p>';
+			markup+='                                                    <input type="text" class="manualdiscountammount ManualDiscountamt" name="" id="ManualDiscountamt" value="DiscountAmount">';
+			markup+='                                                    <div class="dropdown-button-container">';
+			markup+='                                                        <button class="cancel CancelDisc">Cancel</button>';
+			markup+='                                                        <button class="apply Applydisc" id="" style="color: #fff;">Apply</button>';
+			markup+='                                                    </div>';
+			markup+='                                                </div>';
+			markup+='        						</span>';
+			markup+='                                <span class="SC-S-detail-item-value sc-manual-coupon-value" id="scmanualordervalue" style="display:none;width:50%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">manual-Discount-value</span>';
+		 	markup+='                            </div>';
+			markup+='                        </div>';
+			markup+='        				 <div class="modal-footer  no-border no-padding">';
+			markup+='                            <div class="SC-button">';
+			markup+='                                <button id="SC-Ok-Discount">OK</button>';
+			markup+='                            </div>';
+			markup+='                        </div>	 ';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup += '            </div>';
+			markup+='       <!--Discounts Popup Ends HERE-->';
+			//start:No Manual Discount for SKU  Popup
+			markup+= '<div class="modal fade SC-SO-add-popup" id="SC-ManualDiscount-NOSKU" role="dialog">';
+			markup+='	<div class="SC-modal modal-orange-bg">';
+			markup+='            <div class="modal-dialog">';
+			markup+='				<div class="modal-content less-height">';
+			markup+='                    <div class="text">';
+			markup+='                        <span class="SC-span-width add-margin">Manual Discounts have not been setup for this line</span>';
+			markup+='                        <button class="SC-ok-button" id="SC-No-Manual-Dis">OK</button>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='	</div>';
+			markup+= '</div>';
+			//End:No Manual Discount for SKU  Popup
+			//start:New Product Error Popup
+			markup+= '<div class="modal fade SC-SO-add-popup" id="SC-ManualDiscount-error" role="dialog">';
+			markup+='	<div class="SC-modal modal-orange-bg">';
+			markup+='            <div class="modal-dialog">';
+			markup+='				<div class="modal-content less-height">';
+			markup+='                    <div class="text">';
+			markup+='                        <span class="SC-span-width add-margin">Manual Discount Limit exceeded. Please reduce the Discount given or contact your supervisor.</span>';
+			markup+='                        <button class="SC-ok-button" id="SC-ManualDiseerror-ok">OK</button>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='	</div>';
+			markup+= '</div>';
+			//End:New Product Error Popup
+			//start:New Product Error Popup
+			markup+= '<div class="modal fade SC-SO-add-popup" id="SC-ManualDisc-Negative" role="dialog">';
+			markup+='	<div class="SC-modal modal-orange-bg">';
+			markup+='            <div class="modal-dialog">';
+			markup+='				<div class="modal-content less-height">';
+			markup+='                    <div class="text">';
+			markup+='                        <span class="SC-span-width add-margin">Discount Amount or Discount Percentage can not be negative.</span>';
+			markup+='                        <button class="SC-ok-button" id="SC-ManualNegative-ok">OK</button>';
+			markup+='                    </div>';
+			markup+='                </div>';
+			markup+='            </div>';
+			markup+='	</div>';
+			markup+= '</div>';
+			//End:New Product Error Popup
+			markup += '		<div class="modal fade SC-SO-add-popup" id="SC-SO-contact-error" role="dialog">';
+			markup += '           <div class="SC-modal">';
+			markup += '               <div class="modal-dialog">';
+			markup += '                    <div class="modal-content modal-another-color">';
+			markup += '                        <div class="icon">';
+			markup += '                           <img src="images/custom/profile_round.png">';
+			markup += '                        </div>';
+			markup += '                       <div class="text">';
+			markup += '                           <span class="add-margin">Please click on the "View Contact" button in the navigation bar at the top to navigate to Contact 360 and make the required changes.</span>';
+			markup += '                        </div>';
+			markup += '                   </div>';
+			markup += '                </div>';
+			markup += '            </div>';
+			markup += '       </div>';
+			/* <!--Start--Addded popup for P2PE --> */
+			 markup += '     <div class="modal fade SC-SO-add-popup" id="SC-SO-P2PE-Cust-change" role="dialog">';
+             markup += '       <div class="SC-modal">';
+             markup += '           <div class="modal-dialog">';
+             markup += '               <!-- Modal content-->';
+             markup += '               <div class="modal-content modal-another-color">';
+			 markup += '    			 <div >';
+             markup += '                   <img src="images/custom/sc-logo.png">';
+             markup += '               </div>';
+             markup += '                   <div class="text">';
+             markup += '                       <span class="SC-span-width add-margin">Please update Shipping Address/Delivery Phone.</span>';
+             markup += '                       <button class="SC-ok-button" id="SC-SO-P2PE-Custom-ok">OK</button>';
+             markup += '                   </div>';
+             markup += '               </div>';
+             markup += '           </div>';
+            markup += '        </div>';
+            markup += '    </div>';
+			/* <!--End--Addded popup for P2PE --> */
+			/* <!--Start--Addded popup for P2PE --> */
+			 markup += '     <div class="modal fade SC-SO-add-popup" id="SC-SO-P2PE-Info" role="dialog">';
+             markup += '       <div class="SC-modal">';
+             markup += '           <div class="modal-dialog">';
+             markup += '               <!-- Modal content-->';
+             markup += '               <div class="modal-content modal-another-color">';
+			 markup += '    			 <div >';
+             markup += '                   <img src="images/custom/sc-logo.png">';
+             markup += '               </div>';
+             markup += '                   <div class="text">';
+             markup += '                       <span id="SC-SO-P2PE-Info-Main" class="SC-span-width add-margin">Please ask customer to validate contact details and tap Yes/No on payment terminal.</span>';
+			  markup += '                       <span id="SC-SO-P2PE-Info-Note" class="SC-span-width add-margin">If customer taps ‘No’, you will be redirected to Customer 360 to edit.</span>';
+             markup += '                   </div>';
+             markup += '               </div>';
+             markup += '           </div>';
+            markup += '        </div>';
+            markup += '    </div>';
+			/* <!--End--Addded popup for P2PE --> */
+			
+			/* <!--Start--Addded popup for P2PE --> */
+			 markup += '     <div class="modal fade SC-SO-add-popup" id="SC-SO-P2PE-Addr-Info" role="dialog">';
+             markup += '       <div class="SC-modal">';
+             markup += '           <div class="modal-dialog">';
+             markup += '               <!-- Modal content-->';
+             markup += '               <div class="modal-content modal-another-color">';
+			 markup += '    			 <div >';
+             markup += '                   <img src="images/custom/sc-logo.png">';
+             markup += '               </div>';
+             markup += '                   <div class="text">';
+             markup += '                       <span class="SC-span-width add-margin">Please ask customer to validate delivery phone/address and tap Yes/No on payment terminal.</span>';
+			  markup += '                       <span class="SC-span-width add-margin">If customer taps ‘No’, you will be redirected to Order Shipping to edit.</span>';
+             markup += '                   </div>';
+             markup += '               </div>';
+             markup += '           </div>';
+            markup += '        </div>';
+            markup += '    </div>';
+			/* <!--End--Addded popup for P2PE --> */
+			
+			/* <!--Start--Addded popup for Phone Order --> */
+			 markup += '     <div class="modal fade SC-SO-add-popup" id="SC-SO-Phone-Order" role="dialog">';
+             markup += '       <div class="SC-modal">';
+             markup += '           <div class="modal-dialog">';
+             markup += '               <!-- Modal content-->';
+             markup += '               <div class="modal-content modal-another-color">';
+			 markup += '    			 <div>';
+             markup += '                   <img src="images/custom/sc-logo.png" >';
+             markup += '               </div>';
+             markup += '                   <div class="text">';
+             markup += '                       <span class="SC-span-width add-margin">Is this a Phone Order?</span>';
+			 markup += '                   </div>';
+			 markup+='                     <div class="SC-two-buttons">';
+			 markup+='                       	<button style="margin-top: 18px!important; width: 130px; height: 40px; padding: 10px; background: #fff; border: 1px solid #fff; border-radius: 5px; margin: 0 auto; color: #4A4A4A!important" id="SC-phoneorder-no">No</button>';
+			 markup+='                          <button style="margin-top: 18px!important; width: 130px; height: 40px; padding: 10px; background: #fff; border: 1px solid #fff; border-radius: 5px; margin: 0 auto; color: #4A4A4A!important" id="SC-phoneorder-yes">Yes</button>';
+			 markup+='                     </div>';
+             markup += '               </div>';
+             markup += '           </div>';
+             markup += '        </div>';
+             markup += '    </div>';
+			/* <!--End--Addded popup for P2PE --> */
+			
+			
+			/*<!--Start--Addded popup on CreateQuote button --> */
+			 markup += 		'<div class="modal fade SC-SO-add-popup" id="SC-salesorderquote" role="dialog">';
+			 markup += 			'<div class="SC-modal">';
+			 markup += 				'<div class="modal-dialog">';
+			 markup += '					<!-- Modal content-->';
+			 markup += 					'<div class="modal-content modal-another-color">';
+		 	 markup += '							<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" style="display:block" id="SC-salesOrderquote-close">&times;</button>';
+			 markup += '    			 		<div >';
+		     markup += '                  	 <img src="images/custom/sc-logo.png" class="custom-logo-img">';
+			 markup += '               </div>';		
+								// 23032020 - For SalesQuote PopUp			 
+					var PrimDivType = SC_OUI_Methods.SCGetProfileAttrValue("SC Primary Division Type");
+					var DivSubType = SC_OUI_Methods.SCGetProfileAttrValue("SC Primary Division Sub Type");
+							if (DivSubType != "CS") {
+																																					
+		    markup += ' <span class="dateInput">';
+            markup += '  <span style="color: #fff;"> Select Quote Valid Until Date </span> <input type="input" id="SC_QuoteValidDt" name="Validdate">';
+            markup += ' </span>';													
+								
+								}
+						if (DivSubType == "CS" && PrimDivType =="ECOM") {
+																																					
+		    markup += ' <span class="dateInput">';
+            markup += '  <span style="color: #fff;"> Select Quote Valid Until Date </span> <input type="input" id="SC_QuoteValidDt" name="Validdate">';
+            markup += ' </span>';													
+								
+								}
+			 markup += '					<div class="text">';
+			 markup += ' 					<span class="add-margin">Select Quote Option</span>';
+			 markup += '							<div class="SC-two-buttons">';			 
+			 markup += '								<button id="sc-email" class="SC-Create">Email</button>';
+			 markup += '								<button id="sc-print" class="SC-Create">Print</button>';
+			 markup += '								<button id="sc-both" class="SC-Create">Email/Print</button>';
+			 markup += '							</div>';
+			 markup += '						</div>'
+			 markup += '					</div>';
+			 markup += '				</div>';
+			 markup += '			</div>';
+			 markup += '		</div>';
+			 /*<!--End--Addded popup on CreateQuote button-->*/
+			 
+			/*<!--Start--Addded popup on sendemail button --> */
+			
+                    markup += '<div class="modal fade SC-SO-add-popup" id="SC-send-message-popup" role="dialog">';
+                    markup += '  <div class="SC-modal">';
+                    markup += '   <div class="modal-dialog">';
+                    markup += '     <div class="modal-content modal-another-color">';
+                    markup += '		  <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" style="display:block" id="SC-sales-sendemailquote-close">&times;</button>';
+					markup += '        <div>';
+                    markup += '                <img src="images/custom/sc-logo.png" class="sc-order-icon">';
+                    markup += '         </div>';
+                    markup += '          <div class="text">';
+                    markup += '            <span class="add-margin"> This request will be sent to</span>';
+					var contactAddr = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Primary Bill To Email Address");
+					markup += '             <div class="main-email">';
+					markup += '               <div class="email-id">';
+					markup += '                  <input type="text" id="SC-qemailaddr" class="emialnot sc-upemailadd" value="'+contactAddr+'">';
+		            markup += '                   <img src="images/custom/revise-orange.png" id="SC-qeditemailadress" class="email-img">';
+		            markup += '               </div>';
+		            markup += '                  <div id="email-id-popup" class="error">';
+		            markup += '                      <span id="email-id-popup1" class="email-id-contact">This email address will be updated on the contact.</span>';
+		            markup += '                      <span id="email-id-popup2" class="emial-id-valid">Email address is required to complete this request. Please enter contact email address</span>';
+					markup += '                      <span id="email-id-popup3" class="emial-id-validate">Please enter valid contact email address</span>';
+		            markup += '                  </div>';
+					markup += '                  </div>';
+					var PrimDivType = SC_OUI_Methods.SCGetProfileAttrValue("SC Primary Division Type");
+					var DivSubType = SC_OUI_Methods.SCGetProfileAttrValue("SC Primary Division Sub Type");
+								if (DivSubType != "CS") {                   
+					markup += '                         <label class="emailtext-color">Please type personal message here</label>';
+					markup += '                        	<textarea id="SC_personlizedtxt" class="SC_Personalizedtxt" cols="50" rows="19" maxlength="500">';
+					markup += '                           </textarea>';
+					markup += '                    <div  class="SC_PersonalizedtxtCnt">';
+					markup += '	                      <span id="SC_personlizedtxtCnt" >0/500 </span>';
+					markup += '                  </div>';
+														}
+														
+						   if (DivSubType == "CS" && PrimDivType =="ECOM") {                 
+					markup += '                         <label class="emailtext-color">Please type personal message here</label>';
+					markup += '                        	<textarea id="SC_personlizedtxt" class="SC_Personalizedtxt" cols="50" rows="19" maxlength="500">';
+					markup += '                           </textarea>';
+					markup += '                    <div  class="SC_PersonalizedtxtCnt">';
+					markup += '	                      <span id="SC_personlizedtxtCnt" >0/500 </span>';
+					markup += '                  </div>';
+														}								
+														
+														
+                    markup += '                <div class="SC-two-buttons" style="margin-bottom: 10px !important">';
+                    markup += '               <button id="SC-Sendemail" style="margin-right: 55px !important">Send Email</button>';
+                    markup += '               <button id="sc-Cancelsend-button">Cancel</button>';
+                    markup += '          </div>';
+                    markup += '         </div>'
+                    markup += '       </div>';
+                    markup += '      </div>';
+                    markup += '    </div>';
+					markup += '    </div>';
+                   				
+			 /*<!--End--Addded popup on Sendemail button-->*/
+			
+				
+			/*<!-- EmailAddress Update popup starts here-->*/
+			/*markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-Email-Update-popup" role="dialog">';
+			 markup+='    <div class="SC-modal modal-orange-bg">';
+			 markup+='     <div class="modal-dialog">';
+			 markup+='            <!-- Modal content-->';
+			 markup+='            <div class="modal-content less-height">';
+			 markup+='                <div class="text">';
+			 markup+='                    <span class="SC-SO-emailtext"> Would you like to add an email address to the contact to allow the email quote to be sent?</span>';
+			 markup+='                      <span class="SC-span-width add-margin">Please enter contact email address</span>';
+			 markup+='					<input id="SCemail" type="textbox" name="emailaddress" class="inputbox">';				
+			 markup+='                   <div class="SC-two-buttons">';
+			 markup+='                        <button  id="sc-email-Ok">Ok</button>';
+			 markup+='                        <button id="sc-email-Cancel">Cancel</button>';
+			  markup+='                   </div>';
+			 markup+='                </div>';
+			 markup+='            </div>';
+			markup+='        </div>';
+			markup+='    </div>';
+			markup+='</div>';*/
+			/* <!-- EmailAddress Update popup  ends here-->*/
+		
+			/* <!--Start--Addded popup for TACOS --> */
+			 markup += '     <div class="modal fade SC-SO-add-popup" id="SC-NJ-TACOS-Info" role="dialog">';
+             markup += '       <div class="SC-modal" style="width:500px !important">';
+             markup += '           <div class="modal-dialog" style="width:450px !important">';
+             markup += '               <!-- Modal content-->';
+             markup += '               <div class="modal-content modal-another-color" style="width:450px !important;padding:20px">';
+			 markup += '    			 <div >';
+             markup += '                   <img src="images/custom/sc-logo.png">';
+             markup += '               </div>';
+             markup += '                   <div class="text" style="width:450px !important;text-align:left">';
+			  markup += ' 					   <span class="SC-span-width add-margin" style="width:450px !important; padding:10px !important" id="NJAddrTermsHeader">Please ask the customer to review and select Yes.</span>';
+			 markup += '                       <span class="SC-span-width add-margin" style="width:450px !important; text-align:left !important; padding:20px !important" id="NJAddrTerms"></span>';
+			 markup += '                   </div>';
+             markup += '               </div>';
+             markup += '           </div>';
+            markup += '        </div>';
+            markup += '    </div>';
+			/* <!--End--Addded popup for TACOS --> */
+			
+			/* <!--Start--Addded popup for TACOS --> */
+			 markup += '     <div class="modal fade SC-SO-add-popup" id="SC-Prod-Terms-Info" role="dialog">';
+             markup += '       <div class="SC-modal" style="width:500px !important">';
+             markup += '           <div class="modal-dialog" style="width:450px !important">';
+             markup += '               <!-- Modal content-->';
+             markup += '               <div class="modal-content modal-another-color" style="width:450px !important;padding:20px">';
+			 markup += '    			 <div >';
+             markup += '                   <img src="images/custom/sc-logo.png">';
+             markup += '               </div>';
+             markup += '                   <div class="text" style="width:450px !important;text-align:left">';
+			 markup += ' 					   <span class="SC-span-width add-margin" style="width:450px !important; padding:10px !important" id="ProdTermsHeader">Please ask the customer to acknowledge and accept or decline the product specific return and exchange terms</span>';
+             markup += '                       <span class="SC-span-width add-margin" style="width:450px !important; text-align:left !important; padding:20px !important" id="ProdTerms"></span>';
+			 markup += '                   </div>';
+             markup += '               </div>';
+             markup += '           </div>';
+            markup += '        </div>';
+            markup += '    </div>';
+			/* <!--End--Addded popup for TACOS--> */
+			
+			/* <!--Start--Addded popup for TACOS --> */
+			 markup += '     <div class="modal fade SC-SO-add-popup" id="SC-Prod-Terms-Decline-Info" role="dialog">';
+             markup += '       <div class="SC-modal">';
+             markup += '           <div class="modal-dialog">';
+             markup += '               <!-- Modal content-->';
+             markup += '               <div class="modal-content modal-another-color">';
+			 markup += '    			 <div >';
+             markup += '                   <img src="images/custom/sc-logo.png">';
+             markup += '               </div>';
+             markup += '                   <div class="text">';
+             markup += '                       <span class="SC-span-width add-margin" id="SC-ProdTerms-Decline">Customer has declined terms and conditions; please confirm they’d like to cancel. Offer any additional clarity regarding the return exchange policy.</span>';
+			 markup += '                       <button class="SC-ok-button" id="SC-ProdTerms-Decline-ok">OK</button>';
+			 markup += '                   </div>';
+             markup += '               </div>';
+             markup += '           </div>';
+            markup += '        </div>';
+            markup += '    </div>';
+			/* <!--End--Addded popup for TACOS--> */
+			
+			markup += '      <div class="modal fade SC-product-popup" id="SC-bom-tree" role="dialog">';
+            markup += '      <div class="modal-dialog select-payment-width">';
+            markup += '       <div class="modal-content">';
+            markup += '     <div class="modal-header">';
+            markup += '            <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal">&times;</button>';
+            markup += '          <div class="header-content">';
+            markup += '             <div class="sc-head-title">';
+            markup += '               <div class="sc-icon-text">';
+            markup += '                <div>';
+            markup += '               <img src="images/custom/sc-logo.png" class="sc-order-icon">';
+            markup += '           </div>';
+            markup += '          <div class="sc-header-text">';
+            markup += '              <p>Product Tree</p>';
+            markup += '                 </div>';
+            markup += '              </div>';
+            markup += '          </div>';
+            markup += '        </div>';
+           markup += '      </div>';
+           markup += '        <div class="modal-body modal-panel-color" id="SC-Produc-Tree-Body">';
+           markup += '     </div>';
+          markup += '     </div>';
+          markup += '     </div>';
+         markup += '    </div>';
+			
+			markup+='    </div>';
+			markup+='    </div>';//end of Applet1 
+			markup+='</body>';
+			markup+='</html>';
+		 	return markup;	  
+		};
+		
+		//For Error Page
+		SCSalesOrderMarkup.prototype.SCOrderErrorBlock=function(){
+			var Error_Markup="";
+			Error_Markup+='<div class="select-block">';
+			Error_Markup+='                        <div class="label-select-block">';
+			Error_Markup+='                            <label for="first-name" class="SC-select-label">Order Details:</label>';
+			Error_Markup+='                            <span class="SC-error-select-box" id="SC-select-oder-item"><p id="orderdetailserrno"></p><div class="arrow-down" id="SC-arrow"></div></span>';
+			Error_Markup+='                            <div class="SC-err-points" id="SC-order-item" style="display: none">';
+			Error_Markup+='                                <ul id="orderdetailserrors">';
+			Error_Markup+='                                </ul>';
+			Error_Markup+='                            </div>';
+			Error_Markup+='                        </div>';
+			Error_Markup+='                        <div class="label-select-block">';
+			Error_Markup+='                            <label for="first-name" class="SC-select-label">Line Details:</label>';
+			Error_Markup+='                            <span class="SC-error-select-box" id="SC-select-line-item"><p id="linedetailserrno"></p><div class="arrow-down" id="SC-line-arrow"></div></span>';
+			Error_Markup+='                            <div class="SC-err-points" id="SC-line-item" style="display: none">';
+			Error_Markup+='                                <ul id="linedetailserrors">';
+			Error_Markup+='                                </ul>';
+			Error_Markup+='                            </div>';
+			Error_Markup+='                        </div>';
+			Error_Markup+='                        <div class="label-select-block">';
+			Error_Markup+='                            <label for="first-name" class="SC-select-label">Shipping:</label>';
+			Error_Markup+='                            <span class="SC-error-select-box" id="SC-select-ship-item"><p id="shippingserrno"></p><div class="arrow-down" id="SC-ship-arrow"></div></span>';
+			Error_Markup+='                            <div class="SC-err-points" id="SC-ship-item" style="display: none">';
+			Error_Markup+='                                <ul id="shippingserros">';
+			Error_Markup+='                                </ul>';
+			Error_Markup+='                            </div>';
+			Error_Markup+='                        </div>';
+			Error_Markup+='                        <div class="label-select-block">';
+			Error_Markup+='                            <label for="first-name" class="SC-select-label">Contact:</label>';
+			Error_Markup+='                            <span class="SC-error-select-box" id="SC-select-contact-item"><p id="contacterrorno"></p><div class="arrow-down" id="SC-contact-arrow"></div></span>';
+			Error_Markup+='                            <div class="SC-err-points" id="SC-contact-item" style="display: none">';
+			Error_Markup+='                                <ul id="contacterrors">';
+			Error_Markup+='                                </ul>';
+			Error_Markup+='                            </div>';
+			Error_Markup+='                        </div>';
+			Error_Markup+='                    </div>';
+			return Error_Markup;
+		}
+		
+		
+		//on click of cancel order confirmation popup
+		SCSalesOrderMarkup.prototype.CancelOrderPopup = function () {
+			var CancelReason=SC_OUI_Methods.SCGetOrderLoVs("[Active]='Y' AND [Type]='CANCEL_REASON_TYPE'");
+			for (var cr = 0; cr < CancelReason.length; cr++) {
+				CancelOrdermarkup += '<option>' + CancelReason[cr] + '</option>';
+			}
+			var CancelOrdermarkup="";	
+			CancelOrdermarkup+='            <div class="SC-modal">';
+			CancelOrdermarkup+='                <div class="modal-dialog cancel-popup">';
+			CancelOrdermarkup+='                    <!-- Modal content-->';
+			CancelOrdermarkup+='                    <div class="modal-content modal-orange-bg">';
+			CancelOrdermarkup+='                        <div class="icon">';
+			CancelOrdermarkup+='                            <img src="images/custom/minus-circle-orange.png">';
+			CancelOrdermarkup+='                        </div>';
+			CancelOrdermarkup+='                        <div class="text">';
+			CancelOrdermarkup+='                            <p id="cancelheadertext">Cancel Order</p>';
+			CancelOrdermarkup+='                            <span class="SC-span-width">Please select the reason for cancelling this order before proceeding?</span>';
+			CancelOrdermarkup+='                            <select class="SC-select-box" id="SC-Cancel-SelectBox">';
+			CancelOrdermarkup+='                             <option></option>';
+			for (var cr = 0; cr < CancelReason.length; cr++){
+				CancelOrdermarkup += '<option>' + CancelReason[cr] + '</option>';
+			}
+			CancelOrdermarkup+='                            </select>';
+			CancelOrdermarkup+='                            <div class="SC-two-buttons">';
+			CancelOrdermarkup+='                                <button id="SC-cancel-no-button">No</button>';
+			CancelOrdermarkup+='                                <button class="SC-disabled" id="SC-cancel-yes-button" type="button">Yes</button>';
+			CancelOrdermarkup+='                            </div>';
+			CancelOrdermarkup+='                        </div>';
+			CancelOrdermarkup+='                    </div>';
+			CancelOrdermarkup+='                </div>';
+			CancelOrdermarkup+='            </div>';
+			return CancelOrdermarkup;
+		}
+			
+		
+		
+		//for refund details on click of cancel order
+		SCSalesOrderMarkup.prototype.GetRefundDetails = function () {
+			  var Refund_markup="";  
+				Refund_markup+='            <div class="modal-dialog">';
+				Refund_markup+='                <div class="modal-content">';
+				Refund_markup+='                    <div class="modal-header">';
+				Refund_markup+='                        <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal">&times;</button>';
+				Refund_markup+='                        <div class="header-content">';
+				Refund_markup+='                            <div class="sc-head-title">';
+				Refund_markup+='                                <div class="sc-icon-text">';
+				Refund_markup+='                                    <div><img src="images/custom/sc-logo.png" class="sc-order-icon"></div>';
+				Refund_markup+='                                    <div class="sc-header-text">';
+				Refund_markup+='                                        <p>Cancelled Line Details</p>';
+				Refund_markup+='                                        <span id="refundordernumber"></span>';
+				Refund_markup+='                                    </div>';
+				Refund_markup+='                                </div>';
+				Refund_markup+='                            </div>';
+				Refund_markup+='                        </div>';
+				Refund_markup+='                    </div>';
+				Refund_markup+='                    <div class="modal-body">';
+				Refund_markup+='                        <div class="SC-table-with-scroll-main">';
+				Refund_markup+='                            <table class="SC-table">';
+				Refund_markup+='                                <thead>';
+				Refund_markup+='                                    <tr>';
+				Refund_markup+='                                        <th class="so-product-name so-padding-left refund-bg">LINE ITEM</th>';
+				Refund_markup+='                                        <th class="so-sec-padding-left refund-bg">status</th>';
+				Refund_markup+='                                        <th class="so-thd-padding-left refund-bg">AMOUNT</th>';
+				Refund_markup+='                                    </tr>';
+				Refund_markup+='                                </thead>';
+				Refund_markup+='                                <tbody id="sc-refund-lineitems">';
+				Refund_markup+='                                </tbody>';
+				Refund_markup+='                            </table>';
+				Refund_markup+='                        </div>';
+				Refund_markup+='                        <div class="refund-total">';
+				Refund_markup+='                            <p>Refund Total:</p><span id="refundamount"></span>';
+				Refund_markup+='                        </div>';
+				Refund_markup+='                    </div>';
+				Refund_markup+='                    <div class="modal-footer">';
+				Refund_markup+='                        <div class="SC-button">';
+				Refund_markup+='                            <button class="button-bg min-width" id="SC-issue-refund">Proceed to Generate Refunds</button>';
+				Refund_markup+='                        </div>';
+				Refund_markup+='                    </div>';
+				Refund_markup+='                </div>';
+				Refund_markup+='            </div>';
+
+				return Refund_markup;
+			}
+
+			
+ return SCSalesOrderMarkupv;
+   }()
+  );
+  return "SiebelApp.SCSalesOrderMarkup";
+ })
+}

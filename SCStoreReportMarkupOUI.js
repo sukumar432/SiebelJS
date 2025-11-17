@@ -1,0 +1,140 @@
+if (typeof(SiebelApp.SCStoreReportMarkupOUI) === "undefined") {
+ SiebelJS.Namespace("SiebelApp.SCStoreReportMarkupOUI");
+ define("siebel/custom/SelectComfort/SCStoreReportMarkupOUI", ["siebel/phyrenderer","siebel/jqgridrenderer","siebel/custom/SelectComfort/moment","siebel/custom/SelectComfort/moment-timezone-with-data.min",],
+  function () {
+   SiebelApp.SCStoreReportMarkupOUI = (function ()  {
+	var StoreMarkup=new SCStoreReportMarkupOUI();
+	function SCStoreReportMarkupOUI(pm) {}
+	SCStoreReportMarkupOUI.prototype.StoreMainMarkup=function(){
+	var markup="";
+	markup+='<html>';
+	markup+='<head>';
+	markup+='</head>';
+	markup+='<body class="no-margin no-padding">';
+    markup+='<div id="applet1">';
+	markup+='        <div class="container-fluid no-margin no-padding">';
+	markup+='            <!-- Header starts here/ make a common function for this header. so you can use anywhere in the app -->';
+	markup+='            <div class="main-header-container">';
+	markup+='                <div class="nav-header">';
+	markup+='                    <div class="logo-block">';
+	markup+='                        <div class="logo">';
+	markup+='                            <img src="images/custom/sleepnumber.png">';
+	markup+='                        </div>';
+	markup+='                    </div>';
+	markup+='                    <div class="nav-block">';
+	markup+='                        <ul>';
+	markup+='                            <li id="SC_STORE_HOME">Home</li>';
+	markup+='                            <li id="SC_CONTACTS">Contacts</li>';
+	//markup+='                            <li>Accounts</li>';
+	markup+='                            <li id="SC_SALESORDERS">Sales Order</li>';
+	markup+='                        </ul>';
+	markup+='                    </div>';
+	markup+='                    <div class="profile-block">';
+	markup+='                        <div class="profile" id="SC-profile">';
+	markup+='                            <div class="image-block">';
+	markup+='                                <img src="images/custom/profile.png" class="profile-icon">';
+	markup+='                            </div>';
+	markup+='                            <span id="loginInfo"></span>';
+	markup+='                        </div>';
+	markup+='                        <div class="SC-Profile-container" style="display: none">';
+	markup+='                            <div class="SC-Profile-container-body">';
+	markup+='                                <p>User ID :<span id="scLoginuserId"></span></p>';
+	//markup+='                                <p>Store Report</p>';
+	markup+='                                <hr class="no-margin">';
+	markup+='                                <button id="sclogout">Logout</button>';
+	markup+='                            </div>';
+	markup+='                        </div>';
+	markup+='                    </div>';
+	markup+='                </div>';
+	markup+='            </div>';
+	markup+='            <!-- Header ends here -->';
+	markup+='            <div class="container-fluid no-margin sc-main-data-container SC-data-container no-padding">';
+	markup+='                <div class="container SC-store-container row no-top-padding">';
+	markup+='                    <div class="SC-store-name-details-block">';
+	markup+='                        <div class="store-name" id="sc-store-machinename">'
+	markup+='                        </div>';
+	markup+='                    </div>';
+	markup+='                    <div class="SC-store-generate-button">';
+	markup+='                        <div class="input-box-calendar" >';
+	markup+='                       <input type="text" name="" id="SC-Calendar" class="input-box padding-for-calendar" placeholder="Select Date">';
+	markup+='                        <img src="images/custom/calendar-grey.png" class="calendar-icon">';
+	markup+='                 </div>';
+	markup+='                    </div>';
+	markup+='                </div>';
+	markup+='                <p class="clearfix"></p>';
+	markup+='                <p class="clearfix no-margin"></p>';
+	markup+='                <div class="container data-table-container SC-store-table" id="SC-Store-Report-table" style="display:none">';
+	markup+='                    <div class="SC-table-with-scroll-main SC-store-table-width">';
+	markup+='                        <table class="SC-table SC-readonly" id="SC-store-detail-table">';
+	markup+='                            <thead>';
+	markup+='                                <tr>';
+	markup+='                                    <th>Store#</th>';
+	markup+='                                    <th>Reg#</th>';
+	markup+='                                    <th>Cash</th>';
+	markup+='                                    <th>Check</th>';
+	markup+='                                </tr>';
+	markup+='                              </thead>';
+	markup+='                              <tbody id="sc-store-records">';
+	markup+='                                </tbody>';
+	markup+='                                </table>';
+	markup+='								<div class="SC-noresults-container clearfix no-padding margin-top" id="sc-nostore-results" style="display:none">';
+	markup+='								<div class="text-block">';
+	markup+='									<p>No Reports found for</p>';
+	markup+='									<span id="no-results-text"></span>';
+	markup+='								</div>';
+	markup+='							</div>';
+	markup+='                                </div>';
+	markup+='                                <div class="Store-close-report">';
+	markup+='                                <button id="sc-print-Receipt">Print Store Closing Report</button>';
+	markup+='                                </div>';
+	markup+='                                </div>';
+	markup+='                <div class="container data-table-container SC-store-table" id="SC-Store-Generate-block">';
+	markup+='                    <div class="SC-Generate-data-contanier clearfix">';
+	markup+='                        <img src="images/custom/printer.png" />';
+	markup+='                        <button id="SC-generate-report">Generate Store Closing Report</button>';
+	markup+='                    </div>';
+	markup+='                </div>';
+	markup+='                <div class="container" style="display: none">';
+	markup+='                    <div class="pagination sc-pagination pull-right">';
+	markup+='                        <li><img src="images/cusyom/previous-set.png" /></li>';
+	markup+='                        <li><img src="images/custom/previous.png" /></li>';
+	markup+='                        <li><img src="images/custom/next.png" /></li>';
+	markup+='                        <li><img src="images/custom/next-set.png" /></li>';
+	markup+='                    </div>';
+	markup+='                </div>';
+	markup+='                <div class="SC-Store-info" id="SC-Store-info">';
+	markup+='                    <p class="app-info no-margin"> <b>Note:</b><span class="span">Registers with no sales today will not be listed on this report.</span></p>';
+	markup+='                </div>';
+	markup+='            </div>';
+	markup+='          <!-- Store Report Generation starts here-->';
+	markup+='            <div class="modal fade SC-SO-add-popup" id="SC-SO-ST-Generation" role="dialog">';
+	markup+='                <div class="SC-modal">';
+	markup+='                    <div class="modal-dialog">';
+	markup+='                        <!-- Modal content-->';
+	markup+='                        <div class="modal-content modal-another-color">';
+	markup+='                            <div class="icon">';
+	markup+='                                <img src="images/custom/printer-blue.png" >';
+	markup+='                            </div>';
+	markup+='                            <div class="text">';
+	markup+='                                <span class="add-margin add-font">Store Closing Report is being generated. Please wait</span>';
+	markup+='                            </div>';
+	markup+='                        </div>';
+	markup+='                    </div>';
+	markup+='                </div>';
+	markup+='            </div>';
+	markup+='            <!-- tore Report Generation popup ends here-->';
+	markup+='            ';
+	markup+='        </div>';
+	markup+='</body>';
+	markup+='</html>';
+	
+	return markup;
+	};
+    
+	return StoreMarkup;
+   }()
+  );
+ return "SiebelApp.SCStoreReportMarkupOUI";
+ })
+}
+
