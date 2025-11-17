@@ -1,0 +1,1227 @@
+/*********************************************************************************************************
+Purpose: Added this following code contains the common markup code across the Sales Efficiency Project
+Author: Siva ADDALA (SADDALA) : Created on 10 OCT 2017.
+**********************************************************************************************************/
+
+if (typeof(SiebelApp.SC_OUI_Markups) === "undefined") {
+ SiebelJS.Namespace("SiebelApp.SC_OUI_Markups");
+ define("siebel/custom/SelectComfort/SC_OUI_Markups", ["siebel/jqgridrenderer","siebel/custom/SelectComfort/bootstrap.min"],
+  function () {
+   SiebelApp.SC_OUI_Markups = (function () {
+	    var markup="",Dataarray=new Array(),Dataarray1;
+		// Update Store (Change Store location)
+		
+	    /*var service = SiebelApp.S_App.GetService("SC UpdateStores");
+		var inPropSet = SiebelApp.S_App.NewPropertySet ();
+		// set all the input arguments through inPropSet.SetProperty("property_name", "property_value")
+		var outPropSet;
+		if(service){
+		  var ai = {};
+		  ai.async = true;
+		  ai.selfbusy = true;
+		  ai.scope = this;
+		  ai.mask = true;
+		  ai.opdecode = true;
+		  ai.cb = function(){
+			outPropSet = arguments[2];
+			if (outPropSet!== null){
+			  //output_property_set
+			}
+		  }
+		  service.InvokeMethod ("GetStores", inPropSet, ai);
+		}
+		var Child = outPropSet.GetChild(0);
+		var BS_Data = Child.GetProperty("Count");
+		BS_Data = Child.GetProperty("FieldValues");
+		Dataarray=BS_Data.split(',');*/
+		
+		var InPS = SiebelApp.S_App.NewPropertySet();
+		var OutPS = SiebelApp.S_App.NewPropertySet();
+		var Service = SiebelApp.S_App.GetService("SC UpdateStores");
+		OutPS= Service.InvokeMethod("GetStores", InPS);
+		var Child = OutPS.GetChild(0);
+		var BS_Data = Child.GetProperty("Count");
+		BS_Data = Child.GetProperty("FieldValues");
+		Dataarray=BS_Data.split(',');
+		
+		var salesrepj=0,salesRepStartPage=0,slaesRepEndPage;
+		var Servicea = SiebelApp.S_App.GetService("SC HasResponsibility");
+		OutPSs = Servicea.InvokeMethod("CheckResp",InPS);
+		var Childa = OutPSs.GetChild(0);
+		var BSDatas = Childa.GetProperty("Result");
+	   
+	var SCOUIMarkups=new SC_OUI_Markups();
+    function SC_OUI_Markups(pm) {}
+	
+		//Method returns Recent Records Block on passing the recordset
+		SC_OUI_Markups.prototype.ContactRecentRecords_block = function (recordset) {
+			markup="";	
+			markup+='					<div class="recents-title">';
+			markup+='                        RECENTS:';
+			markup+='                    </div>';
+			markup+='                    <div class="recent-results">';
+			if(recordset.length>0){
+				var i=0;
+				if(recordset[i]["RowName"] == "" || recordset[i]["RowName"].length < 2){
+					var Custom_Service="",Input_BS="",Out_BS="";
+					var FirstName = "",LastName = "";
+					Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+					Input_BS = SiebelApp.S_App.NewPropertySet();
+					Out_BS = SiebelApp.S_App.NewPropertySet();
+					searchfields = "First Name,Last Name";
+					Input_BS.SetProperty("BO", "Contact");
+					Input_BS.SetProperty("BC", "SC Contact Thin OUI");
+					Input_BS.SetProperty("SearchSpecification", "[Id] = '"+recordset[i]["RowId"]+"'");
+					Input_BS.SetProperty("SortSpecification", "");
+					Input_BS.SetProperty("ReqNoOfRecords", "1");
+					Input_BS.SetProperty("FieldsArray", searchfields);
+					Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+					var Child_BS = Out_BS.GetChild(0);
+					var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+					if(BS_Data!="}"){
+						var RecordSet =  new Array; 
+						RecordSet = BS_Data.split(";");
+						RecordSet = JSON.parse(RecordSet);
+						FirstName = RecordSet["First Name"];
+						LastName = RecordSet["Last Name"];
+					}
+						markup+='                        <span class="first-child recent-record contact-recent-record" id="'+recordset[i]["RowId"]+'">'+FirstName+' '+LastName+'</span>';
+				}else{
+					markup+='                        <span class="first-child recent-record contact-recent-record" id="'+recordset[i]["RowId"]+'">'+recordset[i]["RowName"]+'</span>';
+				}
+				for(i=1;i<recordset.length;i++){
+					if(recordset[i]["RowName"] == "" || recordset[i]["RowName"].length < 2){
+						var Custom_Service="",Input_BS="",Out_BS="";
+						var FirstName = "",LastName = "";
+						Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+						Input_BS = SiebelApp.S_App.NewPropertySet();
+						Out_BS = SiebelApp.S_App.NewPropertySet();
+						searchfields = "First Name,Last Name";
+						Input_BS.SetProperty("BO", "Contact");
+						Input_BS.SetProperty("BC", "SC Contact Thin OUI");
+						Input_BS.SetProperty("SearchSpecification", "[Id] = '"+recordset[i]["RowId"]+"'");
+						Input_BS.SetProperty("SortSpecification", "");
+						Input_BS.SetProperty("ReqNoOfRecords", "1");
+						Input_BS.SetProperty("FieldsArray", searchfields);
+						Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+						var Child_BS = Out_BS.GetChild(0);
+						var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+						if(BS_Data!="}"){
+							var RecordSet =  new Array; 
+							RecordSet = BS_Data.split(";");
+							RecordSet = JSON.parse(RecordSet);
+							FirstName = RecordSet["First Name"];
+							LastName = RecordSet["Last Name"];
+						}
+						markup+='                        <span class="recent-record contact-recent-record" id="'+recordset[i]["RowId"]+'">'+FirstName+" "+LastName+'</span>';
+					}else{
+						markup+='                        <span class="recent-record contact-recent-record" id="'+recordset[i]["RowId"]+'">'+recordset[i]["RowName"]+'</span>';
+					}
+				}
+			}
+			markup+='					 </div>';
+			markup+='                    <div class="scroll-image" id="scroll">';
+            markup+='			            <img src="images/custom/right-arrow.png">';
+            markup+='    			    </div>';
+		  return markup;
+		}
+		
+		//Method returns Recent Records Block on passing the recordset
+		SC_OUI_Markups.prototype.iFitContactRecentRecords_block = function (recordset) {
+			markup="";	
+			markup+='					<div class="recents-title" style="color:#91d5ed">';
+			markup+='                        iFit RECENTS:';
+			markup+='                    </div>';
+			markup+='                    <div class="recent-results">';
+			if(recordset.length>0){
+				var i=0;
+				markup+='                        <span class="first-child recent-record ifit-contact-recent-record" style="color:#91d5ed" id="'+recordset[i]["Id"]+'">'+recordset[i]["First Name"]+' '+recordset[i]["Last Name"]+'</span>';
+				for(i=1;i<recordset.length;i++){
+					markup+='                        <span class="recent-record ifit-contact-recent-record" style="color:#91d5ed" id="'+recordset[i]["Id"]+'">'+recordset[i]["First Name"]+' '+recordset[i]["Last Name"]+'</span>';
+				}
+			}
+			markup+='					 </div>';
+			markup+='                    <div class="scroll-image" id="scroll">';
+            markup+='			            <img src="images/custom/right-arrow.png">';
+            markup+='    			    </div>';
+		  return markup;
+		}
+	
+		//Method returns Recent Records Block on passing the recordset
+		SC_OUI_Markups.prototype.RecentRecords_block = function (recordset) {
+			markup="";	
+			markup+='					<div class="recents-title">';
+			markup+='                        RECENTS:';
+			markup+='                    </div>';
+			markup+='                    <div class="recent-results">';
+			if(recordset.length>0){
+				var i=0;
+				markup+='                        <span class="first-child recent-record" id="'+recordset[i]["RowId"]+'">'+recordset[i]["RowName"]+'</span>';
+				for(i=1;i<recordset.length;i++){
+					markup+='                        <span class="recent-record" id="'+recordset[i]["RowId"]+'">'+recordset[i]["RowName"]+'</span>';
+				}
+			}
+			markup+='					 </div>';
+			markup+='                    <div class="scroll-image" id="scroll">';
+            markup+='			            <img src="images/custom/right-arrow.png">';
+            markup+='    			    </div>';
+		return markup;
+		}
+	
+		//this Code is for displaying the headerblock of the Contacts,Account pages
+		SC_OUI_Markups.prototype.Header_block = function (activeclass,isStoreUser,lastName,firstName,loginName,divsubtype) {
+			/*SCGetProfileAttr("SC Store User,Last Name,First Name,Login Name");
+			var isStoreUser =  SCGetProfileAttrValue('SC Store User');
+			var lastName = SCGetProfileAttrValue('Last Name');
+			var firstName = SCGetProfileAttrValue('First Name');
+			var loginName = SCGetProfileAttrValue('Login Name');*/
+			markup="";
+			markup+='                    <div class="logo-block">';
+			markup+='                        <div class="logo">';
+			markup+='                            <img src="images/custom/sleepnumber.png">';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                    <div class="nav-block">';
+			markup+='                        <ul>';
+			if(activeclass=="Home"){
+			markup+='							<li class="active" id="SC_HOME">Home</li>';
+			markup+='							<li>Contacts id="SC_CONTACTS"</li>';
+			if(isStoreUser!="Y")
+			markup+='							<li>Accounts id="SC_ACCOUNTS"</li>';
+			markup+='							<li>Sales Orders id="SC_SALESORDERS"</li>';
+			}
+			else if(activeclass=="Contacts"){
+			markup+='							<li id="SC_HOME">Home</li>';
+			markup+='							<li class="active" id="SC_CONTACTS">Contacts</li>';
+			if(isStoreUser!="Y")
+			markup+='							<li id="SC_ACCOUNTS">Accounts</li>';
+			markup+='							<li id="SC_SALESORDERS">Sales Order</li>';
+			}
+			else if(activeclass=="Accounts")
+			{
+			markup+='							<li id="SC_HOME">Home</li>';
+			markup+='							<li id="SC_CONTACTS">Contacts</li>';
+			markup+='							<li class="active" id="SC_ACCOUNTS">Accounts</li>';
+			markup+='							<li id="SC_SALESORDERS">Sales Order</li>';
+			}
+			else if(activeclass=="SalesOrder"){
+			markup+='							<li id="SC_HOME">Home</li>';
+			markup+='							<li id="SC_CONTACTS">Contacts</li>';
+			if(isStoreUser!="Y")
+			markup+='							<li id="SC_ACCOUNTS">Accounts</li>';
+			markup+='							<li class="active" id="SC_SALESORDERS">Sales Order</li>';
+			}
+			else if(activeclass=="CreditApp"){
+			markup += '<li id="SC_HOME">Home</li>';
+			markup += '<li id="SC_CONTACTS">Contacts</li>';
+			if(isStoreUser!="Y")
+			markup += '<li id="SC_ACCOUNTS">Accounts</li>';
+			markup += '<li id="SC_SALESORDERS">Sales Order</li>';
+			}
+			markup+='                        </ul>';
+			markup+='                    </div>';
+			markup+='                    <div class="profile-block">';
+			if(divsubtype == "CSC" || divsubtype == "CS"){
+			 markup += '   <div class="add-contact">';
+			markup += '<div class="image-block account" id="SC-ANI-CTItool">';
+		    markup += '<img src="images/custom/cti-toolbar-orange-new.png" class="add-icon" id="sc-orange" style="display:none"/>';
+			markup += '<img src="images/custom/cti-toolbar-white-new.png" class="add-icon" id="sc-white"/>';
+			markup += '</div>';
+			markup += '<span>CTI Toolbar</span>';
+		    markup += ' </div>';	
+			}
+			if(activeclass=="Contacts"){
+			markup+='                        <div class="add-contact" id="SC-add-contact-btn">';
+			markup+='                            <div class="image-block account">';
+			markup+='                                <img src="images/custom/add-contact-new.png" class="add-icon" />';
+			markup+='                            </div>';
+			markup+='                            <span>New Contact</span>';
+			markup+='                        </div>';
+			}
+			else if(activeclass=="Accounts"){
+			markup+='                        <div class="add-account" id="add-acc-account">';
+			markup+='                              <div class="image-block account">';
+			markup+='                              		<img src="images/custom/add-account.png" class="add-icon account-icon" />';
+			markup+='                             	</div>';
+			markup+='                            <span id="SC-add-account-btn">New Account</span>';
+			markup+='                        </div>';			
+			}
+			else if(activeclass=="CreditApp"){
+			markup+='                        <div class="profile margin-right10">';
+			markup+='                            <div class="image-block finance-cancel-block">';
+			markup+='                                <img src="images/custom/profile_round_white.png" class="cancel-finance" id="gotoContact">';
+			markup+='                            </div>';
+			markup+='                            <span id="viewcontact">View Contact</span>';
+			markup+='                        </div>';
+			markup+='                        <div class="profile margin-right10">';
+			markup+='                            <div class="image-block finance-cancel-block">';
+			markup+='                                <img src="images/custom/status_apply_for_finance.png" class="cancel-finance" id="gotoOrder360">';
+			markup+='                            </div>';
+			markup+='                            <span id="viewcontact">View Recent Order</span>';
+			markup+='                        </div>';
+			markup += '<div class="add-contact" id="SC-add-CA-btn">';
+			markup += '<div class="image-block account">';
+			markup += '<img src="images/custom/fileboard_plus.png" class="credit-app" />';
+			markup += '</div>';
+			markup += '<span>New Application</span>';
+			markup += '</div>';
+			}
+			if(BSDatas==1|| isStoreUser=="Y"){						   
+			markup+='                        <div class="add-contact" id="SC-add-store-location">';
+			markup+='                     		<div class="image-block account">';
+			markup+='                         		<img src="images/custom/storelocation.png" class="add-icon" />';
+			markup+='                     		</div>';
+			markup+='                     	<span id="storename">Add Store</span>';
+			markup+='                 		</div>';
+			}
+			markup+='                        <div class="profile" id="SC-profile">';
+			markup+='                            <div class="image-block">';
+			markup+='                                <img src="images/custom/profile.png" class="profile-icon">';
+			markup+='                            </div>';
+			markup+='                            <span>'+lastName+' '+firstName+'</span>';
+			markup+='                        </div>';
+			markup+='                        <div class="SC-Profile-container" style="display: none">';
+			markup+='                        <div class="SC-Profile-container-body">';
+			markup+='                        <p>User ID :<span>'+loginName+'</span></p>';
+			markup+='                        <hr class="no-margin">';
+			if(isStoreUser == "Y")
+			markup+='						 <button id="sc-cash-draw">Open Cash Drawer</button>';
+			//SPATIBAN:May 2019 release:Removed storereport button
+			//markup+='						 <button id="storereport">Store Closing Report</button>';
+			markup+='                        <button id="logout">Logout</button>';
+			markup+='                    	</div>';
+			markup+='                </div>';
+			markup+='                    </div>';
+	return markup;
+	}
+    
+	//NO Search Results Markup
+	SC_OUI_Markups.prototype.ResultsMessage = function (pm,FieldQueryPair,active){
+			var x,texta = "",result="",output=[];
+            for (x in FieldQueryPair) {
+            output.push(FieldQueryPair[x]);
+            } 
+			
+			for(var i=0;i < output.length; i++){
+			texta = output[i].replace(/\*/g,"");
+			
+			if(i==0)
+				result+=(texta.split("OR"))[0];
+			else
+				result=result+" , "+(texta.split("OR"))[0];
+			}
+			
+		    markup="";
+			if (pm.Get("GetRecordSet").length == 0) {
+				markup += ' <div class="SC-noresults-container clearfix no-padding margin-top">';
+				markup += '                <div class="text-block">';
+				if (active == "contacts")
+					markup += '                    <p>No Contact Results for</p>';
+				else if (active == "accounts")
+					markup += '                    <p>No Account Results for</p>';
+				else if (active == "SalesOrder")
+					markup += '                    <p>No Sales Order Results for</p>';
+				markup += '                    "<span id="Noresults">' + result + '</span>"';
+				markup += '                </div>';
+				markup += '            </div>';
+			}
+			return markup;
+	}
+	//For initial message in serach files like please enter search criteria to enter search
+	SC_OUI_Markups.prototype.InitialMessage = function (pm,active){
+			markup="";
+				markup += ' <div class="SC-noresults-container clearfix no-padding margin-top">';
+				markup += '                <div class="text-block">';
+				if (active == "contacts")
+					markup += '                    <p>Please enter search criteria to begin search</p>';
+				else if (active == "accounts")
+					markup += '                    <p>Please enter search criteria to begin search</p>';
+				else if (active == "SalesOrder")
+					markup += '                    <p>Please enter search criteria to begin search</p>';
+				markup += '                </div>';
+				markup += '            </div>';
+			return markup;
+	}
+	
+	//on click of store closing report button
+	SC_OUI_Markups.prototype.StoreNavigation = function (){
+			//Start loader 
+			//$("body").trigger('Custom.Start');
+			 $('#custommaskoverlay').show();
+			/*var InPS = SiebelApp.S_App.NewPropertySet();
+			var OutPS = SiebelApp.S_App.NewPropertySet(); 
+			var Service='';
+			InPS.SetProperty("View","SC Store Report View"); 
+			Service = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
+			OutPS = Service.InvokeMethod("GotoView",InPS);
+			//hiding the Loader
+			 if(SiebelApp.S_App.GetActiveView()==="SC Store Report View"){*/
+			   //$("body").trigger('Custom.End');
+			   SiebelApp.S_App.GotoView("SC Store Report View","","","");
+			   $('#custommaskoverlay').hide();
+			  //}
+}
+	
+	//Code to Add Custom Timer 
+	SC_OUI_Markups.prototype.CustomTimer = function (){
+			markup="";
+				markup +='<div id="custommaskoverlay" class="siebui-custom-mask-overlay" style="width: 100%;height: 100%;top: 0px;left: 0px;position: absolute;display: none;">';
+				markup +='<div id="custom-mask-img" class="siebui-custom-mask-outer" style="">';  
+				markup +='<div class="siebui-custom-mask-inner">';
+				markup +='</div>';
+				markup +='</div>';
+				markup +='</div>';
+				markup +='<div class="overlay" id="custom-backdrop" style="display:none">';
+				markup +='</div>';
+			return markup;
+	}
+	
+	
+	//Code to Add Custom Timer on White Screen
+	SC_OUI_Markups.prototype.CustomWhiteScreenTimer = function (){
+			markup="";
+				markup +='<div id="custommaskoverlay" class="siebui-custom-mask-overlay whitescreentimer" style="width: 100%;height: 100%;top: 0px;left: 0px;position: absolute;display: none;">';
+				markup +='<div id="custom-mask-img" class="siebui-custom-mask-outer" style="">';  
+				markup +='<div class="siebui-custom-mask-inner">';
+				markup +='</div>';
+				markup +='</div>';
+				markup +='</div>';
+			return markup;
+	}
+	
+	
+	//This Code is to display initial list of store values
+	SC_OUI_Markups.prototype.StoreChange = function () {
+		markup="";
+		markup+='            <div class="modal-dialog">';
+		markup+='                <!-- Modal content-->';
+		markup+='                <div class="modal-content">';
+		markup+='                    <div class="modal-header">';
+		markup+='                        <button type="button" class="close SC-close-popup blue-bg" id="sc-store-close-id" data-dismiss="modal">&times;</button>';
+		markup+='                        <div class="header-content">';
+		markup+='                            <div class="sc-head-title">';
+		markup+='                                <div class="img-sorce"><img src="images/custom/storelocation-big.png"></div>';
+		markup+='                                <p class="no-margin overflow-title" id="StoreTitle">Change Store</p>';
+		markup+='                                 <button id="SC-Clear-store">clear</button>';
+		markup+='                            </div>';
+		markup+='                        </div>';
+		markup+='                    </div>';
+		markup+='                    <div class="modal-body">';
+		markup+='                        <div class="row no-margin">';
+		markup+='                            <div class="col-md-12 col-lg-12 col-sm-12 sc-add-border">';
+		markup+='                                <div class="SC-add-store-container">';
+		markup+='                                    <label for="Lead Rank" class="sc-add-label">Enter Store Number or location</label>';
+		markup+='                                    <input type="text" name="" class="sc-add-input" id="SC-Store-Search">';
+		markup+='                                </div>';
+		markup+='                            </div>';
+		markup+='                        </div>';
+		markup+='                        <p class="clearfix"></p>';
+		markup+='                        <div class="SC-table-with-scroll-main" id="SC-storelocation">';
+		/*markup+='                            <table class="SC-table">';
+		markup+='                                <thead>';
+		markup+='                                    <tr>';
+		markup+='                                        <th>Store location</th>';
+		markup+='                                    </tr>';
+		markup+='                                </thead>';
+		markup+='                                <tbody>';
+		for(var i=0;i<Dataarray.length&&i<5;i++){
+		markup+='                                    <tr id="'+"store"+(i+1)+'">';
+		markup+='                                        <td>'+Dataarray[i]+'</td>';
+		markup+='                                    </tr>';
+		}
+		markup+='                                </tbody>';
+		markup+='                            </table>';
+		markup+='                            <div class="SC-single-button-container less-padding">';
+		markup+='                                <button id="SC-selectstore">Select Store</button>';
+		markup+='                            </div>';
+		markup+='                        </div>';*/
+		markup+='                    </div>';
+		markup+='                </div>';
+		markup+='            </div>';
+		return markup;
+	}
+		
+	//This Code is to display list of store values after a query	
+	SC_OUI_Markups.prototype.StoreChange2 = function (value){
+		function sinclude(arr) {
+			return arr.includes(value);
+		}
+		var filtered=Dataarray.filter(sinclude);
+		markup="";
+		markup+='   					<table class="SC-table">';
+		markup+='                                <thead>';
+		markup+='                                    <tr>';
+		markup+='                                        <th>Store location</th>';
+		markup+='                                    </tr>';
+		markup+='                                </thead>';
+		markup+='                                <tbody>';
+		for(var i=0;i<filtered.length&&i<5;i++){
+		markup+='                                    <tr id="'+"store"+(i+1)+'">';
+		markup+='                                        <td>'+filtered[i]+'</td>';
+		markup+='                                    </tr>';
+		}
+		markup+='                                </tbody>';
+		markup+='  						</table>';
+		markup+='                            <div class="SC-single-button-container less-padding">';
+		markup+='                                <button id="SC-selectstore">Select Store</button>';
+		markup+='                            </div>';
+		return markup;
+	}
+		//this method is to refresh the Orders Applet in Accounts 360
+		SC_OUI_Markups.prototype.Sorting_Orders = function (){
+			var OrdRec=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Order List Applet (All)"].GetPModel().GetRenderer().GetPM().Get("GetRecordSet");
+			var Order_Markup_New = "";
+			for(var i = 0; i < OrdRec.length; i++){
+			var j="ord-row"+(i+1);
+			Order_Markup_New+='<tr id='+j+'>';
+			if(OrdRec[i]["Order Number"] != null){Order_Markup_New+='<td><a href="javascript:void(0)" id="ordernumdrilldown">'+OrdRec[i]["Order Number"]+'</a></td>';}
+			else{Order_Markup_New+='<td></td>';}
+			if(OrdRec[i]["Order Type"] != null){Order_Markup_New+='<td>'+OrdRec[i]["Order Type"]+'</td>';}
+			else{Order_Markup_New+='<td></td>';}
+			if(OrdRec[i]["SC Sub-Type"] != null){Order_Markup_New+='<td>'+OrdRec[i]["SC Sub-Type"]+'</td>';}
+			else{Order_Markup_New+='<td></td>';}
+			if(OrdRec[i]["Status"] != null){Order_Markup_New+='<td>'+OrdRec[i]["Status"]+'</td>';}
+			else{Order_Markup_New+='<td></td>';}
+			if(OrdRec[i]["Order Date"] != null){Order_Markup_New+='<td>'+OrdRec[i]["Order Date"]+'</td>';}
+			else{Order_Markup_New+='<td></td>';}
+			if(OrdRec[i]["SC Sale Location"] != null){Order_Markup_New+='<td>'+OrdRec[i]["SC Sale Location"]+'</td>';}
+			else{Order_Markup_New+='<td></td>';}
+			Order_Markup_New+='</tr>';
+			}
+			$("#orders_sort_id").html(Order_Markup_New);
+		}
+		
+		//this method is to refresh the attatchments Applet in Accounts 360
+		SC_OUI_Markups.prototype.Sorting_Attachments = function (){
+			var AttRec=SiebelApp.S_App.GetActiveView().GetAppletMap()["Account Attachment Applet"].GetPModel().GetRenderer().GetPM().Get("GetRecordSet");
+			var Attachments_Markup_New = "";
+			for(var i = 0; i < AttRec.length; i++)
+			{
+			var j="att-row"+(i+1);
+			Attachments_Markup_New+='<tr id='+j+'>';
+			if(AttRec[i]["AccntFileName"] != null){Attachments_Markup_New+='<td title="'+AttRec[i]["AccntFileName"]+'"><a href="javascript:void(0)" id="attfilenamedrilldown">'+AttRec[i]["AccntFileName"]+'</a></td>';}
+			else{Attachments_Markup_New+='<td></td>';}
+			if(AttRec[i]["AccntFileSize"] != null){Attachments_Markup_New+='<td>'+AttRec[i]["AccntFileSize"]+'</td>';}
+			else{Attachments_Markup_New+='<td></td>';}
+			if(AttRec[i]["AccntFileExt"] != null){Attachments_Markup_New+='<td>'+AttRec[i]["AccntFileExt"]+'</td>';}
+			else{Attachments_Markup_New+='<td></td>';}
+			if(AttRec[i]["AccntFileDate"] != null){Attachments_Markup_New+='<td>'+AttRec[i]["AccntFileDate"]+'</td>';}
+			else{Attachments_Markup_New+='<td></td>';}
+			if(AttRec[i]["AccntFileAutoUpdFlg"] != null){Attachments_Markup_New+='<td>'+AttRec[i]["AccntFileAutoUpdFlg"]+'</td>';}
+			else{Attachments_Markup_New+='<td></td>';}
+			if(AttRec[i]["Comment"] != null){
+				Attachments_Markup_New+='<td title="'+AttRec[i]["Comment"]+'" class="comments-col"><textarea name="detdes" class="SC-input no-padding" id="attachcomment'+(i+1)+'">'+AttRec[i]["Comment"]+'</textarea></td>';
+				
+			}
+			else{Attachments_Markup_New+='<td title="'+AttRec[i]["Comment"]+'" class="comments-col"><textarea name="detdes" class="SC-input no-padding" id="attachcomment'+(i+1)+'"></textarea></td>';}
+			Attachments_Markup_New+='<td><img src="images/custom/delete-red.png" class="so-add-cart acc_attachment_del_360" id="accattachmentdelete'+(i+1)+'"></td>';
+			Attachments_Markup_New+='</tr>';
+			}
+			$("#attachments_sort_id").html(Attachments_Markup_New);
+		}
+		
+		//this method is to refresh the contacts Applet in Accounts 360
+		SC_OUI_Markups.prototype.Sorting_Contacts = function (){
+		var ConRec=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Account Contact List Applet"].GetPModel().GetRenderer().GetPM().Get("GetRecordSet");
+		var ConmarkupNew = '';
+		for(var i = 0; i < ConRec.length; i++){
+			var j="con-row"+(i+1);
+			ConmarkupNew+='<tr id='+j+'>';
+			if(ConRec[i]["SSA Primary Field"] != null){ConmarkupNew+='<td>'+ConRec[i]["SSA Primary Field"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["First Name"] != null){ConmarkupNew+='<td title="'+ConRec[i]["First Name"]+'">'+ConRec[i]["First Name"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Last Name"] != null){ConmarkupNew+='<td title="'+ConRec[i]["Last Name"]+'"><a href="javascript:void(0)" id="lastnamedrilldown">'+ConRec[i]["Last Name"]+'</a></td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["M/M"] != null){ConmarkupNew+='<td>'+ConRec[i]["M/M"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Work Phone #"] != null){ConmarkupNew+='<td>'+ConRec[i]["Work Phone #"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Fax Phone #"] != null){ConmarkupNew+='<td>'+ConRec[i]["Fax Phone #"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Email Address"] != null){ConmarkupNew+='<td title="'+ConRec[i]["Email Address"]+'">'+ConRec[i]["Email Address"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Account Location"] != null){ConmarkupNew+='<td>'+ConRec[i]["Account Location"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Cellular Phone #"] != null){ConmarkupNew+='<td>'+ConRec[i]["Cellular Phone #"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Middle Name"] != null){ConmarkupNew+='<td title="'+ConRec[i]["Middle Name"]+'">'+ConRec[i]["Middle Name"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Personal Street Address"] != null){ConmarkupNew+='<td title="'+ConRec[i]["Personal Street Address"]+'">'+ConRec[i]["Personal Street Address"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Personal City"] != null){ConmarkupNew+='<td>'+ConRec[i]["Personal City"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Personal State"] != null){ConmarkupNew+='<td>'+ConRec[i]["Personal State"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Postal Code"] != null){ConmarkupNew+='<td>'+ConRec[i]["Postal Code"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Personal Country"] != null){ConmarkupNew+='<td>'+ConRec[i]["Personal Country"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			//ConmarkupNew+='<td>'+ConRec[i]["Comment"]+'</td>';
+			if(ConRec[i]["Home Phone #"] != null){ConmarkupNew+='<td>'+ConRec[i]["Home Phone #"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			if(ConRec[i]["Households"] != null){ConmarkupNew+='<td>'+ConRec[i]["Households"]+'</td>';}
+			else{ConmarkupNew+='<td></td>';}
+			ConmarkupNew+='</tr>';
+		}
+		$("#contacts-sort-id").html(ConmarkupNew);
+		}
+		
+		//header block of the SalesOrder
+		SC_OUI_Markups.prototype.SalesOrderCreateHeader_block = function (recordset,divsubtype) {
+			markup="";
+			markup+='                    <div class="apply-for-finance">';
+			markup+='                        <img src="images/custom/sc-logo.png" />';
+			markup+='                        <div>';
+			markup+='                            <p class="no-margin">Sales Order</p>';
+			markup+='                            <span>#'+recordset[0]["Order Number"]+'</span>';
+			markup+='                        </div>';
+			markup+='                    </div>';
+			markup+='                    <div class="profile-block">';
+			if(divsubtype=="CSC" || divsubtype=="CS"){
+				
+			//Start: SHARATH: Added code for Terminal US.
+			markup+='<div class="add-contact" id="SC-terminal-tile" style="display:none">';
+			markup+='<div class="image-block account">';
+			markup+='<img src="images/custom/Adyen_S1E2L.png" class="add-icon">                            </div>';
+			markup+='<span>No Terminal Available</span>';
+			markup+='</div>';
+			//End: SHARATH: Added code for Terminal US.
+			
+			markup += '   <div class="add-contact">';
+			markup += '<div class="image-block account" id="SC-ANI-CTItool">';
+		    markup += '<img src="images/custom/cti-toolbar-orange-new.png" class="add-icon" id="sc-orange" style="display:none"/>';
+			markup += '<img src="images/custom/cti-toolbar-white-new.png" class="add-icon" id="sc-white"/>';
+			markup += '</div>';
+			markup += '<span>CTI Toolbar</span>';
+		    markup += ' </div>';
+			}
+			if(BSDatas==1||SiebelApp.S_App.GetProfileAttr("SC Store User")=="Y"){
+
+			//Start: SHARATH: Added code for Terminal US.
+			markup+='<div class="add-contact" id="SC-terminal-tile" style="display:none">';
+			markup+='<div class="image-block account">';
+			markup+='<img src="images/custom/Adyen_S1E2L.png" class="add-icon">                            </div>';
+			markup+='<span>No Terminal Available</span>';
+			markup+='</div>';
+			//End: SHARATH: Added code for Terminal US.		
+			
+			markup+='                        <div class="add-contact" id="SC-add-store-location">';
+			markup+='                     		<div class="image-block account">';
+			markup+='                         		<img src="images/custom/storelocation.png" class="add-icon" />';
+			markup+='                     		</div>';
+			markup+='                     	<span id="storename">Add Store</span>';
+			markup+='                 		</div>';
+			}
+			markup+='                        <div class="profile margin-right10" id="sc-cr-view-account">';
+			markup+='                            <div class="image-block finance-cancel-block">';
+			markup+='                                <img src="images/custom/profile_round_white.png" class="cancel-finance" id="gotoContact">';
+			markup+='                            </div>';
+			markup+='                            <span id="viewcontact">View Contact</span>';
+			markup+='                        </div>';
+			markup+='                        <div class="profile margin-right10">';
+			markup+='                            <div class="image-block finance-cancel-block">';
+			markup+='                                <img src="images/custom/download.png" class="cancel-finance" id="savenexit">';
+			markup+='                            </div>';
+			markup+='                            <span>Save & exit</span>';
+			markup+='                        </div>';
+			//NTHARRE:29-JUN-2021:Added disabled class for STRY0122298
+			var scLocalProfilAttr=localStorage.getItem("ProfileAttr");
+			scLocalProfilAttr=JSON.parse(scLocalProfilAttr);
+			var loginName = scLocalProfilAttr['Login Name'];
+			if(recordset[0]["Created By Name"] == loginName || recordset[0]["Created By Name"] == "SVCDBSNIPSIEBEL")//3Oct25;SL;Added OR for SAL-734
+			markup+= '                    <div id="SCOrderDeleteBtn">';
+			else
+			markup+= '                    <div id="SCOrderDeleteBtn" class="SC-disabled">';
+			markup+='                        <div class="profile" id="deleteordermark">';
+			markup+='                            <div class="image-block finance-cancel-block">';
+			markup+='                                <img src="images/custom/icon-cancel.png" class="cancel-finance" id="deleteorder">';
+			markup+='                            </div>';
+			markup+='                            <span>Quote Cancel</span>';//3Oct25;SL;Rephrased the span for SAL-734
+			markup+='                        </div>';
+			markup+='                      </div>';
+			markup+='                    </div>';
+			return markup;
+		}
+		
+		
+		
+		//for sales rep popup pagination
+		SC_OUI_Markups.prototype.SCSalesRepTable = function(Dataarray,action){
+			markup="";
+			$("#SC-select-salesrep").addClass('SC-disabled');
+			switch(action) {
+				case "nextset":
+					for(var i=salesRepStartPage+5,j=0;i<=slaesRepEndPage&& j<=4;i++,j++){
+						markup+='                                        <tr id="scsalrow'+i+1+'">';
+						Dataarray1=Dataarray[i].split("/");
+						markup+='											 <td style="display: none">'+Dataarray1[0]+'</td>';
+						markup+='                                            <td>'+Dataarray1[3]+'</td>';
+						markup+='                                            <td>'+Dataarray1[2]+'</td>';
+						markup+='                                            <td>'+Dataarray1[1]+'</td>';
+						markup+='                                        </tr>';
+					}
+					if((salesRepStartPage+5)<slaesRepEndPage)
+						salesRepStartPage=salesRepStartPage+5;
+					else
+						markup=$("#sc-sales-rep-table").html();
+					break;
+				case "prevset":
+						if(salesRepStartPage!=0)
+						salesRepStartPage=salesRepStartPage-5;
+						for(var i=salesRepStartPage,j=0;i<slaesRepEndPage && j<=4;j++,i++){
+						markup+='                                        <tr id="scsalrow'+i+1+'">';
+						Dataarray1=Dataarray[i].split("/");
+						markup+='											 <td style="display: none">'+Dataarray1[0]+'</td>';
+						markup+='                                            <td>'+Dataarray1[3]+'</td>';
+						markup+='                                            <td>'+Dataarray1[2]+'</td>';
+						markup+='                                            <td>'+Dataarray1[1]+'</td>';
+						markup+='                                        </tr>';
+					}
+					break;
+				case "firstset":
+					for(var i=0;i<=Dataarray.length-1&&i<=4;i++){
+						markup+='                                        <tr id="scsalrow'+i+1+'">';
+						Dataarray1=Dataarray[i].split("/");
+						markup+='											 <td style="display: none">'+Dataarray1[0]+'</td>';
+						markup+='                                            <td>'+Dataarray1[3]+'</td>';
+						markup+='                                            <td>'+Dataarray1[2]+'</td>';
+						markup+='                                            <td>'+Dataarray1[1]+'</td>';
+						markup+='                                        </tr>';
+					}
+					salesrepj=i-1;
+					break;
+				case "lastset":
+					for(var i=Dataarray.length-5;i<=Dataarray.length-1;i++){
+						markup+='                                        <tr id="scsalrow'+i+1+'">';
+						Dataarray1=Dataarray[i].split("/");
+						markup+='											 <td style="display: none">'+Dataarray1[0]+'</td>';
+						markup+='                                            <td>'+Dataarray1[3]+'</td>';
+						markup+='                                            <td>'+Dataarray1[2]+'</td>';
+						markup+='                                            <td>'+Dataarray1[1]+'</td>';
+						markup+='                                        </tr>';
+					}
+					salesrepj=i-1;
+					break;
+				default:
+					salesRepStartPage=0;
+					slaesRepEndPage=Dataarray.length-1;
+					for(var i=0;i<Dataarray.length&&i<5;i++){
+						markup+='                                        <tr id="scsalrow'+i+1+'">';
+						Dataarray1=Dataarray[i].split("/");
+						markup+='											 <td style="display: none">'+Dataarray1[0]+'</td>';
+						markup+='                                            <td>'+Dataarray1[3]+'</td>';
+						markup+='                                            <td>'+Dataarray1[2]+'</td>';
+						markup+='                                            <td>'+Dataarray1[1]+'</td>';
+						markup+='                                        </tr>';
+					}
+					salesrepj=i-1;
+			}
+			$("#sc-sales-rep-table").html(markup);
+		}
+		
+		
+	SC_OUI_Markups.prototype.prodmarkup=function (outPS,Lov1,Lov2,isStoreUser) {
+		var addonstartprice,netprice,startprice,discounts,cLineId,OrderId,LineId,qua,carttotalno=0,addonlinediscount,scaddonStartPrice,scLocalProfilAttr,addondisreason,addondisper,addonsamount,scsubType;
+		
+		//initially hide line details and disable choose shipping button
+		$('#scproductinfodiv').hide();
+		$('#sc-proceed').addClass("SC-disabled");	
+		scLocalProfilAttr=localStorage.getItem("ProfileAttr");
+		scLocalProfilAttr=JSON.parse(scLocalProfilAttr);
+		scsubType=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sub-Type");
+		scstatus=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status");
+		markup='                    <div class="SC-SO-panel container no-padding">';
+		markup+='                        <div class="SC-SO-panel-head">';
+		markup+='                            <div class="SC-SO-panel-title">';
+		//SPATIBAN: nov 15 2019:to hide line details
+		if((scstatus === "Booked")||(scstatus === "Submitted")||(scstatus === "Complete")||(scstatus === "Cancelled")||(scstatus === "Closed")){
+			markup+='                                <button data-toggle="collapse" data-target="#product-info" id="prod-expand-collapse" class="sc-icon iconClosed lineitemsopen SC-readonly"></button>';
+		}
+		else{		
+		markup+='                                <button data-toggle="collapse" data-target="#product-info" id="prod-expand-collapse" class="sc-icon iconClosed lineitemsopen"></button>';
+		}
+		markup+='                                 <div class="SC-title-button">';
+		markup+='		                          		<p class="no-margin">Line Details</p>';
+		markup+='		                              <div id="SC-product-tree"> <img src="images/custom/BOM-order.png"></div>';
+        markup+='                      			   </div>';
+		markup+='                            </div>';
+		markup+='                            <div class="SC-SO-details-items">';
+		markup+='								<div class="SC-SO-detail-item">';
+		markup+='								   <img class="cart-number-img" src="images/custom/line items.png">';
+		markup+='								   <span class="cart-number" id="SC-Cart-value">0</span>';
+		markup+='								</div>';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">total start price:</label>';
+		//NGOLLA defect #758 Added code to Display thousands separator (comma ,)
+		markup+='                                    <label class="item-value" id="topstart">$'+Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Base Price")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</label>';
+		markup+='                                </div>';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">total line discounts:</label>';
+		//NGOLLA defect #758 Added code to Display thousands separator (comma ,)
+		markup+='                                    <label class="item-value" id="topdisc">$'+Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Item Discount")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</label>';
+		markup+='                                </div>';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">total NRC sub-total:</label>';
+		//NGOLLA defect #758 Added code to Display thousands separator (comma ,)
+		markup+='                                    <label class="item-value pending" id="toptotal">$'+((Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")))-(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</label>';
+		markup+='                                </div>';
+		markup+='                            </div>';
+		markup+='                        </div>';
+		markup+='                        <div class="SC-SO-panel-body collapse clearfix no-left-padding" id="product-info">';
+		markup+='                            <div class="SC-SO-Prod-info-main no-margin-top">';
+		for(var pr=0;pr<outPS.GetChild(0).GetChildCount();pr++){
+			if(outPS.GetChild(0).GetChild(pr).GetProperty("Product Type Code")!="Promotion"){
+				carttotalno++;
+				//if the line details have at least one product then show line details section and enable proceed to ship
+				$('#scproductinfodiv').show();
+				$('#sc-proceed').removeClass("SC-disabled");
+				//var userposition=SiebelApp.S_App.GetProfileAttr('SC Primary Division Type');
+				var userposition=scLocalProfilAttr["SC Primary Division Type"];
+				startprice=outPS.GetChild(0).GetChild(pr).GetProperty("Start Price")!=""?parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("Start Price")):0.00;
+				discounts=outPS.GetChild(0).GetChild(pr).GetProperty("SC Total Line Discounts")!=""?parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("SC Total Line Discounts")):0.00;
+				netprice=outPS.GetChild(0).GetChild(pr).GetProperty("Item Price - Display")!=""?parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("Item Price - Display")):0.00;
+				qua=outPS.GetChild(0).GetChild(pr).GetProperty("Quantity Requested");
+				startprice=(startprice*qua);
+				discounts=(discounts*qua);
+				netprice=(netprice*qua);
+				SiebelJS.Log(outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description"));
+				nrcsubtotal=outPS.GetChild(0).GetChild(pr).GetProperty("NRC Sub Total")!=""?parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("NRC Sub Total")):0.00;
+				LineId=outPS.GetChild(0).GetChild(pr).GetProperty("Id");
+				var sLineDetail=outPS.GetChild(0).GetChild(pr).GetProperty("SC Warranty Ref Line Detail");
+				var revisable='N';
+				//if((outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="Booked"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="Backordered"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="At Plant"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In-Transit To Hub"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="Ready to Ship"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="At Supplier") && outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")!="DELIVERY")
+					if((outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="Booked"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="Backordered"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="At Plant"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In-Transit To Hub"||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="Ready to Ship") && outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")!="DELIVERY")
+					revisable='Y';
+				//condition for making referred by readonly
+				//Added code for defect 707
+				if(outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")=="MATTRESS"){
+					var Revisenumber=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision");
+						Revisenumber=parseInt(Revisenumber);
+						if(Revisenumber<=1){
+							if($("#SC-search-icon-referreby").hasClass("refer")){
+								$("#SC-search-icon-referreby").removeClass("SC-disabled").removeClass("refer");
+								$("#SC-search-icon-referreby").addClass("refeditable");
+								$("#referreby").removeClass("SC-readonly");
+								$("#referreby").addClass("read-mode");
+								$("#referreby").addClass("overflow");
+								var ReferralInsider=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Referred By");
+								if(ReferralInsider == ""){
+								 $("#SC-Add-Referral").show();
+								  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Management Products"].GetPModel().SetProperty("AddReferral", true);
+								}
+								
+							}
+						}
+				}
+				
+				markup+='                                <div class="cart-item clearfix no-margin-bottom20">';
+				markup+='                                    <div class="SC-SO-Prod-items spec-width">';
+				var revisionNumber= SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision");
+					revisionNumber=revisionNumber!=""?parseInt(revisionNumber):0;
+				if(revisionNumber>1){
+				markup+='                                        <div class="title-sku less-padding">';
+				}else{
+				markup+='                                        <div class="title-sku less-padding" style="width: 505px !important;">';	
+				}
+				if(localStorage.getItem('comingfrom')=="revise"&&outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")!="In Progress"){
+					markup+='                                            <div class="delete-title non-customizable-prod">';	
+						if(revisable=='Y')	
+						markup+='                                                <img src="images/custom/cancel-line-revise.png" class="deleteline cancellineitem" style="height:22px !important;width:22px !important;background-color: #f63 !important;" id="'+LineId+'">';
+				}
+				else{
+					if(outPS.GetChild(0).GetChild(pr).GetProperty("Product Def Type Code")=="Customizable"){
+					markup+='                                            <div class="delete-title">';
+					markup+='                                                <img src="images/custom/edit_fill.png" class="blue-bg customline" id="'+outPS.GetChild(0).GetChild(pr).GetProperty("Line Number")+'">';
+					}
+					else{
+					markup+='                                            <div class="delete-title non-customizable-prod">';	
+					}
+					markup+='                                                <img src="images/custom/icon-close.png" class="deleteline deletelineitem" id="'+LineId+'">';
+				}
+				markup+='                                                <p class="product-title no-margin wordbreak" id="prodtitle'+LineId+'" title="'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description")+'">'+outPS.GetChild(0).GetChild(pr).GetProperty("Line Number")+' - '+outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description")+'</p>';
+				markup+='                                            </div>';
+				if(outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description")=="GIFT CARD"){
+					markup+='                                            <span class="SKU SKU-line">SKU# <label class="product-SKU-label">'+outPS.GetChild(0).GetChild(pr).GetProperty("Part Number")+'</label>';
+					markup+='                                            </p></span>';
+					markup+='                                        </div>';
+					markup+='                                        <div class="header-items">';					
+					markup+='                                             <div class="header-item">';
+					markup+='                                				<p class="item-title less-margin">AMOUNT</p>';
+					markup+='                               				<span class="currency">$</span>';
+					markup+='                               				<input type="text" name="" class="small-input less-height amount-width SC-giftcard" id="'+LineId+'" value="'+outPS.GetChild(0).GetChild(pr).GetProperty("Unit Price - Display")+'">';
+					markup+='                            				  </div>';
+					markup+='                            				  <div class="header-item">';
+					markup+='                               				 <p class="item-title less-margin">QTY</p>';
+					markup+='                                				 <input type="text" name="" value="1" readonly class="small-input less-height quantitybox first-item SC-readonly" id="'+LineId+'">';
+					markup+='                           				  </div>';
+				}
+				else{
+					//VYADAVAL-08MAY2025-Added below code for Protection plan by Extend
+					var sOrderId=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue('Id');
+					var sProtplan=outPS.GetChild(0).GetChild(pr).GetProperty("Part Number");
+					if (sProtplan=='PROTPLAN1' || sProtplan=='PROTPLAN2' || sProtplan=='PROTPLAN3'){
+						var Custom_Service = "",
+						Input_BS = "",
+						Out_BS = "";
+						var Concatval1="";
+						Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+						Input_BS = SiebelApp.S_App.NewPropertySet();
+						Out_BS = SiebelApp.S_App.NewPropertySet();
+						searchfields = "Line Number,SC Long Description";
+						Input_BS.SetProperty("BO", "Order Entry (Sales)");
+						Input_BS.SetProperty("BC", "Order Entry - Line Items");
+						Input_BS.SetProperty("SearchSpecification", "[SC Parent Order Id] = '"+sOrderId+"' AND [Parent Order Item Id] IS NULL AND ([SC Product Primary Product Line] = 'MATTRESS' OR [SC Product Primary Product Line] = 'FOUNDATION')");
+						Input_BS.SetProperty("FieldsArray", searchfields);
+						Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+						var ChildCount=Out_BS.GetChildCount();		
+						var Child_BS = Out_BS.GetChild(0);
+						var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+						console.log(BS_Data);
+						var ResArray = new Array;	
+						ResArray = BS_Data.split(";");
+						var ResArrayLen=ResArray.length;
+						markup+='<span class="SKU SKU-line">SKU# <label class="product-SKU-label">'+outPS.GetChild(0).GetChild(pr).GetProperty("Part Number")+'</label>';
+						markup+='<label class="product-SKU-label Protplan-mattress-line">Mattress Line Num:</label><span title="sc-extend" id="sc-protplan">';
+						var sFulStatusCode = outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code");
+						if(sFulStatusCode == "In Progress")
+								{
+						markup+='<select class="SC-SO-input inherit overflow" title="line-desc" id="'+LineId+'_sc-line-desc">';
+								}
+						else
+						{
+							markup+='<select class="SC-SO-input inherit overflow SC-disabled" title="line-desc" id="'+LineId+'_sc-line-desc">';
+						}
+						ResArray.forEach((ResArr) => {
+								var jsonRes = JSON.parse(ResArr);
+					            var LineNum = jsonRes["Line Number"];
+								var Description = jsonRes["SC Long Description"];		
+								var Concatval=	LineNum+" - "+Description;	
+								var sFulStatusCode = outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code");
+								SiebelJS.Log(outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code"));
+								
+								if(sLineDetail==Concatval){
+						markup+='<option class="SC-SO-Option product-SKU-label" selected>'+Concatval+'</option>';	
+								} else{
+						markup+='<option class="SC-SO-Option product-SKU-label">'+Concatval+'</option>';
+								}
+								
+								
+						});
+						markup+='</select>';
+					} else {
+						markup+='<span class="SKU SKU-line">SKU# <label class="product-SKU-label">'+outPS.GetChild(0).GetChild(pr).GetProperty("Part Number")+'</label> Display Bed <p class="Order-value SC-checkbox-white-square">';
+						if(outPS.GetChild(0).GetChild(pr).GetProperty("SC Display Bed")=='Y'){
+					markup +='<input type="checkbox" name="" checked class="bedcheckbox check_'+LineId+'" id="cmp_'+LineId+'"/>';
+						}else{
+					markup+='<input type="checkbox" name="" class="bedcheckbox check_'+LineId+'" id="cmp_'+LineId+'"/>';	
+					}}
+					//VYADAVAL-08MAY2025-End of code for protection plan by Extend
+					markup+='                                                <label for="cmp_'+LineId+'" class="SC-360-cusin displaybed" id="cmp_'+LineId+'"></label>';
+					markup+='                                            </p></span>';
+					markup+='                                        </div>';
+					markup+='                                        <div class="header-items">';
+					markup+=' 											<div class="header-item">';
+					markup+='                                    			 <p class="item-title less-margin">DETAILS</p>';
+					markup+='                                    			 <p class="item-value center-align detail-value"><img class="detail-icon SC-details-popup" src="images/custom/fileboard-white.png" id="'+LineId+'"></p>';
+					markup+='                                    			 <p class="item-title less-margin" style="display:none" id="statushand_'+LineId+'">'+outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")+'</p>';
+					markup+='                                    			 <p class="item-title less-margin" style="display:none" id="planthq_'+LineId+'">'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Plant OHQ")+'</p>';
+					markup+='                                    			 <p class="item-title less-margin" style="display:none" id="storehq_'+LineId+'">'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Store OHQ")+'</p>';
+					markup+='                                			 </div>';
+					/* var revisionNumber= SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision");
+					revisionNumber=revisionNumber!=""?parseInt(revisionNumber):0; */
+					if(revisionNumber>1){
+						markup+=' 											<div class="header-item">';
+						markup+=' 													<p class="item-title less-margin">REQ TO CANCEL</p>';
+						markup+=' 													<div class="item-value center-align">';
+						markup+=' 														<p class="SC-checkbox-white-square">';
+						if(outPS.GetChild(0).GetChild(pr).GetProperty("Request To Cancel")=="Y")
+							markup+=' 															<input type="checkbox" checked name="" class="SC-disabled" id="rtc_'+LineId+'">';
+						else
+							markup+=' 															<input type="checkbox" name="" class="SC-disabled" id="rtc_'+LineId+'">';
+						markup+=' 															<label for=rtc_'+LineId+'" class="SC-360-cusin SC-disabled" id="rtccmp_'+LineId+'"></label>';
+						markup+=' 														</p>';
+						markup+=' 													</div>';
+						markup+=' 												</div>';
+				    }
+					//SNARRA:Added Discount Markup based on Conditions
+					var ManualReason=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Manual Order Reason");
+					var divtype =scLocalProfilAttr["SC Primary Division Type"]; 
+					var divsubtype = scLocalProfilAttr["SC Primary Division Sub Type"];
+					if((isStoreUser == "Y" || (divtype == "DIRECT" && divsubtype =="CSC")) && ManualReason=="" ){
+						markup+='                                            <div class="header-item">';
+						markup+='                                                <p class="item-title less-margin">PRODUCT COUPON</p>';
+						if((revisable=='Y'&& localStorage.getItem('comingfrom')=="revise")||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In Progress")
+						markup+='                                                <button class="item-button prodcoupon prodcouponhtml" id="'+LineId+'">Edit</button>';
+						else
+						markup+='                                                <button class="item-button prodcoupon prodcouponhtml SC-disabled" id="'+LineId+'">Edit</button>';
+						if(outPS.GetChild(0).GetChild(pr).GetProperty("Prod Prom Name")!=null&&outPS.GetChild(0).GetChild(pr).GetProperty("Prod Prom Name")!="")
+							markup+='                                                <span style="display:flex" id="coupdesc_'+LineId+'" title="'+outPS.GetChild(0).GetChild(pr).GetProperty("Prod Prom Name")+'"><img class="detail-icon coupdescdel" id="'+LineId+'" style="width: 18px;height: 18px;background: #fff;border-radius: 100%;padding: 1px;border: 0 solid #F63;cursor: pointer;"src="images/custom/icon-close.png">'+outPS.GetChild(0).GetChild(pr).GetProperty("Prod Prom Name").substring(0,15)+'</span>';
+						else
+							markup+='                                                <span id="coupdesc_'+LineId+'">no coupons applied</span>';
+						markup+='                                            </div>';
+				    }else{
+					markup+='  	<div class="header-item">';
+                    markup+='        <p class="item-title less-margin" style="text-align: center;">DISCOUNTS</p>';
+                    markup+='		   <div class="item-value add-flex">';
+				    markup+='				  <div class="sub-item">';
+				    markup+='						<span class="add-size" title="no coupons applied" >';
+					if(outPS.GetChild(0).GetChild(pr).GetProperty("Prod Prom Name")!=null&&outPS.GetChild(0).GetChild(pr).GetProperty("Prod Prom Name")!=""){
+					 if((revisable=='Y'&& localStorage.getItem('comingfrom')=="revise")||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In Progress"){	
+					   markup+='	                      <img class="detail-icon coupdescdel" src="images/custom/icon-close.png" id="'+LineId+'">';
+					 }
+				    markup+='	                       <p class="text-wrap no-margin" id="ProductCoupon_'+LineId+'" title="'+outPS.GetChild(0).GetChild(pr).GetProperty("Prod Prom Name")+'">'+outPS.GetChild(0).GetChild(pr).GetProperty("Prod Prom Name")+'</p>';	
+					}
+				    else{
+				   markup+='	                      <img class="detail-icon coupdescdel" src="images/custom/icon-close.png" id="'+LineId+'" style="display:none">';
+					markup+='	                       <p class="text-wrap no-margin" id="ProductCoupon_'+LineId+'">no coupons applied</p>';		
+					}
+					markup+='	                    </span>';
+				    markup+='					   <span class="add-size text-wrap" id="sc-manual-div" >';
+					manualdiscreason=outPS.GetChild(0).GetChild(pr).GetProperty("SC Manual Discount Reason");
+					manualdiscperct=outPS.GetChild(0).GetChild(pr).GetProperty("Discount Percent");
+					manualdiscamount = outPS.GetChild(0).GetChild(pr).GetProperty("Discount Amount - Display");
+				    if(outPS.GetChild(0).GetChild(pr).GetProperty("SC Manual Discount Reason")!=null&&outPS.GetChild(0).GetChild(pr).GetProperty("SC Manual Discount Reason")!=""){
+						if((revisable=='Y'&& localStorage.getItem('comingfrom')=="revise")||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In Progress"){
+							markup+='	                     <img class="detail-icon scmanualdisdelete" src="images/custom/icon-close.png" id="scmanualcoupondelete_'+LineId+'">';
+						}
+						if(manualdiscperct!=""){
+							markup+='	                     <p  class="text-wrap no-margin" id="scmanualcouponval_'+LineId+'" title="'+manualdiscperct+'-'+manualdiscreason+'">'+manualdiscperct+'% -'+manualdiscreason+'</p>';
+					     }else{
+							markup+='	                     <p  class="text-wrap no-margin" id="scmanualcouponval_'+LineId+'" title="'+manualdiscamount+'-'+manualdiscreason+'">$'+manualdiscamount+'-'+manualdiscreason+'</p>'; 
+						 }
+					 markup+='	                     <p id="scmanualdiscountper_'+LineId+'" style="display:none">'+manualdiscperct+'</p>';
+					markup+='	                     <p id="scmanualdiscountamount_'+LineId+'" style="display:none">'+manualdiscamount+'</p>';
+					}else{
+					 markup+='	                     <img class="detail-icon scmanualdisdelete" src="images/custom/icon-close.png" id="scmanualcoupondelete_'+LineId+'" style="display:none">';
+					markup+='	                     <p class="text-wrap no-margin" id="scmanualcouponval_'+LineId+'" style="display:none" title="no coupons applied">no coupons applied</p>';
+					}
+					markup+='	                     <p id="Applybutton_'+LineId+'" style="display:none">'+LineId+'@'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")+'@'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Classification")+'@'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Detail")+'@'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Class")+'@'+outPS.GetChild(0).GetChild(pr).GetProperty("Part Number")+'@'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Sub-Type")+'</p>';
+					markup+='	                   </span>';
+					markup+='				   </div>';
+					if((revisable=='Y'&& localStorage.getItem('comingfrom')=="revise")||outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In Progress")
+					markup+='			 <img class="edit-icon SC-Discount-button" id="SCDiscountsedit_'+LineId+'" src="images/custom/edit_fill.png">';
+				    else
+					markup+='			 <img class="edit-icon SC-disabled" id="SCDiscountsedit_'+LineId+'" style="display:none" src="images/custom/edit_fill.png">';	
+				    markup+='	      </div>';
+                    markup+='     </div>';
+					}
+					markup+='                                            <div class="header-item">';
+					markup+='                                                <p class="item-title less-margin">QTY</p>';
+					if((outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")=="MATTRESS" && scsubType!="Wholesale" && scsubType!="QVC" && scsubType!="Commercial" && scsubType!="Internal")||(revisable=='N'&& localStorage.getItem('comingfrom')=="revise"&&(outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")=="MATTRESS" && scsubType!="Wholesale" && scsubType!="QVC" && scsubType!="Commercial" && scsubType!="Internal")))
+						markup+='                                                <input type="text" name="" readonly class="small-input less-height quantitybox first-item" id="'+LineId+'" value="'+outPS.GetChild(0).GetChild(pr).GetProperty("Quantity Requested")+'">';
+					else
+						markup+='                                                <input type="text" name="" class="small-input less-height quantitybox first-item" id="'+LineId+'" value="'+outPS.GetChild(0).GetChild(pr).GetProperty("Quantity Requested")+'">';
+					
+					markup+='                                            </div>';
+				}
+				markup+='                                            <div class="header-item">';
+				markup+='                                                <p class="item-title">START PRICE</p>';
+				markup+='                                                <p class="item-value">$'+startprice.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+				markup+='                                            </div>';
+				markup+='                                            <div class="header-item">';
+				markup+='                                                <p class="item-title">LINE DISCOUNTS</p>';
+				markup+='                                                <p class="item-value">$'+discounts.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+				markup+='                                            </div>';
+				markup+='                                            <div class="header-item">';
+				markup+='                                                <p class="item-title">NET PRICE</p>';
+				markup+='                                                <p class="item-value link-bg SC-order-line" id="'+LineId+'">$'+netprice.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+				markup+='                                            </div>';
+				markup+='                                        </div>';
+				markup+='                                    </div>';
+				markup+='                                    <div class="SC-SO-Prod-addon-items-block">';
+				if(outPS.GetChild(0).GetChild(pr).GetChildCount()>=1){
+					markup+='                                        <span>Add-ons</span>';
+					//markup+='<span class="add-discount-text">Discounts</span>';
+				}
+				for(var childpr=0;childpr<outPS.GetChild(0).GetChild(pr).GetChildCount();childpr++){
+					addonstartprice=outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Item Price - Display")!=""?parseFloat(outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Item Price - Display")):0.00;
+					cLineId=outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Id");
+					addondisreason=outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Manual Discount Reason");
+					addondisper=outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Discount Percent");
+					addonsamount=outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Discount Amount - Display");
+					addonlinediscount=outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Total Line Discounts")!=""?parseFloat(outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Total Line Discounts")):0.00;
+					scaddonStartPrice=outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Start Price")!=""?parseFloat(outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Start Price")):0.00;
+					markup+='                                        <div class="SC-SO-Prod-addon-item">';
+					markup+='                                            <div class="SC-SO-Prod-addon-item-name">';
+					markup+='                                                <p class="add-overflow" title="'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Calc Long Description")+'">'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Line Number")+' - '+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Part Number")+' - '+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Calc Long Description")+'</p>';
+					markup+='                                            </div>';
+					markup+=' 											<div class="SC-SO-Prod-addon-item-price SC-manual-block">';
+					markup+='														<div class="SC-manual-head" style="width:90%;margin-left:30px">';
+					if(addondisreason!=""){
+						if((((userposition =="STORE"&& ManualReason!="")||(userposition !="STORE"))&& (outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In Progress") && ((addonstartprice==0&& addondisreason!="")||(addonstartprice!=0)))||(revisable=='Y'&& localStorage.getItem('comingfrom')=="revise"&& (userposition!="STORE") && ((addonstartprice==0&& addondisreason!="")||(addonstartprice!=0)))){
+							if(addondisper!="")
+								markup+='														<img class="delete-icon addonsdel" src="images/custom/icon-close.png" id="'+cLineId+'_'+LineId+'_Y_deletemanualdisc">';
+							else
+								markup+='														<img class="delete-icon addonsdel" src="images/custom/icon-close.png" id="'+cLineId+'_'+LineId+'_N_deletemanualdisc">';
+						}else
+						markup+='														<img class="delete-icon" src="images/custom/icon-close.png" style="display: none;" id="'+cLineId+'_deletemanualdisc">';	
+						if(addondisper!="")
+							markup+='														<span title="'+addondisper+'-'+addondisreason+'">'+addondisper+'% -'+addondisreason+'</span>';
+						else
+							markup+='														<span title="'+addonsamount+'-'+addondisreason+'">$'+addonsamount+'-'+addondisreason+'</span>';
+					}
+					else{
+					markup+='														<img class="delete-icon" src="images/custom/icon-close.png" style="display: none;" id="'+cLineId+'_deletemanualdisc">';
+					markup+='														<span title="coupons text">no discounts applied</span>';	
+					}
+					 if((((userposition =="STORE"&& ManualReason!="")||(userposition !="STORE")) && (outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In Progress") && ((addonstartprice==0&& addondisreason!="")||(addonstartprice!=0)))||(revisable=='Y'&& localStorage.getItem('comingfrom')=="revise"&& (userposition!="STORE") && ((addonstartprice==0&& addondisreason!="")||(addonstartprice!=0))))
+					  markup+='														<img class="edit-icon edit-manual-icon maualdiscaddons" id="'+cLineId+'_editmanualdisc" src="images/custom/edit_fill.png">';
+				    else
+					markup+='														<img class="edit-icon edit-manual-icon maualdiscaddons" style="display: none;" id="'+cLineId+'_editmanualdisc" src="images/custom/edit_fill.png">';	
+				   markup+='														</div>';
+					markup+='												<div class="product-discount-block add-margin-right manual-block'+pr+''+childpr+'" id="'+cLineId+'_editaddonblock" style="display: none;">';
+					markup+='													<select class="form-control SC-SO-item-box no-margin addon-manual-discounts" id="'+cLineId+'adddiscreason">';
+					if(addondisreason!=""){
+					markup+='                                                       <option value="'+addondisreason+'" selected >'+addondisreason+'</option>';
+					}
+					else{
+					markup+='                                                       <option value="" selected hidden>Manual discount reason</option>';
+					}
+					markup+='														<option>Remove Manual Discount</option>';
+					for(var i=0;i<Lov1.length;i++){
+						if(Lov1[i]!=addondisreason)
+						markup+='                                                        <option>'+Lov1[i]+'</option>';
+					}
+					markup+='													</select>';
+					markup+='													<p class="discount-applied" id="applied-discount"></p>';
+					markup+='													<select class="form-control SC-SO-item-box no-margin SC-manual-addon-per" id="'+cLineId+'adddisper">';
+					if(addondisper!=""){
+					markup+='                                                       <option value="'+addondisper+'" selected >'+addondisper+'</option>';
+					}
+					else{
+					markup+='														<option value="" selected hidden>% Manual discount</option>';
+					}
+					for(var i=0;i<Lov2.length;i++){
+						if(Lov2[i]!=addondisper)
+						markup+='                                                        <option>'+Lov2[i]+'</option>';
+					}
+					markup+='													</select>';
+					markup+='													<p class="discount-applied-percentage" id="discount-percentage"></p>';
+					markup+='													<p class="discount-amount" style="width:100% !important">Manual discount amount</p>';
+					if(addonsamount!="")
+						markup+='													<input type="text" name="" id="'+cLineId+'addondiscamount" value="'+addonsamount+'">';
+					else
+						markup+='													<input class="Manualaddonamt"  type="text" name="" id="'+cLineId+'addondiscamount">';
+					markup+='													<div class="dropdown-button-container">';
+					markup+='														<button class="cancel manual-disc-addonscl" id="'+cLineId+'_canceladdons">Cancel</button>';
+					//Updated BC Name for #STRY0037337
+					if(addondisper!="")
+					markup+='														<button class="apply manual-disc-addonsapp" id="'+cLineId+'_'+LineId+'_Y_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Product Primary Product Line")+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Product Classification")+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Product Detail")+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Product Class")+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Part Number")+'_'+scaddonStartPrice.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Sub-Type")+'_applydiscaddons">Apply</button>';
+					else
+					markup+='														<button class="apply manual-disc-addonsapp" id="'+cLineId+'_'+LineId+'_N_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Product Primary Product Line")+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Product Classification")+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Product Detail")+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Product Class")+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Part Number")+'_'+scaddonStartPrice.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'_'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Sub-Type")+'_applydiscaddons">Apply</button>';
+					markup+='													</div>';
+					markup+='												</div>';
+					markup+=' 											</div>';
+					markup+='                                            <div class="SC-SO-Prod-addon-item-price" style="margin-right:20px">';
+					markup+=' 												 <input type="text" name="" class="small-input less-height quantitybox SC-disabled" id="'+cLineId+'" value="'+outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Quantity Requested")+'">';
+					markup+='                                            </div>';
+					markup+='                                            <div class="SC-SO-Prod-addon-item-price">';
+					markup+='                                                <p>$'+scaddonStartPrice.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+					markup+='                                            </div>';
+					markup+='                                            <div class="SC-SO-Prod-addon-item-price" style="text-align: right;">';
+					markup+='                                                <p>$'+addonlinediscount.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+					markup+='                                            </div>';
+					markup+='                                            <div class="SC-SO-Prod-addon-item-price">';
+					markup+='                                                <p>$'+addonstartprice.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+					markup+='                                            </div>';
+					markup+='                                        </div>';
+				}
+				//SBOORLA: changed if condition for displaying the manual discount edit button
+				//if(((userposition=="DIRECT"||userposition=="ECOM"||userposition=="WHOLESALE"||userposition=="Wholesale"||userposition=="COMMERICAL"||userposition=="Commercial"||userposition=="CS"||userposition=="CSC")&&(outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In Progress"))||(revisable=='Y'&& localStorage.getItem('comingfrom')=="revise"&& (userposition=="DIRECT"||userposition=="ECOM"||userposition=="WHOLESALE"||userposition=="Wholesale"||userposition=="COMMERICAL"||userposition=="Commercial"||userposition=="CS"||userposition=="CSC"))){
+				/*if(((userposition!="STORE") && (outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")=="In Progress"))||(revisable=='Y'&& localStorage.getItem('comingfrom')=="revise"&& (userposition!="STORE"))){
+					markup+='                                        <div class="SC-SO-Prod-nrc-sub">';
+					markup+='                                              <div class="header-item">';
+					markup+='                                              	<div class="header-p-button">';
+					markup+='                                                <p class="item-title">DISCOUNTS</p>';
+					markup+='                                                <button class="item-button discount-btn" id="'+LineId+'">Edit</button>';
+					markup+='                                            </div>';
+					markup+='                                            <div class="p-item">';
+					if(outPS.GetChild(0).GetChild(pr).GetProperty("Discount Amount - Display")==""&&outPS.GetChild(0).GetChild(pr).GetProperty("Discount Percent")=="")
+						markup+='                                                <p id="manualdisc'+LineId+'">no discounts given</p>';
+					markup+='                                            </div>';
+					markup+='                                                <div class="product-discount-block manualblock'+LineId+'" style="display: none;">';
+					markup+='                                                    <select class="form-control SC-SO-item-box no-margin prod-discounts" id="prod-discounts'+LineId+'">';
+					markup+='                                                        <option value="" selected hidden>Manual discount reason</option>';
+					markup+='                                                        <option>Remove Manual Discount</option>';
+					for(var i=0;i<Lov1.length;i++){
+						markup+='                                                        <option>'+Lov1[i]+'</option>';
+					}
+					markup+='                                                    </select>';
+					markup+='                                                    <p class="discount-applied" id="applied-discount'+LineId+'">'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Manual Discount Reason")+'</p>';
+					markup+='                                                    <select class="form-control SC-SO-item-box no-margin SC-manual-discount" id="SC-manual-discount'+LineId+'">';
+					markup+='                                                        <option value="" selected hidden>% Manual discount</option>';
+					for(var i=0;i<Lov2.length;i++){
+						markup+='                                                        <option>'+Lov2[i]+'</option>';
+					}
+					markup+='                                                    </select>';
+					markup+='                                                    <p class="discount-applied-percentage" id="discount-percentage'+LineId+'">'+outPS.GetChild(0).GetChild(pr).GetProperty("Discount Percent")+'</p>';
+					markup+='                                                    <p class="discount-amount">Manual discount amount</p>';
+					markup+='                                                    <input type="text" class="discountammount" name="" id="discountammount'+LineId+'" value="'+outPS.GetChild(0).GetChild(pr).GetProperty("Discount Amount - Display")+'">';
+					markup+='                                                    <div class="dropdown-button-container">';
+					markup+='                                                        <button class="cancel CancelDisc">Cancel</button>';
+					markup+='                                                        <button class="apply Applydisc" id="'+LineId+'">Apply</button>';
+					markup+='                                                    </div>';
+					markup+='                                                </div>';
+					markup+='                                            </div>';
+					markup+='                                        </div>';
+				}*/
+				if(outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")=="MATTRESS"){
+					markup+='                                        <div class="SC-SO-Prod-nrc-sub">';
+					markup+='                                            <p class="no-margin add-font">NRC SUBTOTAL :</p>';
+					markup+='                                                <p class="no-margin add-font">$'+nrcsubtotal.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+					markup+='                                        </div>';
+				}
+				markup+='                                    </div>';
+				markup+='                                </div>';
+			}//if not promotion
+		
+		}//for loop of line items
+		markup+='                                <div class="SC-SO-total-block">';
+		markup+='                                    <div class="total-item">';
+		markup+='                                        <p class="no-margin">SUBTOTAL :</p>';
+		//markup+='                                        <p class="amount no-margin" id="bottotal">$'+Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")).toFixed(2)+'</p>';
+		//NGOLLA defect #758 Added code to Display thousands separator (comma ,)
+		markup+='                                        <p class="amount no-margin" id="bottotal">$'+(parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")).toFixed(2))-parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")).toFixed(2))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+		markup+='                                    </div>';
+		markup+='                                </div>';
+		markup+='                            </div>';
+		markup+='                        </div>';
+		markup+='                    </div>';
+		$('#scproductinfodiv').html(markup);
+		$('#SC-Cart-value').text(carttotalno);
+		if(carttotalno == 0)
+			$("#SC-validate-order").addClass("SC-disabled");
+		else
+			$("#SC-validate-order").removeClass("SC-disabled");
+	}
+	
+	function SCGetProfileAttr(profileAttrs){
+				var Custom_Service="",Input_BS="",Out_BS="";
+				Custom_Service = SiebelApp.S_App.GetService("SC Get Profile Attribute BS");
+				Input_BS = SiebelApp.S_App.NewPropertySet();
+				Out_BS = SiebelApp.S_App.NewPropertySet();
+				//scAttrNames = "SC Store User,MachineInfo,Login Name,SC Store Number";
+				Input_BS.SetProperty("ProfileAttrArray", profileAttrs);
+				Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+				var Child_BS = Out_BS.GetChild(0);
+				var BS_Data = Child_BS.GetProperty("OutPutArray");
+			if(BS_Data!="No Records"){
+					//var ResArray = new Array;
+					//ResArray = BS_Data;
+					scProfileAttr = JSON.parse(BS_Data);
+					
+			}
+		
+	}
+	function SCGetProfileAttrValue(profileAttr){
+		return scProfileAttr[profileAttr];
+	}
+		
+		
+ return SCOUIMarkups;
+   }()
+  );
+  return "SiebelApp.SC_OUI_Markups";
+ })
+}

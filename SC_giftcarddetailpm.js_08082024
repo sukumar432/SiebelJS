@@ -1,0 +1,209 @@
+
+window.parseResponse = function(data)
+{
+	console.log("parseResponse code"+ data);
+	if(data.i4go_response !== "SUCCESS"){ //Error in sending the data
+		console.log("parseResponse and received error code from Shift4 " +data.i4go_responsecode);
+		alert("Received Error from Shift4: " + data.i4go_responsetext);
+		var controls = window.PM.Get("GetControls");
+		$("#" + controls["Gift Card Balance"].GetInputName() + "_Ctrl").css('visibility', 'visible');		
+		return;
+	} else if(data.i4go_uniqueid){
+		if(window.PM.Get("GetGCBalanceFlag") == "Y")
+		{	
+			console.log("parseResponse");	
+			window.PM.ExecuteMethod("GET_GC_BALANCE", data);
+		}
+	}
+}
+
+if( typeof( SiebelAppFacade.GiftCardDetailPM ) === "undefined" ){
+
+    SiebelJS.Namespace( "SiebelAppFacade.GiftCardDetailPM" );
+	define("siebel/custom/SC_giftcarddetailpm", [], function() {
+		SiebelAppFacade.GiftCardDetailPM = ( function(){
+			var siebConsts  = SiebelJS.Dependency( "SiebelApp.Constants" );
+			function GiftCardDetailPM( proxy ){
+				SiebelAppFacade.GiftCardDetailPM.superclass.constructor.call( this, proxy );
+			}	
+			SiebelJS.Extend( GiftCardDetailPM, SiebelAppFacade.PresentationModel );
+			GiftCardDetailPM.prototype.Init = function(){
+				SiebelAppFacade.GiftCardDetailPM.superclass.Init.call( this );
+				window.PM = this; //Save reference to PM for later use (in window.parseResponse) after AJAX call.
+				var scChatuser=SiebelApp.S_App.GetProfileAttr("SC Chat User");
+				var scVoiceUser=theApplication().GetProfileAttr("SC Voice User");
+				var giftCardFlag=SiebelApp.S_App.GetProfileAttr("GiftCardFlag");
+				this.AddProperty( "SCStoreUser", SiebelApp.S_App.GetProfileAttr("SC Store User"));
+				this.AddProperty( "CalcGiftCardNumber", "" ); 
+				this.AddProperty( "CalcPIN", "" );
+				this.AddProperty( "PaymentsRowID", "" );
+				this.AddProperty( "sGiftCardNumber", "" );
+				this.AddProperty( "sGiftPin", "" );				
+				this.AddProperty( "GetGCBalanceFlag", "N" );
+				this.AddProperty( "AccountNumber", "" );
+				this.AddProperty( "SCOrderTotal", "" );
+				this.AddProperty( "PaymentMethod", "" );
+				//Start..Venkat R 11/19/2020 for Secure Payments
+				this.AddProperty("CaptureStatus","");
+				this.AddProperty("PaymentLink","");
+				this.AddProperty( "SCChatUser", scChatuser);
+				//End..Venkat R 11/19/2020 for Secure Payments
+				//Start: spatiban:21/1/20/ for Secure Payments
+				//this.AddMethod( "InvokeMethod",  PreInvokeMethod, { sequence : true, scope: this } );
+				
+					this.AddProperty( "SemaPhoneGCAccNum", "" );
+					this.AddProperty( "SemaPhoneGCpayType", "" );
+					this.AddProperty( "SemaPayGCId", "" );
+					this.AddProperty( "SemaPhoneGCpayCard", "" );
+					this.AddProperty( "SemaPhonepayCR", "" );
+					this.AddProperty( "SCVoicerUser",scVoiceUser);
+					if(scChatuser=="Y"){
+						var inPS  = SiebelApp.S_App.NewPropertySet();
+						var outPS = SiebelApp.S_App.NewPropertySet();
+						var Bservice="";
+						 Bservice = SiebelApp.S_App.GetService("Communications Client"); //get service
+						 outPS = Bservice.InvokeMethod("GetSelectedWorkItemInfo",inPS); //invoke the method
+						 var sCTIActivityId= outPS.GetChild(0).GetProperty("WorkObjectID");
+						 if(sCTIActivityId!="" && sCTIActivityId!="" && sCTIActivityId!=undefined && sCTIActivityId!="undefined"){
+							 this.AddProperty( "SCChatUser","N");
+							 this.AddProperty( "SCVoicerUser","Y");
+						 }
+					}
+				//End: spatiban:21/1/20/ for Secure Payments
+				this.AddMethod("GET_TOKEN",
+					function () {
+
+						var GiftCardType = this.Get("GiftCardType");
+						if (GiftCardType === 'GC') {
+							GiftCardType = 'YC';
+						}
+						
+						var myContent = {};
+						myContent['fuseaction'] = 'account.jsonpPostCardEntry';
+						myContent['i4Go_AccessBlock'] = window.i4goCode; //The value comes from the first call to https://access.shift4test.com
+						myContent['i4Go_CardType'] = GiftCardType;
+						myContent['i4Go_CardNumber'] = this.Get("CalcGiftCardNumber");
+						myContent['i4Go_CVV2Code'] = this.Get("CalcPIN");
+						myContent['i4Go_ExpirationMonth'] = '12';
+						myContent['i4Go_ExpirationYear'] = '25';						
+
+						$.ajax({
+						        url: window.i4goServer, //The value is from the first call to https://access.shift4test.com. Normally it is https://i4go01.shift4test.com or https://i4go02.shift4test.com
+						        type: 'GET',
+						        dataType: 'script',
+						        timeout: 25000,
+						        data: myContent,
+
+						        error: function(jqXHR, textStatus, errorThrown){
+						                alert("Error in tokenization: " + errorThrown);
+						        },
+						});
+
+					},
+					{scope:this}
+				);
+
+				this.AttachEventHandler("GETGCBALANCE_BUTTON_CLICK",
+					function() {
+						// perform PM processing of button
+						console.log("GetGCBalanceButtonClickinPM");
+    					window.i4goServer=SiebelApp.S_App.GetProfileAttr("i4go_server");
+    					window.i4goCode=SiebelApp.S_App.GetProfileAttr("i4go_code");
+						//venkat 12/2/2020 added for secure payment
+						if(window.PM.Get("SCChatUser") != "Y" && window.PM.Get("SCVoicerUser") != "Y" && giftCardFlag !="Y" )
+						{
+							this.ExecuteMethod("GET_TOKEN");
+						}
+						else if(window.PM.Get("SCChatUser") == "Y" || window.PM.Get("SCVoicerUser") == "Y" ||  giftCardFlag =="Y")
+						{
+							var inPS = SiebelApp.S_App.NewPropertySet();
+							var outPS = SiebelApp.S_App.NewPropertySet();
+							var service = SiebelApp.S_App.GetService("SC Shift4 Payment Auth Service");
+							if( service ){
+								inPS.SetProperty("i4go_Token",this.Get("AccountNumber"));
+								inPS.SetProperty("Row Id",this.Get("PaymentsRowID"));	
+								inPS.SetProperty("GiftCardNumber",  this.Get("sGiftCardNumber"));
+						        inPS.SetProperty("GiftPin",  this.Get("sGiftPin"));
+								service.InvokeMethod("GetGiftCardBalance", inPS, outPS);		            
+							}
+						}
+					}
+				);
+
+				this.AddMethod("GET_GC_BALANCE",
+				    function(data) {
+						//define a new propertyset and set appropriate input arguments
+					
+						var inPS = SiebelApp.S_App.NewPropertySet();
+						var outPS = SiebelApp.S_App.NewPropertySet();
+						var service = SiebelApp.S_App.GetService("SC Shift4 Payment Auth Service");
+						if( service ){
+							inPS.SetProperty("i4go_Token",data.i4go_uniqueid);
+							inPS.SetProperty("Row Id",this.Get("PaymentsRowID"));
+//Pavithra added for Adyen GC Get balance :
+                            
+                            inPS.SetProperty("GiftCardNumber",  this.Get("sGiftCardNumber"));
+						    inPS.SetProperty("GiftPin",  this.Get("sGiftPin"));
+						    inPS.SetProperty("Access_Token",this.Get("AccessToken"));
+						    outPS = service.InvokeMethod("GetGiftCardBalance", inPS);
+						    this.SetProperty("GiftCardBalance",outPS.GetChild(0).GetProperty("Balance_Amount"));
+						    this.SetProperty("sGiftCardNumber",outPS.GetChild(0).GetProperty("sGiftCardNumber"));							
+							service.InvokeMethod("GetGiftCardBalance", inPS, outPS);		            
+				        }
+				        //SiebelApp.S_App.uiStatus.Free(); //to remove the wait icon
+				    }, //end of function AUTHORIZE_PAYMENT_LINE
+				    {scope: this}
+				);
+				//Start: spatiban:21/1/20/ for Secure Payments
+				this.AddMethod("GCINVOKEDELETERCD",
+				    function(data) {
+						
+					var SemDelBservice = '',semDelinPS = '',semDeloutPS = '';
+						semDelinPS = SiebelApp.S_App.NewPropertySet();
+						semDeloutPS = SiebelApp.S_App.NewPropertySet();
+						semDelinPS.SetProperty("BO", "Order Entry");
+						semDelinPS.SetProperty("BC", "Payments");
+						var semapayId=this.Get("GetBusComp").GetFieldValue("Id");
+						semDelinPS.SetProperty("SearchSpecification", "[Id] = '" + semapayId + "'");
+						SemDelBservice = SiebelApp.S_App.GetService("SC Custom Query Simplified");
+						if(SemDelBservice)
+						semDeloutPS = SemDelBservice.InvokeMethod("DeleteRecord", semDelinPS);
+					
+				        
+				    }, //end of function GCINVOKEDELETERCD
+				    {scope: this}
+				);
+				this.AddMethod("UPDAESEMAPHONEGCTOKEN",
+				    function(data) {
+						var GiftCardType = this.Get("SemaPhoneGCpayType");
+						if (GiftCardType == 'YC') {
+							GiftCardType = 'GC';
+						}
+						var CRNumber="*#"+this.Get("SemaPhonepayCR");
+						var SemBservice = '',seminPS = '',semoutPS = '';
+						seminPS = SiebelApp.S_App.NewPropertySet();
+						seminPS = SiebelApp.S_App.NewPropertySet();
+						seminPS.SetProperty("BO", "Order Entry");
+						seminPS.SetProperty("BC", "Payments");
+						var Farray = ["Account Number", "SC Payment Status","SC Payment Type Code","SC Payment Link"];
+						//var Farray = ["Account Number"];
+						seminPS.SetProperty("FieldsArray", Farray);
+						var gvalue = [this.Get("SemaPhoneGCAccNum"), "In Progress",GiftCardType,CRNumber];
+						seminPS.SetProperty("ValuesArray", gvalue);
+						var semapayId=this.Get("GetBusComp").GetFieldValue("Id");
+						seminPS.SetProperty("SearchSpecification", "[Id] = '" + semapayId + "'");
+						SemBservice = SiebelApp.S_App.GetService("SC Custom Query Simplified");
+						if(SemBservice)
+						semoutPS = SemBservice.InvokeMethod("Insert", seminPS);
+						
+				    }, //end of function UPDAESEMAPHONETOKEN
+				    {scope: this}
+				);
+
+			};
+
+			return GiftCardDetailPM;
+		}());
+		return "SiebelAppFacade.GiftCardDetailPM";
+	});
+}

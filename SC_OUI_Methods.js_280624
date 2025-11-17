@@ -1,0 +1,1757 @@
+/*********************************************************************************************************
+Purpose: Added this following code for common method to use accross the Sales Efficiency Project
+Author: Siva ADDALA (SADDALA) : Created on 10 OCT 2017.
+**********************************************************************************************************/
+
+if (typeof(SiebelApp.SC_OUI_Methods) === "undefined") {
+
+ SiebelJS.Namespace("SiebelApp.SC_OUI_Methods");
+ define("siebel/custom/SelectComfort/SC_OUI_Methods", ["siebel/jqgridrenderer","siebel/custom/SelectComfort/SC_OUI_Markups"],
+  function () {
+   SiebelApp.SC_OUI_Methods = (function () {
+	var subTotal=0.00,poleTaxTotal=0.00,scLovValues=[],scProfileAttr=[];
+	var SCOUIMarkups = SiebelJS.Dependency("SiebelApp.SC_OUI_Markups");
+	var SiebelConstant = SiebelJS.Dependency("SiebelApp.Constants");
+	var SCOUIMethods=new SC_OUI_Methods();
+    function SC_OUI_Methods(pm) {}
+
+	SC_OUI_Methods.prototype.SCGetProfileAttr=function(profileAttrs){
+				var Custom_Service="",Input_BS="",Out_BS="";
+				scProfileAttr=[];
+				Custom_Service = SiebelApp.S_App.GetService("SC Get Profile Attribute BS");
+				Input_BS = SiebelApp.S_App.NewPropertySet();
+				Out_BS = SiebelApp.S_App.NewPropertySet();
+				//scAttrNames = "SC Store User,MachineInfo,Login Name,SC Store Number";
+				Input_BS.SetProperty("ProfileAttrArray", profileAttrs);
+				Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+				var Child_BS = Out_BS.GetChild(0);
+				var BS_Data = Child_BS.GetProperty("OutPutArray");
+			if(BS_Data!="No Records"){
+					//var ResArray = new Array;
+					//ResArray = BS_Data;
+					scProfileAttr = JSON.parse(BS_Data);
+					localStorage.setItem("ProfileAttr",JSON.stringify(scProfileAttr));
+
+			}
+
+	}
+	SC_OUI_Methods.prototype.SCGetProfileAttrValue=function(profileAttr){
+		scProfileAttr=localStorage.getItem("ProfileAttr");
+		scProfileAttr=JSON.parse(scProfileAttr);
+		return scProfileAttr[profileAttr];
+	}
+	//SHARATH: added below method for payment terminal UI.
+	SC_OUI_Methods.prototype.SCnGetDisplayTerminals= function(){
+			var isTerminalPresent = $('#SC-terminal-tile').css('display');
+			
+			if(isTerminalPresent == "none")
+			{
+					//Reset terminal list.
+					$('#terminal-list option').remove();
+					$('#terminal-list').append('<option class="SC-SO-Option" selected="selected">Select Terminal</option>');
+					
+					//Show popup.
+					$("#SC-add-terminal-tile").modal({
+									backdrop: 'static'
+								});
+					$("#SC-add-terminal-tile").css({
+					"display": "flex",
+					"justify-content": "center",
+					"align-items": "center"
+					});
+					$(".modal-backdrop").css('background', '#ffffff');
+					
+					//Retrieve terminal values and populate dropdown.
+					var tinPS="",toutPS="",tBservice="";
+					tinPS = SiebelApp.S_App.NewPropertySet();
+					toutPS = SiebelApp.S_App.NewPropertySet();
+					tBservice = SiebelApp.S_App.GetService("Workflow Process Manager");
+					var StoreNum = SiebelApp.S_App.GetProfileAttr('SC Store Number');
+					tinPS.SetProperty('ProcessName','SC Get Payment Terminals SNIP API WF');
+					tinPS.SetProperty('Store Id',StoreNum);
+					var terminalSet = "";
+					var ActiveTerminals = 0;
+					var optionsString = "";
+					if(tBservice)
+					toutPS = tBservice.InvokeMethod("RunProcess", tinPS);
+				
+					var childNum = toutPS.GetChild(0).GetChild(0).GetChild(0).GetChildCount();
+					if(childNum > 0)
+					{
+							 terminalSet = toutPS.GetChild(0).GetChild(0).GetChild(0).GetChild(0).GetChild(0).GetChild(0).GetChild(0);
+						
+							var terminalCount = terminalSet.GetChildCount();
+							
+							var terminalCounter = 0;
+							while(terminalCount > 0)
+							{
+								var termName = terminalSet.GetChild(terminalCounter).GetProperty('TerminalName');
+								var termId = terminalSet.GetChild(terminalCounter).GetProperty('TerminalId');
+								var termStatus = terminalSet.GetChild(terminalCounter).GetProperty('Active');
+								if(termStatus)
+								{
+									optionsString+='<option class="SC-SO-Option" term-id="'+termId+'">'+termName+ ' - '+termId+'</option>';
+									ActiveTerminals = ActiveTerminals + 1;
+								}
+								else
+								{
+									optionsString+='<option class="SC-SO-Option"  term-id="'+termId+'" disabled="disabled">'+termName+'</option>';
+								}
+								
+								terminalCounter = terminalCounter + 1;
+								terminalCount=terminalCount-1;
+							}
+					}
+					if(optionsString!="")
+					$('#terminal-list').append(optionsString);
+					else if(ActiveTerminals == 0 || optionsString == "")
+					$('#terminal-list').append('<option class="SC-SO-Option" term-id="No Terminal Available">No Terminal Available</option>');
+		
+			}
+
+			
+	}
+
+	SC_OUI_Methods.prototype.SCSetLoVs=function(scSrchSpec,scSortSpec){
+				var Custom_Service="",Input_BS="",Out_BS="",scAttrNames="";
+				scLovValues=[];
+				Custom_Service = SiebelApp.S_App.GetService("SC Get Profile Attribute BS");
+				Input_BS = SiebelApp.S_App.NewPropertySet();
+				Out_BS = SiebelApp.S_App.NewPropertySet();
+				//scSrchSpec[0]="[Type]= 'FS_ORDER_STATUS' and [Active] = 'Y' and [Name]='In Progress'";
+				//scSrchSpec[1]="[Type]= 'SAP_SO_HEADER_DELIV_BLOCK' and [Active] = 'Y'";
+				//scSortSpec[0]="";
+				//scSortSpec[1]="Order By";
+				Input_BS.SetProperty("LoVSearchSpecArray", scSrchSpec);
+				Input_BS.SetProperty("LoVSortSpecArray", scSortSpec);
+				Out_BS = Custom_Service.InvokeMethod("GetLovs", Input_BS);
+				var Child_BS = Out_BS.GetChild(0);
+				var BS_Data = Child_BS.GetProperty("OutPutArray");
+			if(BS_Data!="No Records"){
+					//var ResArray = new Array;
+					//ResArray = BS_Data;
+					scLovValues = JSON.parse(BS_Data);
+
+			}
+			for(var i=0;i<scSrchSpec.length;i++){
+				lovvalues=scLovValues[scSrchSpec[i]];
+				lovvalues=lovvalues.split("|");
+				scLovValues[scSrchSpec[i]]=lovvalues;
+			}
+
+	}
+	SC_OUI_Methods.prototype.SCGetLoVs=function(searchSpec){
+		return scLovValues[searchSpec];
+	}
+	SC_OUI_Methods.prototype.SCGetOrderProfileAttr=function(profileAttrs){
+				var Custom_Service="",Input_BS="",Out_BS="";
+				var scOrderProfileAttr=[];
+				Custom_Service = SiebelApp.S_App.GetService("SC Get Profile Attribute BS");
+				Input_BS = SiebelApp.S_App.NewPropertySet();
+				Out_BS = SiebelApp.S_App.NewPropertySet();
+				//scAttrNames = "SC Store User,MachineInfo,Login Name,SC Store Number";
+				Input_BS.SetProperty("ProfileAttrArray", profileAttrs);
+				Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+				var Child_BS = Out_BS.GetChild(0);
+				var BS_Data = Child_BS.GetProperty("OutPutArray");
+			if(BS_Data!="No Records"){
+					//var ResArray = new Array;
+					//ResArray = BS_Data;
+					scOrderProfileAttr = JSON.parse(BS_Data);
+					localStorage.setItem("ProfileAttr",JSON.stringify(scOrderProfileAttr));
+
+			}
+
+	}
+	SC_OUI_Methods.prototype.SCGetOrderProfileAttrValue=function(profileAttr){
+		scOrderProfileAttr=localStorage.getItem("ProfileAttr");
+		scOrderProfileAttr=JSON.parse(scOrderProfileAttr);
+		return scOrderProfileAttr[profileAttr];
+	}
+	
+	SC_OUI_Methods.prototype.SCSetOrderLoVs=function(scSrchSpec,scSortSpec){
+				var Custom_Service="",Input_BS="",Out_BS="",scAttrNames="";
+				var scOrderLovValues=[];
+				Custom_Service = SiebelApp.S_App.GetService("SC Get Profile Attribute BS");
+				Input_BS = SiebelApp.S_App.NewPropertySet();
+				Out_BS = SiebelApp.S_App.NewPropertySet();
+				Input_BS.SetProperty("LoVSearchSpecArray", scSrchSpec);
+				Input_BS.SetProperty("LoVSortSpecArray", scSortSpec);
+				Out_BS = Custom_Service.InvokeMethod("GetLovs", Input_BS);
+				var Child_BS = Out_BS.GetChild(0);
+				var BS_Data = Child_BS.GetProperty("OutPutArray");
+			if(BS_Data!="No Records"){
+
+					scOrderLovValues = JSON.parse(BS_Data);
+
+			}
+			for(var i=0;i<scSrchSpec.length;i++){
+				lovvalues=scOrderLovValues[scSrchSpec[i]];
+				lovvalues=lovvalues.split("|");
+				scOrderLovValues[scSrchSpec[i]]=lovvalues;
+			}
+			localStorage.setItem("SCLOVSOUI",JSON.stringify(scOrderLovValues));
+	}
+	SC_OUI_Methods.prototype.SCGetOrderLoVs=function(searchSpec){
+		scOrderLovValues=localStorage.getItem("SCLOVSOUI");
+		scOrderLovValues=JSON.parse(scOrderLovValues);
+		return scOrderLovValues[searchSpec];
+	}
+	//SPATIBAN:JUNE2019:custom logic to invoke UPT
+	SC_OUI_Methods.prototype.SCInvokeUPT=function(context){
+		var uptRecord = CCFMiscUtil_CreatePropSet();
+		var details = CCFMiscUtil_CreatePropSet();
+		uptRecord.SetType("UPT");
+		uptRecord.SetProperty("Object Type", "Application");
+		uptRecord.SetProperty("Object Name", "Siebel Universal Agent");
+		uptRecord.SetProperty("Event Name", "UPTClientScript");
+		//uptRecord.SetProperty("Event Sub name", "Test");
+		uptRecord.SetProperty("Event Source", "Client Script");
+		uptRecord.SetProperty("Event Context",context );
+		/*details.SetType("UPT Details");
+		details.SetProperty("Detail1", "Test UPT Value1");
+		details.SetProperty("Detail2", "Test UPT Value2");
+		uptRecord.AddChild(details);*/
+		SiebelApp.S_App.TriggerUPTEvent(uptRecord);
+	}
+
+		//Applet Search Method
+	SC_OUI_Methods.prototype.ExecuteListAppletFrame=function(l,FieldQueryPairSearch,appletName){
+
+		SiebelJS.Log(FieldQueryPairSearch);
+		SiebelJS.Log(appletName);
+		  var appletToBeQueried,
+		  view = SiebelApp.S_App.GetActiveView().GetAppletMap(),  //getting the applets Object in the view variable
+		  columnId = "",
+		  oProp = CCFMiscUtil_CreatePropSet(),
+		  QueryString = SiebelApp.S_App.GetRequestDefault(); // Creating Query string  Propsert set.This will hold all the field values for the search
+
+		  //Iterate over the Applet map and assign the Applet object to appletToBeQueried
+		  $.each(view,function (i,v)
+		  {
+		   if(i == appletName ){
+			appletToBeQueried = v;
+		   }
+		  });
+		  var listOfColumns = appletToBeQueried.GetPModel().Get("ListOfColumns"); //Get the list of columns in the List applet that has to be queried.
+
+		  //iterate over the column list
+		  $.each(listOfColumns,function(i,v)
+		  {
+		   $.each(FieldQueryPairSearch,function (inx,vlv) { //again iterate over FieldQueryPairSearch
+			if (v.control.GetDisplayName() == inx) //check if current iterated Applet list is the one in Field Query Pair.
+			{
+			 columnId = v.control.GetInputName(); //if so get the column ID eg. for column Id: S_1_2_3_4
+			 QueryString.SetProperty(columnId,vlv); // Set the column ID and Field value in this Object.
+			}
+		   });
+		  });
+
+		  QueryString.SetProperty(l.get("SWE_CMD_ARG"), l.get("SWE_CMD_INVOKE_METHOD_STR"));
+		  QueryString.SetProperty(l.get("SWE_METHOD_STR"), "ExecuteFrameQuery"); // This is the method that executes the List frame.
+		  QueryString.SetProperty(l.get("SWE_APPLET_STR"), appletName);
+		  QueryString.SetProperty(l.get("SWE_VIEW_ARG"), SiebelApp.S_App.GetActiveView().GetName());
+		  $("body").trigger('Custom.Start');
+		  SiebelApp.S_App.CallServer(QueryString, oProp, true, {
+		   async: true,
+		   cb: function(){
+			   $("body").trigger('Custom.End');
+		   },
+		   scope: this
+		  })
+		};
+
+
+
+
+
+			//Applet Search Method is false
+	SC_OUI_Methods.prototype.ExecuteListAppletFramesync=function(l,FieldQueryPairSearch,appletName){
+
+		SiebelJS.Log(FieldQueryPairSearch);
+		SiebelJS.Log(appletName);
+		  var appletToBeQueried,
+		  view = SiebelApp.S_App.GetActiveView().GetAppletMap(),  //getting the applets Object in the view variable
+		  columnId = "",
+		  oProp = CCFMiscUtil_CreatePropSet(),
+		  QueryString = SiebelApp.S_App.GetRequestDefault(); // Creating Query string  Propsert set.This will hold all the field values for the search
+
+		  //Iterate over the Applet map and assign the Applet object to appletToBeQueried
+		  $.each(view,function (i,v)
+		  {
+		   if(i == appletName )
+		   {
+			appletToBeQueried = v;
+		   }
+		  });
+		  var listOfColumns = appletToBeQueried.GetPModel().Get("ListOfColumns"); //Get the list of columns in the List applet that has to be queried.
+
+		  //iterate over the column list
+		  $.each(listOfColumns,function(i,v)
+		  {
+		   $.each(FieldQueryPairSearch,function (inx,vlv) { //again iterate over FieldQueryPairSearch
+			if (v.control.GetDisplayName() == inx) //check if current iterated Applet list is the one in Field Query Pair.
+			{
+			 columnId = v.control.GetInputName(); //if so get the column ID eg. for column Id: S_1_2_3_4
+			 QueryString.SetProperty(columnId,vlv); // Set the column ID and Field value in this Object.
+			}
+		   });
+		  });
+
+		  QueryString.SetProperty(l.get("SWE_CMD_ARG"), l.get("SWE_CMD_INVOKE_METHOD_STR"));
+		  QueryString.SetProperty(l.get("SWE_METHOD_STR"), "ExecuteFrameQuery"); // This is the method that executes the List frame.
+		  QueryString.SetProperty(l.get("SWE_APPLET_STR"), appletName);
+		  QueryString.SetProperty(l.get("SWE_VIEW_ARG"), SiebelApp.S_App.GetActiveView().GetName());
+		  $("body").trigger('Custom.Start');
+		  SiebelApp.S_App.CallServer(QueryString, oProp, true, {
+		   async: false,
+		   cb: function(){
+			   $("body").trigger('Custom.End');
+		   },
+		   scope: this
+		  })
+		};
+
+
+		//this method is responsible for showing buttons on the UI and perform the pagination
+		SC_OUI_Methods.prototype.PrimaryButton=function(pm,concat){
+			var appletid=pm.Get("GetFullId");
+			var markup="";
+			if(pm.Get("GetRecordSet").length>=10){
+			markup+='                        <li id="First'+appletid+'"><img src="images/custom/previous-set.png" /></li>';
+			markup+='                        <li id="Prev'+appletid+'"><img src="images/custom/previous.png" /></li>';
+			markup+='                        <li id="Next'+appletid+'"><img src="images/custom/next.png" /></li>';
+			markup+='                        <li id="Last'+appletid+'"><img src="images/custom/next-set.png" /></li>';
+			}
+			$("#"+concat).html(markup);	//return markup and get it in applet
+
+			$("#Last"+appletid).click(function(){
+				 pm.ExecuteMethod("InvokeMethod","GotoLastSet",null,false);
+				 if(SiebelApp.S_App.GetActiveView().GetName()=="SC Account 360 View OUI"){
+				 SCOUIMarkups.Sorting_Contacts();SCOUIMarkups.Sorting_Attachments();SCOUIMarkups.Sorting_Orders();
+				 }
+			});
+			$("#Next"+appletid).click(function(){
+				 pm.ExecuteMethod("InvokeMethod","GotoNextSet",null,false);
+				 //$("#"+appletid+" .ui-icon-seek-end").trigger("click");
+					if(SiebelApp.S_App.GetActiveView().GetName()=="SC Account 360 View OUI"){
+					SCOUIMarkups.Sorting_Contacts();SCOUIMarkups.Sorting_Attachments();SCOUIMarkups.Sorting_Orders();
+					}
+			});
+			$("#Prev"+appletid).click(function(){
+				 pm.ExecuteMethod("InvokeMethod","GotoPreviousSet",null,false);
+				 //$("#"+appletid+" .ui-icon-seek-first").trigger("click");
+				if(SiebelApp.S_App.GetActiveView().GetName()=="SC Account 360 View OUI"){
+				SCOUIMarkups.Sorting_Contacts();SCOUIMarkups.Sorting_Attachments();SCOUIMarkups.Sorting_Orders();
+				}
+			});
+			$("#First"+appletid).click(function(){
+				 pm.ExecuteMethod("InvokeMethod","GotoFirstSet",null,false);
+				 if(SiebelApp.S_App.GetActiveView().GetName()=="SC Account 360 View OUI"){
+				 SCOUIMarkups.Sorting_Contacts();SCOUIMarkups.Sorting_Attachments();SCOUIMarkups.Sorting_Orders();
+				 }
+			});
+
+			//method to supress alerts on pagination
+			(function(proxied) {
+			  window.alert = function() {
+				if((arguments[0].includes("Method GotoLastSet is not allowed here"))||(arguments[0].includes("Method GotoFirstSet is not allowed here"))||(arguments[0].includes("Method GotoNextSet is not allowed here"))||(arguments[0].includes("Method GotoPreviousSet is not allowed here")))
+				{}
+				else
+				return proxied.apply(this, arguments);
+			  };
+			})(window.alert);
+		};
+
+
+		//this method is responsible for showing buttons on the UI and perform the 5 records pagination
+		SC_OUI_Methods.prototype.MiniPagination=function(pm,concat){
+			var appletid=pm.Get("GetFullId");
+			SiebelJS.Log("AppletID:"+appletid);
+			var markup="";
+			if(pm.Get("GetRecordSet").length>=5){
+			markup+='                        <li id="First'+appletid+'"><img src="images/custom/previous-set.png" /></li>';
+			markup+='                        <li id="Prev'+appletid+'"><img src="images/custom/previous.png" /></li>';
+			markup+='                        <li id="Next'+appletid+'"><img src="images/custom/next.png" /></li>';
+			markup+='                        <li id="Last'+appletid+'"><img src="images/custom/next-set.png" /></li>';
+			}
+			$("#"+concat).html(markup);	//return markup and get it in applet
+
+			$("#Last"+appletid).click(function(){
+				 pm.ExecuteMethod("InvokeMethod","GotoLastSet",null,false);
+			});
+			$("#Next"+appletid).click(function(){
+				 pm.ExecuteMethod("InvokeMethod","GotoNextSet",null,false);
+				 //$("#"+appletid+" .ui-icon-seek-end").trigger("click");
+					SiebelJS.Log("In last page");
+			});
+			$("#Prev"+appletid).click(function(){
+				 pm.ExecuteMethod("InvokeMethod","GotoPreviousSet",null,false);
+				 //$("#"+appletid+" .ui-icon-seek-first").trigger("click");
+				SiebelJS.Log("In last page");
+			});
+			$("#First"+appletid).click(function(){
+				 pm.ExecuteMethod("InvokeMethod","GotoFirstSet",null,false);
+			});
+
+			//method to supress alerts on pagination
+			(function(proxied) {
+			  window.alert = function() {
+				if((arguments[0].includes("Method GotoLastSet is not allowed here"))||(arguments[0].includes("Method GotoFirstSet is not allowed here")))
+				{SiebelJS.Log("supressed");}
+				else
+				return proxied.apply(this, arguments);
+			  };
+			})(window.alert);
+		};
+
+
+		//Start: Hiding Employee code if its an alpha-numeric
+
+			SC_OUI_Methods.prototype.Hide_EmployeeCode=function(EmployeeId){
+				var empNumb = $('#'+EmployeeId).val();
+				var isNumber = new RegExp('/^\d+$/').test(empNumb);
+				if(isNumber){}
+				else{
+					$("#cd-Employee-Number").val("");
+				}
+
+			};
+		//End: Hiding Employee code if its an alpha-numeric
+
+
+		//Start: Sort Records
+			SC_OUI_Methods.prototype.SortRecords=function(pm,sortField,sortOrder){
+			var inp = theApplication().NewPropertySet();
+			  inp.SetProperty("SWEMethod", sortOrder);
+			  inp.SetProperty("SWEField", sortField);
+			  pm.ExecuteMethod("InvokeMethod",sortOrder,inp,{
+			   async: false,
+			   cb: function() {
+				 $("body").trigger('Custom.End');
+			   },
+			   scope: this
+			});
+		}
+		//End: Sort Records
+		
+		//Start: All Sales Order view Pilot
+		SC_OUI_Methods.prototype.AllSalesOrderPilot = function(){
+			var sStoreNum = SCOUIMethods.SCGetProfileAttrValue('SC Store Number');
+			var sDivSubType = SCOUIMethods.SCGetProfileAttrValue("SC Primary Division Sub Type");
+			var strDivType = SCOUIMethods.SCGetProfileAttrValue("SC Primary Division Type");
+			var bIsAllSalesPilot = '';
+			var InPS = '',
+				OutPS = '',
+				sOrderId = '',
+				BService = '';
+			InPS = SiebelApp.S_App.NewPropertySet();
+			OutPS = SiebelApp.S_App.NewPropertySet();
+			Bservice = SiebelApp.S_App.GetService("SC Check LOV Values"); //get service
+			var sSearchSpec = "[Name] = '" + sStoreNum + "' AND [Type] = 'SC_ALL_SALES_PILOT' AND [Active] = 'Y'";
+			InPS.SetProperty("searchExpr", sSearchSpec);
+			OutPS = Bservice.InvokeMethod("CheckLovValues", InPS);
+			var child = OutPS.GetChild(0);
+			var bIsStorePresent = child.GetProperty("ISRecordFlag");
+			
+			
+			InPS = SiebelApp.S_App.NewPropertySet();
+			OutPS = SiebelApp.S_App.NewPropertySet();
+			Bservice = SiebelApp.S_App.GetService("SC Check LOV Values"); //get service
+			var sSearchSpec = "[Name] = '" + strDivType + "-" + sDivSubType + "' AND [Type] = 'SC_ALL_SALES_PILOT' AND [Active] = 'Y'";
+			InPS.SetProperty("searchExpr", sSearchSpec);
+			OutPS = Bservice.InvokeMethod("CheckLovValues", InPS);
+			var child = OutPS.GetChild(0);
+			var bIsDivPresent = child.GetProperty("ISRecordFlag");
+			if (bIsStorePresent == "Y" || bIsDivPresent == "Y") {
+				bIsAllSalesPilot = "Y";
+			}else{
+				bIsAllSalesPilot = "N";
+			}
+			return bIsAllSalesPilot;
+		}
+		//End: All Sales Order view Pilot
+
+		//Start: Changing phone number to US Format
+			SC_OUI_Methods.prototype.PH_USFormat=function(Phoneno){
+				$(document).on('focusout','#'+Phoneno,function() {
+					var phNumb = $(this).val();
+					if(phNumb != '' && phNumb.match(/^\d+$/) && phNumb.length == 10)
+					{
+						var USFormt_PhNum  = "("+phNumb.substring(0,phNumb.length-7)+") "+phNumb.substring(3,phNumb.length-4)+"-"+phNumb.substring(6,phNumb.length);
+						$(this).val(USFormt_PhNum);
+					}
+					if ($(this).val() === "")
+						$(this).parent().removeClass("is-completed");
+					$(this).parent().removeClass("is-active");
+
+				});
+			};
+		//End: Changing phone number to US Format
+
+		//Start: Save phone number to US Format
+		SC_OUI_Methods.prototype.PH_USFormat_Save=function(id,mblNumb){
+			if(mblNumb != ''){
+				var USFormt_mblNum  =''; USFormt_mblNum = "("+mblNumb.substring(0,mblNumb.length-7)+") "+mblNumb.substring(3,mblNumb.length-4)+"-"+mblNumb.substring(6,mblNumb.length);
+				$("#"+id).val(USFormt_mblNum);
+			}
+			else{
+				$("#"+id).val(mblNumb);
+			}
+		};
+		SC_OUI_Methods.prototype.verifyUserLocation=function(disaflag,posRegArray){
+			var storenumber="",storeuser="",salelocationnumber="",UserStoreNumber="";
+			var mystoreNumber="",scLocalProfile="";
+			scLocalProfile=localStorage.getItem("ProfileAttr");
+			scLocalProfile=JSON.parse(scLocalProfile);
+			salelocationnumber= SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Location Store Number");
+			//storenumber=SiebelApp.S_App.GetProfileAttr("MachineInfo");
+			storenumber=scLocalProfile["MachineInfo"];
+			//storeuser=SiebelApp.S_App.GetProfileAttr("SC Store User");
+			storeuser=scLocalProfile["SC Store User"];
+			//mystoreNumber = SiebelApp.S_App.GetProfileAttr("SC Store Number");
+			mystoreNumber = scLocalProfile["SC Store Number"];
+			UserStoreNumber=scLocalProfile["SC Store Name OUI"];
+			//NTHARRE: 29-APR-2021:Added for Chat users
+			var SCOrderSalelocation= SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sale Location");
+            var storeinfo  = scLocalProfile["SC Primary Division Name"];
+				storeinfo = storeinfo.replace(/'$/, "");
+				storeinfo = storeinfo.replace(/^\'/, "");
+			if(storenumber!=""&&storenumber!=undefined){
+			storenumber=storenumber.split('_');
+			storenumber=storenumber[0];
+			}
+			//start:code for if disa is not installed verfying user location with order sale location
+			else {
+				if(salelocationnumber!=mystoreNumber && storeuser == "Y" && UserStoreNumber !=""){
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Change","Y");
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+						$("#SC-SO-CF-verify").modal('hide');
+						$("#SC-SO-CF-verify").css({
+							"display": "",
+							"justify-content": "",
+							"align-items": ""
+						});
+						$("#SC-SO-store-location").modal({
+							backdrop: 'static'
+						});
+						$("#SC-order-location-text").text("The Order Sale Location does not match User Location, click ‘Yes’ to auto-update Order Sale Location.");
+						$("#SC-SO-store-location").css({
+							"display": "flex",
+							"justify-content": "center",
+							"align-items": "center"
+						});
+						$(".modal-backdrop").css('background', '#ffffff');
+						return 1;
+				}
+				//else if(storeuser == "N" && salelocationnumber!=UserStoreNumber){
+				else if(storeuser == "N" && salelocationnumber!=UserStoreNumber && UserStoreNumber != ""){
+						//SPATIBAN:MAY2019 Release:Added below code for checking the order sale location with user location for non store users.
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Change","Y");
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+						$("#SC-SO-CF-verify").modal('hide');
+						$("#SC-SO-CF-verify").css({
+							"display": "",
+							"justify-content": "",
+							"align-items": ""
+						});
+						$("#SC-SO-store-location").modal({
+							backdrop: 'static'
+						});
+						$("#SC-order-location-text").text("The Order Sale Location does not match User Location, click ‘Yes’ to auto-update Order Sale Location.");
+						$("#SC-SO-store-location").css({
+							"display": "flex",
+							"justify-content": "center",
+							"align-items": "center"
+						});
+						$(".modal-backdrop").css('background', '#ffffff');
+						return 1;
+				}
+				//NTHARRE:03-MAY-2021:Added below code for STRY0109546
+				else if(storeuser == "N" && SCOrderSalelocation != storeinfo){
+					SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Change","Y");
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+						$("#SC-SO-CF-verify").modal('hide');
+						$("#SC-SO-CF-verify").css({
+							"display": "",
+							"justify-content": "",
+							"align-items": ""
+						});
+						$("#SC-SO-store-location").modal({
+							backdrop: 'static'
+						});
+						$("#SC-order-location-text").text("The Order Sale Location does not match User Location, click ‘Yes’ to auto-update Order Sale Location.");
+						$("#SC-SO-store-location").css({
+							"display": "flex",
+							"justify-content": "center",
+							"align-items": "center"
+						});
+						$(".modal-backdrop").css('background', '#ffffff');
+						return 1;
+				}
+				else
+				return 2;
+			}
+			//end:code for if disa is not installed verfying user location with order sale location
+			if(disaflag=="Y"&&storeuser=="Y" && UserStoreNumber != ""){
+				if(mystoreNumber==storenumber){
+					if(salelocationnumber!=mystoreNumber){
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Change","Y");
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+						$("#SC-SO-CF-verify").modal('hide');
+						$("#SC-SO-CF-verify").css({
+							"display": "",
+							"justify-content": "",
+							"align-items": ""
+						});
+						$("#SC-SO-store-location").modal({
+							backdrop: 'static'
+						});
+						$("#SC-SO-store-location").css({
+							"display": "flex",
+							"justify-content": "center",
+							"align-items": "center"
+						});
+						$(".modal-backdrop").css('background', '#ffffff');
+						return 1;
+					}
+					else
+						return 2;
+				}
+				else if(posRegArray.indexOf(storenumber)!=-1){
+					if(salelocationnumber!=mystoreNumber){
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Change","Y");
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+						$("#SC-SO-CF-verify").modal('hide');
+						$("#SC-SO-CF-verify").css({
+							"display": "",
+							"justify-content": "",
+							"align-items": ""
+						});
+						$("#SC-SO-store-location").modal({
+							backdrop: 'static'
+						});
+						$("#SC-SO-store-location").css({
+							"display": "flex",
+							"justify-content": "center",
+							"align-items": "center"
+						});
+						$(".modal-backdrop").css('background', '#ffffff');
+						return 1;
+					}
+					else
+						return 2;
+				}
+				else{
+					$("#SC-SO-CF-verify").modal('hide');
+					$("#SC-SO-CF-verify").css({
+						"display": "",
+						"justify-content": "",
+						"align-items": ""
+					});
+					$("#SC-SO-my-store").modal({
+					backdrop: 'static'
+					});
+					$("#SC-SO-my-store").css({
+					"display": "flex",
+					"justify-content": "center",
+					"align-items": "center"
+					});
+					$(".modal-backdrop").css('background', '#ffffff');
+				return 0;
+				}
+			}
+			//else if(storeuser == "N" && salelocationnumber!=UserStoreNumber){
+			else if(storeuser == "N" && salelocationnumber!=UserStoreNumber && UserStoreNumber != ""){
+						//SPATIBAN:MAY2019 Release:Added below code for checking the order sale location with user location for non store users.
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Change","Y");
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+						$("#SC-SO-CF-verify").modal('hide');
+						$("#SC-SO-CF-verify").css({
+							"display": "",
+							"justify-content": "",
+							"align-items": ""
+						});
+						$("#SC-SO-store-location").modal({
+							backdrop: 'static'
+						});
+						$("#SC-order-location-text").text("The Order Sale Location does not match User Location, click ‘Yes’ to auto-update Order Sale Location.");
+						$("#SC-SO-store-location").css({
+							"display": "flex",
+							"justify-content": "center",
+							"align-items": "center"
+						});
+						$(".modal-backdrop").css('background', '#ffffff');
+						return 1;
+			}
+			//NTHARRE:03-MAY-2021:Added below code for STRY0109546
+			else if(storeuser == "N" && SCOrderSalelocation != storeinfo){
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Change","Y");
+					SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+					$("#SC-SO-CF-verify").modal('hide');
+					$("#SC-SO-CF-verify").css({
+						"display": "",
+						"justify-content": "",
+						"align-items": ""
+					});
+					$("#SC-SO-store-location").modal({
+						backdrop: 'static'
+					});
+					$("#SC-order-location-text").text("The Order Sale Location does not match User Location, click ‘Yes’ to auto-update Order Sale Location.");
+					$("#SC-SO-store-location").css({
+						"display": "flex",
+						"justify-content": "center",
+						"align-items": "center"
+					});
+					$(".modal-backdrop").css('background', '#ffffff');
+					return 1;
+			}
+			else{
+				return 2;
+			}
+		}
+		//to get LOVs with splitting
+		SC_OUI_Methods.prototype.GetLOVs=function(SearchExpr,SortSpec){
+				var Custom_Q_Service = SiebelApp.S_App.GetService("SC Custom Query Simplified");
+				var InputProp= '', OutputProp='', Child_Out = '',lovBS_Data = '',lovArray = '',lovValue = '';
+				InputProp=SiebelApp.S_App.NewPropertySet();
+				OutputProp = SiebelApp.S_App.NewPropertySet();
+
+				InputProp.SetProperty("SearchExpr", SearchExpr);
+				if(SortSpec != '')
+					InputProp.SetProperty("SortSpec", SortSpec);
+
+				OutputProp = Custom_Q_Service.InvokeMethod("GetLOVs",InputProp);
+
+				Child_Out=OutputProp.GetChild(0);
+				lovBS_Data=Child_Out.GetProperty("LOV_List");
+
+				lovArray = new Array;
+				lovArray = lovBS_Data.split("|");
+
+			return lovArray;
+		};
+
+		//to get LOVs without splitting
+		SC_OUI_Methods.prototype.GetLOVs2=function(SearchExpr,SortSpec){
+				var Custom_Q_Service = SiebelApp.S_App.GetService("SC Custom Query Simplified");
+				var InputProp= '', OutputProp='', Child_Out = '',lovBS_Data = '',lovArray = '',lovValue = '';
+				InputProp=SiebelApp.S_App.NewPropertySet();
+				OutputProp = SiebelApp.S_App.NewPropertySet();
+
+				InputProp.SetProperty("SearchExpr", SearchExpr);
+				if(SortSpec != '')
+					InputProp.SetProperty("SortSpec", SortSpec);
+
+				OutputProp = Custom_Q_Service.InvokeMethod("GetLOVs",InputProp);
+
+				Child_Out=OutputProp.GetChild(0);
+				lovBS_Data=Child_Out.GetProperty("LOV_List");
+
+			return lovBS_Data;
+
+		};
+
+		//to get the store name
+		SC_OUI_Methods.prototype.StoreName=function(LoginId){
+		 var Bservice1 = '',inPS1 = '', outPS1 = '';
+		 inPS1  = SiebelApp.S_App.NewPropertySet();
+		 outPS1 = SiebelApp.S_App.NewPropertySet();
+		 inPS1.SetProperty("BusObj","Employee");
+		 inPS1.SetProperty("BusComp","Employee");
+		 inPS1.SetProperty("Login Name",LoginId);
+		 inPS1.SetProperty("QueryFields","Login Name");
+		 inPS1.SetProperty("ValueFields","SC Current Location");
+		 Bservice1 = SiebelApp.S_App.GetService("Inbound E-mail Database Operations");
+		 var output = Bservice1.InvokeMethod("FindRecord",inPS1);
+		 var child_Series = output.GetChild(0);
+		 //theApplication().SetProfileAttr("SC Store Name OUI", child_Series.GetProperty("SC Current Location"));
+		 return child_Series.GetProperty("SC Current Location");
+		};
+
+		//to set the store name
+		SC_OUI_Methods.prototype.SetStore=function(selectstoreid){
+			var scLocalProfilAttr="";
+			scLocalProfilAttr=localStorage.getItem("ProfileAttr");
+			scLocalProfilAttr=JSON.parse(scLocalProfilAttr);
+			var InPS = SiebelApp.S_App.NewPropertySet();
+			var OutPS = SiebelApp.S_App.NewPropertySet();
+			InPS.SetProperty("Login",scLocalProfilAttr["Login Name"]);
+			InPS.SetProperty("Location",selectstoreid);
+			var Service = SiebelApp.S_App.GetService("SC UpdateStores");
+			Service.InvokeMethod("SetStores", InPS);
+		};
+
+		// Code for about record popup logic
+		SC_OUI_Methods.prototype.AboutRecord=function(ActiveApplet){
+			//RCHATHAR: Modified for defect number=653
+			if(ActiveApplet == "SC Order Entry - Line Item List Applet (Sales) OUI")
+			{
+				SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[ActiveApplet]);
+				var InPS = SiebelApp.S_App.NewPropertySet();
+				var OutPS = SiebelApp.S_App.NewPropertySet();
+				InPS.SetProperty("Applet Mode","2:Edit");
+				InPS.SetProperty("Applet Name","About Record Applet");
+				var Service = SiebelApp.S_App.GetService("SLM Save List Service");
+				OutPS= Service.InvokeMethod("LoadPopupApplet",InPS);
+			}
+			else
+			{
+				$(document).on('click','#Button',function() {
+					SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[ActiveApplet]);
+					var InPS = SiebelApp.S_App.NewPropertySet();
+					var OutPS = SiebelApp.S_App.NewPropertySet();
+					InPS.SetProperty("Applet Mode","2:Edit");
+					InPS.SetProperty("Applet Name","About Record Applet");
+					var Service = SiebelApp.S_App.GetService("SLM Save List Service");
+					OutPS= Service.InvokeMethod("LoadPopupApplet",InPS);
+				});
+			}
+		};
+
+		//code for DISA open Cash Drawer
+		SC_OUI_Methods.prototype.OpenCashDrawer=function(message){
+			var siebConsts  = SiebelJS.Dependency( "SiebelApp.Constants" );
+			var DISA_PLUGIN = "plugin_cashdrawer";
+			siebConsts.set("WS_"+DISA_PLUGIN.toUpperCase()+"_VERSION", "1.0.0");
+			var DISAHandler = null,alertFirstTime="Y";
+			var attachedHandlers = 0;
+			// Increase the number of attached handlers
+			attachedHandlers++;
+			console.log("before  handler");
+			callDISAPlugin();
+			function callDISAPlugin() {
+				console.log("Calling DISA PLUGIN with : ");
+				//console.log(myContent);
+				var handler = getDISAHandler.call(this);
+				// here we create an object containing data which the Java application will read.
+				// Neither "Command", nor "GetSysInfo" are DISA specific.
+				// The shape and content of the message is entirely up to the developer.
+				var msgJSON = {};
+				msgJSON["Command"] = "Ready";
+				handler.SendMessage(msgJSON);
+			}
+			//DISA Handler
+			function getDISAHandler() {
+				if (DISAHandler === null) {
+					(function(proxied) {
+						  window.alert = function() {
+							if(arguments[0].includes("Failed to connect to Desktop Integration Siebel Agent on your machine"))
+							{
+							}
+							else
+							return proxied.apply(this, arguments);
+						  };
+						})(window.alert);
+					DISAHandler = SiebelApp.WebSocketManager.CreateWSHandler(DISA_PLUGIN);
+					// communications with DISA are asynchronous. We define handler functions here to deal with
+					// possible responses from DISA, such as a message or communication failure conditions.
+					DISAHandler.OnMessage = onWSMessage.bind(this);
+					DISAHandler.OnFail = onWSSendFail.bind(this);
+					DISAHandler.OnClose = onWSClose.bind(this);
+				}
+			return DISAHandler;
+			}
+			function onWSMessage(msg) {
+				// this is the result of callDISAPlugin if all goes well
+				handleMsg.call(this,msg);
+
+			}
+			// Normally this indicates something wrong with communication attempt to operator at DISA
+			// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+			// Maybe because the version number at two sides are not matched, operator version should be equal or newer
+			// Reset state or other variables if necessary
+			function onWSSendFail() {
+			 handleException("Failed to send message to DISA");
+			}
+			// This indicates Siebel OpenUI with DISA connection was lost
+			// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+			// Maybe because DISA exited (by user) or crashed
+			// Reset state or other variables if necessary
+			function onWSClose() {
+			 handleException("Connection to DISA was lost");
+			}
+			// Called by onWSMessage event handler
+			function handleMsg(msg) {
+				// Log the message received
+				console.log("JSON message received: " + JSON.stringify(msg));
+				// Pass the message to the PR
+				//console.log("DISAResponse", msg);
+			}
+
+			// Called by onWSClose or onWSSendFail event handler
+			function handleException(msg) {
+			// Add other error handling logic
+			//console.log("Handle Exception" + msg);
+				if(alertFirstTime=="Y"){
+					alertFirstTime="N";
+					alert("There is an issue with the software that opens your cash drawer (DISA). Please contact the Service Desk.");
+				}
+			}
+	};
+	//code for Pole Display
+	SC_OUI_Methods.prototype.PoleDisplay=function(poleInfo,payments){
+			var DISA_POLEDISPLAY = "plugin_poledisplay";
+			var consts = SiebelJS.Dependency("SiebelApp.Constants");
+            consts.set("WS_" + DISA_POLEDISPLAY.toUpperCase() + "_VERSION", "1.0.0");
+			var DISAHandler = null;
+			//subTotal=subTotal.toFixed(2);
+			callPoleDisplay(poleInfo);
+			function callPoleDisplay(poleInfo) {
+				console.log("Calling DISA Pole Display PLUGIN with : ");
+				var poleHandler = getDISAHandler.call(this);
+				 // here we create an object containing data which the Java application will read.
+				 // Neither "Command", nor "GetSysInfo" are DISA specific.
+				 // The shape and content of the message is entirely up to the developer.
+				var msgJSON = {};
+				//msgJSON["Command"] = "Ready";
+				if(payments=="Y")
+				msgJSON=getOrderTotal();
+				if(payments=="N")
+				msgJSON = getLinedetails(poleInfo);
+				if(payments=="P")
+				msgJSON = nulliflyPole(poleInfo);
+				poleHandler.SendMessage(msgJSON);
+				 // the message is sent asychronously, so once the command is sent, nothing further happens
+				 // within the PR/PM until a message is received.
+			}
+			function getDISAHandler() {
+				 if (DISAHandler === null) {
+				 (function(proxied) {
+					  window.alert = function() {
+						if(arguments[0].includes("Failed to connect to Desktop Integration Siebel Agent on your machine"))
+						{
+						}
+						else
+						return proxied.apply(this, arguments);
+					  };
+					})(window.alert);
+				  DISAHandler = SiebelApp.WebSocketManager.CreateWSHandler(DISA_POLEDISPLAY);
+				 // communications with DISA are asynchronous. We define handler functions here to deal with
+				 // possible responses from DISA, such as a message or communication failure conditions.
+				  DISAHandler.OnMessage = onWSMessage.bind(this);
+				  DISAHandler.OnFail = onWSSendFail.bind(this);
+				  DISAHandler.OnClose = onWSClose.bind(this);
+				 }
+				 return DISAHandler;
+			}
+
+			function getLinedetails(poleInfo) {
+				poleTaxTotal=poleTaxTotal.toFixed(2);
+				subTotal=subTotal.toFixed(2);
+					poleInfo.push({
+							"Command" : "Ready",
+							"SubTotal"  : subTotal,
+							"Tax"     : poleTaxTotal
+						});
+					SiebelJS.Log(JSON.stringify(poleInfo));
+					var poleData = {};
+					poleData["PoleDisplay"] = poleInfo;
+					SiebelJS.Log(JSON.stringify(poleData));
+					//SiebelApp.S_App.LogOff();
+					return poleData;
+            }
+			function getOrderTotal() {
+				var ordertotal=$("#ordertotal").text();
+				ordertotal=ordertotal.replace(/[$,]/g,"");
+				poleInfo = [];
+				poleInfo.push({
+						"Command" : "Ready",
+						"Total"  : ordertotal
+						});
+					SiebelJS.Log(JSON.stringify(poleInfo));
+					var poleData = {};
+					poleData["PoleDisplay"] = poleInfo;
+					SiebelJS.Log(JSON.stringify(poleData));
+					//SiebelApp.S_App.LogOff();
+					return poleData;
+            }
+			function nulliflyPole(poleInfo) {
+				poleInfo = [];
+				poleInfo.push({
+						"Command" : "Ready",
+				});
+					SiebelJS.Log(JSON.stringify(poleInfo));
+					var poleData = {};
+					poleData["PoleDisplay"] = poleInfo;
+					SiebelJS.Log(JSON.stringify(poleData));
+					//SiebelApp.S_App.LogOff();
+					return poleData;
+            }
+			function onWSMessage(msg) {
+				 // this is the result of callDISAPlugin if all goes well
+				  handleMsg.call(this,msg);
+			}
+			// Normally this indicates something wrong with communication attempt to operator at DISA
+			// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+			// Maybe because the version number at two sides are not matched, operator version should be equal or newer
+			// Reset state or other variables if necessary
+			function onWSSendFail() {
+				handleException("Failed to send message to DISA");
+			}
+			// This indicates Siebel OpenUI with DISA connection was lost
+			// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+			// Maybe because DISA exited (by user) or crashed
+			// Reset state or other variables if necessary
+			function onWSClose() {
+				handleException("Connection to DISA was lost");
+			}
+
+			// Called by onWSMessage event handler
+			function handleMsg(msg) {
+				// Log the message received
+				console.log("JSON message received: " + JSON.stringify(msg) + "");
+			}
+
+			// Called by onWSClose or onWSSendFail event handler
+			function handleException(msg) {
+				//Add other error handling logic
+				console.log("Handle Exception" + msg);
+				//alert("Handle Exception" + msg);
+			}
+
+	};
+
+		//DISA AutoPrint
+		SC_OUI_Methods.prototype.AutoPrint=function(fileName){
+			var siebConsts  = SiebelJS.Dependency( "SiebelApp.Constants" );
+			var DISA_PLUGIN = "plugin_print";
+			siebConsts.set("WS_"+DISA_PLUGIN.toUpperCase()+"_VERSION", "1.0.0");
+			var DISAPrintHandler = null,alertFirstTime="Y";;
+			//Invoke Disa AutoPrint
+			disaPrint(fileName);
+			function disaPrint(fileName) {
+				console.log("Calling DISA PLUGIN with : ");
+				//console.log(myContent);
+				var handler = getDISAPrintHandler.call(this);
+				 // here we create an object containing data which the Java application will read.
+
+				var msgJSON = {};
+				msgJSON["Command"] = "Ready";
+				msgJSON["FileName"] = fileName;
+				msgJSON["PrintOnce"] = "N";
+				scProfileAttr=localStorage.getItem("ProfileAttr");
+				scProfileAttr=JSON.parse(scProfileAttr);
+        		msgJSON["CurrentUser"] = scProfileAttr['Login Name'];
+				handler.SendMessage(msgJSON);
+			}
+			//DISA Handler
+			function getDISAPrintHandler() {
+				 if (DISAPrintHandler === null) {
+					 (function(proxied) {
+						  window.alert = function() {
+							if(arguments[0].includes("Failed to connect to Desktop Integration Siebel Agent on your machine"))
+							{
+							}
+							else
+							return proxied.apply(this, arguments);
+						  };
+						})(window.alert);
+					  DISAPrintHandler = SiebelApp.WebSocketManager.CreateWSHandler(DISA_PLUGIN);
+					 // communications with DISA are asynchronous. We define handler functions here to deal with
+					 // possible responses from DISA, such as a message or communication failure conditions.
+					  DISAPrintHandler.OnMessage = onWSMessage.bind(this);
+					  DISAPrintHandler.OnFail = onWSSendFail.bind(this);
+					  DISAPrintHandler.OnClose = onWSClose.bind(this);
+				 }
+				 return DISAPrintHandler;
+			}
+
+			function onWSMessage(msg) {
+				// this is the result of callDISAPlugin if all goes well
+				handleMsg.call(this,msg);
+
+			}
+
+			// Normally this indicates something wrong with communication attempt to operator at DISA
+			// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+			// Maybe because the version number at two sides are not matched, operator version should be equal or newer
+			// Reset state or other variables if necessary
+			function onWSSendFail() {
+				handleException("Failed to send message to DISA");
+			}
+
+			// This indicates Siebel OpenUI with DISA connection was lost
+			// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+			// Maybe because DISA exited (by user) or crashed
+			// Reset state or other variables if necessary
+			function onWSClose() {
+				handleException("Connection to DISA was lost");
+			}
+
+				// Called by onWSMessage event handler
+
+			function handleMsg(msg) {
+				// Log the message received
+				console.log("JSON message received: " + JSON.stringify(msg) + "");
+				// Pass the message to the PR
+				//console.log("DISAResponse", msg);
+			}
+
+			// Called by onWSClose or onWSSendFail event handler
+			function handleException(msg) {
+				// Add other error handling logic
+				console.log("Handle Exception" + msg);
+				if(alertFirstTime=="Y"){
+					alertFirstTime="N";
+				alert("There is an issue with the software that auto prints from Siebel (DISA). Please contact the Service Desk.");
+				}
+			}
+
+		};
+		
+		//DISA UTGSignatureCapture
+		SC_OUI_Methods.prototype.UTGSignatureCapture=function(){
+		var siebConsts  = SiebelJS.Dependency( "SiebelApp.Constants" );
+		var DISA_PLUGIN = "plugin_signaturecapture";
+		siebConsts.set("WS_"+DISA_PLUGIN.toUpperCase()+"_VERSION", "1.0.0");
+		var DISASignatureHandeler = null;
+		//Invoke Disa UTGSignatureCapture
+		disaSignatureCapture();
+		
+		function disaSignatureCapture() {
+			console.log("Calling DISA PLUGIN with : ");
+			//console.log(myContent);
+			var handler = getDISAPrintHandler.call(this);
+			 // here we create an object containing data which the Java application will read.
+
+			var msgJSON = {};
+			msgJSON["Command"] = "Ready";
+			msgJSON["MachineName"] = "usvmware-421933.comfort.com";
+			msgJSON["TerminalName"] = "usvmware-421933";
+			msgJSON["InterfaceVersion"] = "v2.0.0";
+			msgJSON["InterfaceName"] = "Retail";
+			msgJSON["CompanyName"] = "SleepNumber";
+			msgJSON["AccessToken"] = "F5458032-FB4C-4661-8E7C-061FD6D85836";
+			handler.SendMessage(msgJSON);
+		}
+		//DISA Handler
+		function getDISAPrintHandler() {
+			 if (DISASignatureHandeler === null) {
+				 DISASignatureHandeler = SiebelApp.WebSocketManager.CreateWSHandler(DISA_PLUGIN);
+				 // communications with DISA are asynchronous. We define handler functions here to deal with
+				 // possible responses from DISA, such as a message or communication failure conditions.
+				  DISASignatureHandeler.OnMessage = onWSMessage.bind(this);
+				  DISASignatureHandeler.OnFail = onWSSendFail.bind(this);
+				  DISASignatureHandeler.OnClose = onWSClose.bind(this);
+			 }
+			 return DISASignatureHandeler;
+		}
+
+		function onWSMessage(msg) {
+			// this is the result of callDISAPlugin if all goes well
+			handleMsg.call(this,msg);
+
+		}
+
+		// Normally this indicates something wrong with communication attempt to operator at DISA
+		// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+		// Maybe because the version number at two sides are not matched, operator version should be equal or newer
+		// Reset state or other variables if necessary
+		function onWSSendFail() {
+			handleException("Failed to send message to DISA");
+		}
+
+		// This indicates Siebel OpenUI with DISA connection was lost
+		// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+		// Maybe because DISA exited (by user) or crashed
+		// Reset state or other variables if necessary
+		function onWSClose() {
+			handleException("Connection to DISA was lost");
+		}
+
+			// Called by onWSMessage event handler
+
+		function handleMsg(msg) {
+			// Log the message received
+			console.log("JSON message received: " + JSON.stringify(msg) + "");
+			// Pass the message to the PR
+			//console.log("DISAResponse", msg);
+		}
+
+		// Called by onWSClose or onWSSendFail event handler
+		function handleException(msg) {
+			// Add other error handling logic
+			console.log("Handle Exception" + msg);
+		}
+
+	};
+
+	//DISA Invoke Shift 4Go
+	SC_OUI_Methods.prototype.Invoke4Go=function(){
+		var siebConsts  = SiebelJS.Dependency( "SiebelApp.Constants" );
+		var DISA_PLUGIN = "plugin_invokeapp";
+		siebConsts.set("WS_"+DISA_PLUGIN.toUpperCase()+"_VERSION", "1.0.0");
+		var DISA4GoHandler = null,alertFirstTime="Y";
+		//Invoke Disa Shift 4Go
+		disaInvokeApp();
+
+		function disaInvokeApp() {
+			console.log("Calling DISA PLUGIN");
+			//console.log(myContent);
+			var handler = getDISA4GoHandler.call(this);
+			// here we create an object containing data which the Java application will read.
+			var msgJSON = {};
+			msgJSON["Command"] = "Ready";
+			handler.SendMessage(msgJSON);
+		}
+		//DISA Handler
+		function getDISA4GoHandler() {
+			 if (DISA4GoHandler === null) {
+				 (function(proxied) {
+						  window.alert = function() {
+							if(arguments[0].includes("Failed to connect to Desktop Integration Siebel Agent on your machine"))
+							{
+							}
+							else
+							return proxied.apply(this, arguments);
+						  };
+						})(window.alert);
+				  DISA4GoHandler = SiebelApp.WebSocketManager.CreateWSHandler(DISA_PLUGIN);
+				 // communications with DISA are asynchronous. We define handler functions here to deal with
+				 // possible responses from DISA, such as a message or communication failure conditions.
+				  DISA4GoHandler.OnMessage = onWSMessage.bind(this);
+				  DISA4GoHandler.OnFail = onWSSendFail.bind(this);
+				  DISA4GoHandler.OnClose = onWSClose.bind(this);
+			 }
+			 return DISA4GoHandler;
+		}
+
+		function onWSMessage(msg) {
+			// this is the result of callDISAPlugin if all goes well
+			handleMsg.call(this,msg);
+		}
+		// Normally this indicates something wrong with communication attempt to operator at DISA
+		// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+		// Maybe because the version number at two sides are not matched, operator version should be equal or newer
+		// Reset state or other variables if necessary
+		function onWSSendFail() {
+			handleException("Failed to send message to DISA");
+		}
+		// This indicates Siebel OpenUI with DISA connection was lost
+		// Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+		// Maybe because DISA exited (by user) or crashed
+		// Reset state or other variables if necessary
+		function onWSClose() {
+			handleException("Connection to DISA was lost");
+		}
+		// Called by onWSMessage event handler
+		function handleMsg(msg) {
+			// Log the message received
+			console.log("JSON message received: " + JSON.stringify(msg) + "");
+			// Pass the message to the PR
+			//console.log("DISAResponse", msg);
+		}
+		// Called by onWSClose or onWSSendFail event handler
+		function handleException(msg) {
+			// Add other error handling logic
+			console.log("Handle Exception" + msg);
+			if(alertFirstTime=="Y"){
+				alertFirstTime="N";
+				alert("There is an issue with the software that processes credit card information (DISA). Please contact the Service Desk.");
+			}
+		}
+	};
+
+
+		//To Get the Address Lines -- used in Sales Order
+		SC_OUI_Methods.prototype.GetContactAddressesList = function (BOName,MVLBC,SearchSpc,Fields) {
+			var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query Simplified");
+			var InputArg = SiebelApp.S_App.NewPropertySet();
+			var OutputArg = SiebelApp.S_App.NewPropertySet();
+			InputArg.SetProperty("BO",BOName)
+			InputArg.SetProperty("BC", "CUT Address");
+			InputArg.SetProperty("BCMVL",MVLBC);
+			InputArg.SetProperty("SearchSpecification",SearchSpc);
+			InputArg.SetProperty("FieldsArray", Fields);
+			OutputArg = Custom_Service.InvokeMethod("GetAddressNames", InputArg);
+			var Child_OutArg = OutputArg.GetChild(0);
+			var BS_Data_Addresses = Child_OutArg.GetProperty("OutputRecordSet");
+			SiebelJS.Log("BS_Data_Addresses--" + JSON.stringify(BS_Data_Addresses));
+			BS_Data_Addresses = BS_Data_Addresses.substring(1, BS_Data_Addresses.length - 1);
+			var addressList = BS_Data_Addresses.split(";");
+			return addressList;
+		};
+
+		// Function to show Order Summary
+		SC_OUI_Methods.prototype.OrderSummary=function(OrderFormPMinstance,scshippingcost,shippingdiscounts){
+			var OrderFormItemList=OrderFormPMinstance.Get("GetRecordSet");
+			subTotal=0.00;
+			scshippingcost=parseFloat(scshippingcost);
+			shippingdiscounts=parseFloat(shippingdiscounts);
+			var totalstartprice=OrderFormItemList[0]["Current Order Total Base Price"];
+			totalstartprice =totalstartprice.replace(/[$,]/g,"");
+			totalstartprice=totalstartprice==""?0.00:parseFloat(totalstartprice);
+			var totaldiscounts=OrderFormItemList[0]["Current Order Total Item Discount"];
+			totaldiscounts =totaldiscounts.replace(/[$,]/g,"");
+			totaldiscounts=totaldiscounts==""?0.00:parseFloat(totaldiscounts);
+			var ordertotal=OrderFormItemList[0]["Order Total"];
+			ordertotal =ordertotal.replace(/[$,]/g,"");
+			ordertotal=ordertotal==""?0.00:parseFloat(ordertotal);
+			totalstartprice=totalstartprice-scshippingcost;
+			totaldiscounts-=shippingdiscounts;
+
+			subTotal=totalstartprice-totaldiscounts+scshippingcost-shippingdiscounts;
+			SiebelJS.Log("subtotal"+subTotal);
+			var paymentdue=OrderFormItemList[0]["SC Total Balance Due"];
+			taxtotal=OrderFormItemList[0]["Third Party Tax Amount"];
+			taxtotal = taxtotal.replace(/[$,]/g,"");
+			taxtotal=taxtotal==""?0.00:parseFloat(taxtotal);
+			poleTaxTotal=taxtotal;
+			//var finaltotalvalue = ordertotal-taxtotal;
+
+			var markup="";
+			markup+='                                <div class="SC-SO-Order-Details">';
+			markup+='                                    <div class="SC-SO-Order-items">';
+			markup+='                                        <div class="Order-item">';
+			markup+='                                            <p class="Order-title">Total Product Price:</p>';
+			markup+='                                            <p class="Order-value">$'+totalstartprice.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")+'</p>';
+			markup+='                                        </div>';
+			markup+='                                        <div class="Order-item">';
+			markup+='                                            <p class="Order-title">Total Product Line Discounts:</p>';
+			markup+='                                            <p class="Order-value">$'+totaldiscounts.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")+'</p>';
+			markup+='                                        </div>';
+			markup+='                                        <div class="Order-item read-mode" >';
+			markup+='                                            <p class="Order-title">Pack Discounts:</p>';
+			/*if(OrderFormItemList[0]["SC Comfort Pack Disc Flag"]=="Y")
+				markup+='<p class="Order-value">Comfort</p>';
+			else if(OrderFormItemList[0]["SC Value Pack Disc Flag"]=="Y")
+				markup+='<p class="Order-value">Value</p>';*/
+			if(OrderFormItemList[0]["SC Pack Discounts Flag"]=="Y")
+				markup+='<p class="Order-value">Qualified</p>';
+			else
+				markup+='<p class="Order-value">Not Qualified</p>';
+			//markup+='                                                <label for="cmp" class="SC-360-cusin"></label>';
+			//markup+='                                            </p>';
+			markup+='                                        </div>';
+			/*markup+='                                        <div class="Order-item read-mode">';
+			markup+='                                            <p class="Order-title">Value Pack Discounts:</p>';
+			markup+='                                            <p class="Order-value SC-checkbox-white-square">';
+			if(OrderFormItemList[0]["SC Value Pack Disc Flag"]=="Y")
+			markup+='                                                <input type="checkbox" name="" id="vpd" checked/>';
+			else
+			markup+='                                                <input type="checkbox" name="" id="vpd" />';
+			markup+='                                                <label for="vpd" class="SC-360-cusin"></label>';
+			markup+='                                            </p>';
+			markup+='                                        </div>'; */
+			markup+='                                        <div class="Order-item">';
+			markup+='                                            <p class="Order-title">Total Shipping cost:</p>';
+			markup+='                                            <p class="Order-value">$'+scshippingcost.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+			markup+='                                        </div>';
+			if(shippingdiscounts!=0.00)
+			{
+			markup+='                                        <div class="Order-item">';
+			markup+='                                            <p class="Order-title">Total Shipping Discounts:</p>';
+			markup+='                                            <p class="Order-value">$'+shippingdiscounts.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+			markup+='                                        </div>';
+			}
+			markup+='                                    </div>';
+			markup+='                                    <div class="SC-SO-Order-Total">';
+			markup+='                                        <div class="Order-item">';
+			markup+='                                            <p class="Order-title">Order Subtotal:</p>';
+			markup+='                                            <p class="Order-value">$'+subTotal.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+			markup+='                                        </div>';
+			markup+='                                    </div>';
+			markup+='                                </div>';
+			markup+='                                <div class="SC-SO-Order-Details right-align">';
+			markup+='                                    <div class="SC-SO-Order-items">';
+			markup+='                                        <div class="Order-item">';
+			markup+='                                            <p class="Order-title font-weight">Order Subtotal:</p>';
+			markup+='                                            <p class="Order-value font-weight">$'+subTotal.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+			markup+='                                        </div>';
+			if(OrderFormItemList[0]["Tax Exempt"]=="Y")
+			{
+			markup+='                                        <div class="Order-item read-mode">';
+			markup+='                                            <p class="Order-title font-weight">Tax Exempt:</p>';
+			markup+='                                            <p class="Order-value font-weight SC-checkbox-white-square">';
+			markup+='                                                <input type="checkbox" name="" id="taxexempt" checked/>';
+			markup+='                                                <label for="taxexempt" class="SC-360-cusin"></label>';
+			markup+='                                            </p>';
+			markup+='                                        </div>';
+			}
+			markup+='                                        <div class="Order-item">';
+			markup+='                                            <p class="Order-title font-weight">Tax Total:</p>';
+			markup+='                                            <p class="Order-value font-weight" id="taxtotal">$'+taxtotal.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+			markup+='                                        </div>';
+			markup+='                                    </div>';
+			markup+='                                    <div class="SC-SO-Order-Total">';
+			markup+='                                        <div class="Order-item">';
+			markup+='                                            <p class="Order-title font-weight">ORDER TOTAL:</p>';
+			if(SiebelApp.S_App.GetActiveView().GetName()=="SC Create Sales Order View OUI")
+				markup+='                                            <p class="Order-value font-weight" id="ordertotal">$'+ordertotal.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+			else
+				markup+='                                            <p class="Order-value ora-col font-weight" id="ordertotal">$'+ordertotal.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+			markup+='                                        </div>';
+			markup+='                                    </div>';
+			//SBOORLA:Added code for defcet 721
+			sViewName=SiebelApp.S_App.GetActiveView().GetName();
+			if(sViewName=="SC Create Sales Order View OUI" || sViewName=="SC Sales Order 360 Degree View OUI"){
+				markup+='                                    <div class="SC-SO-Order-Total">';
+				markup+='                                        <div class="Order-item">';
+				markup+='                                            <p class="Order-title font-weight">Payment Due:</p>';
+				markup+='                                            <p class="Order-value ora-col font-weight" id="paymentdue">$'+Number(paymentdue).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</p>';
+				markup+='                                        </div>';
+				markup+='                                    </div>';
+			}
+			markup+='                                </div>';
+		    return markup;
+
+		}
+
+		SC_OUI_Methods.prototype.addAddressMVG=function(){
+			 //Clicking on ADD new Address in MVG Applet
+                    $(document).on('click', 'button[title="Add Address:New"]', function() {
+
+                        setTimeout(function() {
+                            $(document).find(".scLabelRight").addClass("siebui-responsive-label-active");
+                         }, 1000);
+
+                    });
+                    $(document).on('focus focusout', '.scField', function() {
+                        $(document).find(".scLabelRight").addClass("siebui-responsive-label-active");
+
+                    });
+
+                    $(document).on('keyup', 'input[placeholder="Street Address"],input[placeholder="Street Address 2"],input[placeholder="City"],input[placeholder="State"],input[placeholder="Postal Code"],input[placeholder="Country"]', function() {
+                        if ($(this).val() == "") {
+                            $(document).find(".scLabelRight").addClass("siebui-responsive-label-active");
+                        }
+                    });
+
+
+
+                    $(document).on('change', '.siebui-ctrl-select,.siebui-ctrl-input', function() {
+                        $(this).parent().addClass("siebui-responsive-label-active");
+
+                    });
+		}
+		// VAMSI:08-OCT-18: Added below function to Support P2PE pole Display.
+		SC_OUI_Methods.prototype.ClearP2PEPoleDisplay = function (orderId) {
+			var sService = SiebelApp.S_App.GetService("Workflow Process Manager");
+			var sInputs = SiebelApp.S_App.NewPropertySet();
+			var sOutputs = SiebelApp.S_App.NewPropertySet();
+			sInputs.SetProperty("Object Id",orderId);
+			sInputs.SetProperty("ProcessName","SC Clear Display Line Items WF");
+			sOutputs = sService.InvokeMethod("RunProcess", sInputs);
+		};
+
+		// VAMSI:08-OCT-18: Added below function to Support P2PE pole Display.
+		SC_OUI_Methods.prototype.P2PEDispalyLineItem = function (orderId,LineItems) {
+			if(Lineitems.length != 0){
+				//VAMSI: 11-OCT-18: Added the below code to clear the P2PE Device Display
+				var sService = SiebelApp.S_App.GetService("Workflow Process Manager");
+				var sInputs = SiebelApp.S_App.NewPropertySet();
+				var sOutputs = SiebelApp.S_App.NewPropertySet();
+				sInputs.SetProperty("Object Id",orderId);
+				sInputs.SetProperty("ProcessName","SC Clear Display Line Items WF");
+				sOutputs = sService.InvokeMethod("RunProcess", sInputs);
+				//End Clear the P2PE Device Dispaly
+
+				var sService = SiebelApp.S_App.GetService("Workflow Process Manager");
+				var sInputs = SiebelApp.S_App.NewPropertySet();
+				var sOutputs = SiebelApp.S_App.NewPropertySet();
+				sInputs.SetProperty("Object Id",orderId);
+				sInputs.SetProperty("ProcessName","SC Single Line Item Pole Display");
+				for (var index = 0; index < LineItems.length; index++) {
+					sInputs.SetProperty("LineItem",LineItems[index]);
+					console.log(LineItems[index]);
+					sOutputs = sService.InvokeMethod("RunProcess", sInputs);
+				}
+			}
+		};
+
+		// VAMSI:08-OCT-18: Added below function to Support P2PE pole Display.
+		SC_OUI_Methods.prototype.P2PEDispalyMultiLineItems = function (orderId,Lineitems) {
+
+			if(Lineitems.length != 0){
+				//VAMSI: 11-OCT-18: Added the below code to clear the P2PE Device Display
+				var sService = SiebelApp.S_App.GetService("Workflow Process Manager");
+				var sInputs = SiebelApp.S_App.NewPropertySet();
+				var sOutputs = SiebelApp.S_App.NewPropertySet();
+				sInputs.SetProperty("Object Id",orderId);
+				sInputs.SetProperty("ProcessName","SC Clear Display Line Items WF");
+				sOutputs = sService.InvokeMethod("RunProcess", sInputs);
+				//End Clear the P2PE Device Dispaly
+				DisplayMultiLine(orderId,Lineitems)
+			}
+		};
+
+		//VAMSI:08-OCT-18: Added below function to Support P2PE pole Display.
+		SC_OUI_Methods.prototype.OrderTotalP2PEPoleDisplay = function (orderId) {
+			var TotalText = "Order Total: ";
+			var ordertotal = $("#ordertotal").text();
+			var sService = SiebelApp.S_App.GetService("Workflow Process Manager");
+			var sInputs = SiebelApp.S_App.NewPropertySet();
+			var sOutputs = SiebelApp.S_App.NewPropertySet();
+			sInputs.SetProperty("Object Id",orderId);
+			sInputs.SetProperty("ProcessName","SC Single Line Item Pole Display");
+			sInputs.SetProperty("LineItem",TotalText+" "+ordertotal);
+			sOutputs = sService.InvokeMethod("RunProcess", sInputs);
+		};
+
+		// VAMSI:08-OCT-18: Added below function to Support P2PE pole Display.
+		SC_OUI_Methods.prototype.TaxDetailsP2PEDisplay = function(orderId,productsJSON,FreightJSON) {
+			var LineDetails = [];
+			for(var i=0;i<productsJSON.length;i++){
+				LineDetails.push(productsJSON[i]["ProductDesc"]);
+				LineDetails.push("QTY: "+productsJSON[i]["Quantity"]+"  PRICE: $"+parseFloat(productsJSON[i]["Price"]).toFixed(2));
+			}
+			LineDetails.push("------------------------------");
+			if((LineDetails.length % 10) == 9){
+				LineDetails.push(" ");
+			}
+			for(var j=0;j<FreightJSON.length;j++){
+				LineDetails.push(FreightJSON[j]["ProductDesc"]);
+				LineDetails.push("QTY: "+FreightJSON[j]["Quantity"]+"  PRICE: $"+parseFloat(FreightJSON[j]["Price"]).toFixed(2));
+			}
+			LineDetails.push("------------------------------");
+			var TaxTotalText = "TaxTotal:";
+			var SubTotalText = "SubTotal:";
+			subTotal = parseFloat(subTotal).toFixed(2);
+			poleTaxTotal = parseFloat(poleTaxTotal).toFixed(2);
+		    LineDetails.push(SubTotalText+" $"+subTotal);
+			LineDetails.push(TaxTotalText+" $"+poleTaxTotal);
+			LineDetails.push("------------------------------");
+			if(LineDetails.length != 0){
+				DisplayMultiLine(orderId,LineDetails);
+			}
+		};
+
+		// VAMSI:08-OCT-18: Added below function to Support P2PE pole Display.
+		SC_OUI_Methods.prototype.SROLineDetailsP2PEDisplay = function(orderId,productsJSON,FreightJSON) {
+			var LineDetails = [];
+			for(var i=0;i<productsJSON.length;i++){
+				LineDetails.push(productsJSON[i]["ProductDesc"]);
+				LineDetails.push("QTY: "+productsJSON[i]["Quantity"]+"  PRICE: $"+productsJSON[i]["Price"]);
+			}
+			LineDetails.push("------------------------------");
+			if((LineDetails.length % 10) == 9){
+				LineDetails.push(" ");
+			}
+			for(var j=0;j<FreightJSON.length;j++){
+				LineDetails.push(FreightJSON[j]["ProductDesc"]);
+				LineDetails.push("QTY: "+FreightJSON[j]["Quantity"]+"  PRICE: $"+FreightJSON[j]["Price"]);
+			}
+			if(FreightJSON.length != 0){
+				LineDetails.push("------------------------------");
+			}
+			if(LineDetails.length != 0){
+				DisplayMultiLine(orderId,LineDetails);
+			}
+		};
+		
+		SC_OUI_Methods.prototype.emailTrigger = function(RevisionNumber, RevisionReason, OrderId) {
+			 var sStoreNum = SiebelApp.S_App.GetProfileAttr("SC Store Number");
+			 var strDivType = SiebelApp.S_App.GetProfileAttr("SC Primary Division Type");
+			 var sDivSubType = SiebelApp.S_App.GetProfileAttr("SC Primary Division Sub Type");
+			 var InPS = '', OutPS = '', sOrderId = '', BService = '';
+			 InPS = SiebelApp.S_App.NewPropertySet();
+			 OutPS = SiebelApp.S_App.NewPropertySet();
+			 Bservice = SiebelApp.S_App.GetService("SC Check LOV Values"); //get service
+			 var sSearchSpec = "[Name] = '"+sStoreNum+"' AND [Type] = 'SC_EMAIL_RECEIPT'";
+			 InPS.SetProperty("searchExpr", sSearchSpec); 
+			 OutPS = Bservice.InvokeMethod("CheckLovValues", InPS);
+			 var child = OutPS.GetChild(0);
+			 bIsStorePresent = child.GetProperty("ISRecordFlag");
+			 
+			 InPS = SiebelApp.S_App.NewPropertySet();
+			 OutPS = SiebelApp.S_App.NewPropertySet();
+			 Bservice = SiebelApp.S_App.GetService("SC Check LOV Values"); //get service
+			 var sSearchSpec = "[Name] = '" + strDivType + "-" + sDivSubType + "' AND [Type] = 'SC_EMAIL_QUOTE'";
+			 InPS.SetProperty("searchExpr", sSearchSpec); 
+			 OutPS = Bservice.InvokeMethod("CheckLovValues", InPS);
+			 var child = OutPS.GetChild(0);
+			 sDivSubTyp = child.GetProperty("ISRecordFlag");
+			 if(bIsStorePresent == "Y" || sDivSubTyp == "Y") {
+			 var Custom_Service = "",
+				Input_BS = "",
+				Out_BS = "";
+				Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+				Input_BS = SiebelApp.S_App.NewPropertySet();
+				Out_BS = SiebelApp.S_App.NewPropertySet();
+				searchfields = "Id,Revision Reason";
+				Input_BS.SetProperty("BO", "Order Entry (Sales)");
+				Input_BS.SetProperty("BC", "Order Entry - Orders");
+				Input_BS.SetProperty("SearchSpecification", "[Id] = '" + OrderId + "'");
+				Input_BS.SetProperty("SortSpecification", "");
+				Input_BS.SetProperty("ReqNoOfRecords", "");
+				Input_BS.SetProperty("FieldsArray", searchfields);
+				Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+				var Child_BS = Out_BS.GetChild(0);
+				var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+				if (BS_Data != "}") {
+					var ResArray = new Array;
+					ResArray = BS_Data.split(";");
+
+					jsonRes = JSON.parse(ResArray[0]);
+				   RevisionReason = jsonRes["Revision Reason"];								
+				   // SiebelJS.Log("jsonSK" + jsonRes["Id"]);
+				}
+			var searchExpr = "[Type] = 'SC_EVENT_TYPE_REASON1' AND [Name] = 'Internally Initiated' AND [Active] = 'Y'";
+			var RevisionReasonLov = SCOUIMethods.SCGetOrderLoVs(searchExpr);
+			var Revrsnflg = "";
+			if (RevisionNumber > 1 && RevisionReason == RevisionReasonLov) {
+				Revrsnflg = "N";
+			} else{
+				Revrsnflg = "Y";
+			}
+			
+			if (Revrsnflg == "Y") {
+				var frstorderInPS = SiebelApp.S_App.NewPropertySet();
+				var frstorderOutPS = SiebelApp.S_App.NewPropertySet();
+				var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+				frstorderInPS.SetProperty("ProcessName", "CX Email Quote Workflow");
+				frstorderInPS.SetProperty("Object Id", OrderId);
+				frstorderInPS.SetProperty("ReportType", "Sales Order Receipt");
+				frstorderOutPS = Bservice.InvokeMethod("RunProcess", frstorderInPS);
+			}
+		 }
+       }
+		
+		SC_OUI_Methods.prototype.triggerEmailQuote = function(OrderId, VQuoteValidUntillDate, VPersonalizedMsg) {
+			  var emailInPS = '', emailOutPS = '', sOrderId = '', BService = '';
+			  //Vqemailchngflg = "N";
+			  emailInPS = SiebelApp.S_App.NewPropertySet();
+			  emailOutPS = SiebelApp.S_App.NewPropertySet();
+			  //sOrderId = ShipToContactRecordSet[0]["Id"];
+			  Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+			  emailInPS.SetProperty("ProcessName", "CX Email Quote Workflow"); 
+			  emailInPS.SetProperty("Object Id", OrderId);
+			  emailInPS.SetProperty("ReportType","Sales Order Quote");
+			  // 24032020 - For SalesQuote PopUp
+			  if (VQuoteValidUntillDate != "" && VQuoteValidUntillDate != undefined) {  
+				emailInPS.SetProperty("ValidUntilDate",VQuoteValidUntillDate);
+			  }
+			  if (VPersonalizedMsg != "" && VPersonalizedMsg != undefined) { 
+				emailInPS.SetProperty("Comment",VPersonalizedMsg);
+			  }
+			  emailOutPS = Bservice.InvokeMethod("RunProcess", emailInPS);
+		}
+		
+		SC_OUI_Methods.prototype.PrintReceipt = function(bip_id,bip_ordernumber) {
+		SiebelJS.Log("on click of reciept generation");                      
+                        SiebelJS.Log("bip id:" + bip_id);
+                        SiebelJS.Log("bip ordernumber:" + bip_ordernumber);
+                        $("body").trigger('Custom.Start');
+                        setTimeout(function() {
+                            if (bip_id != null) {
+                                var InPS3 = SiebelApp.S_App.NewPropertySet();
+                                var OutPS3 = SiebelApp.S_App.NewPropertySet();
+                                InPS3.SetProperty("bipordernumber", bip_ordernumber);
+                                InPS3.SetProperty("biporderrowid", bip_id);
+								InPS3.SetProperty("receiptmode", "Original");
+                                var Service3 = SiebelApp.S_App.GetService("SC Store Data BS");
+                                // VALLA:10APR18: #712 Coded for Whole Sale and Commercial Receipt Report
+                                var orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Order Form Applet (Sales) OUI"].GetBusComp();
+                                var orderSubType = orderBC.GetFieldValue("SC Sub-Type");
+                                if (orderSubType == "Wholesale" || orderSubType == "Commercial" || orderSubType == "QVC" || orderSubType == "Internal" || orderSubType == "HSN") {
+                                    OutPS3 = Service3.InvokeMethod("SC WC Reciept Generation", InPS3);
+                                } else {
+                                    OutPS3 = Service3.InvokeMethod("SC Reciept Generation", InPS3);
+                                }
+                                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].InvokeMethod("RefreshAppletUI");
+                                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().ExecuteMethod("OnDrillDown", 'Report Name', 1);
+                                setTimeout(function() {
+                                    $(".ui-dialog-buttonset button:nth-child(2)").trigger('click');
+                                    setTimeout(function() {
+                                        $(".ui-dialog-buttonset button:nth-child(3)").trigger('click');
+                                    }, 1000);
+                                }, 1000);
+                            }
+                            $("body").trigger('Custom.End');
+                        }, 1000);	
+			
+		}
+
+		// VAMSI:08-OCT-18: Added below function to Support P2PE pole Display.
+		SC_OUI_Methods.prototype.lineDetailFormat = function(ProductDesc,Quantitys,NRCSubtotal) {
+			if(ProductDesc.length >= 18){
+				ProductDesc = ProductDesc.substring(0,18);
+			}else{
+				var  prefLineLength = 18;
+				var diff = prefLineLength - ProductDesc.length;
+				for (var i = 0; i < diff; i++) {
+					ProductDesc = ProductDesc + " ";
+				}
+			}
+			if(Quantitys.length <= 2){
+				var  prefLineLength = 2;
+				var diff = prefLineLength - Quantitys.length;
+				for (var i = 0; i < diff; i++) {
+					Quantitys = " "+Quantitys;
+				}
+			}
+			if(NRCSubtotal.length <= 8){
+				var  prefLineLength = 8;
+				var diff = prefLineLength - NRCSubtotal.length;
+				for (var i = 0; i < diff; i++) {
+					NRCSubtotal = " "+NRCSubtotal;
+				}
+			}
+			return ProductDesc+" "+Quantitys+" "+NRCSubtotal;
+		}
+
+		/*function sleep(ms) {
+		  return new Promise(resolve => setTimeout(resolve, ms));
+		}*/
+
+		function sleep(milliseconds) {
+		  var start = new Date().getTime();
+		  for (var i = 0; i < 1e7; i++) {
+			if ((new Date().getTime() - start) > milliseconds){
+			  break;
+			}
+		  }
+		}
+
+		function DisplayMultiLine(orderId,LineDetails){
+			var sDMultiService = SiebelApp.S_App.GetService("Workflow Process Manager");
+			var sDMultiInputs = SiebelApp.S_App.NewPropertySet();
+			var sDMultiOutputs = SiebelApp.S_App.NewPropertySet();
+			sDMultiInputs.SetProperty("Object Id",orderId);
+			sDMultiInputs.SetProperty("ProcessName","SC Multiple Line Items Pole Display");
+			SiebelJS.Log("Pole Dispaly:"+LineDetails);
+			var linenumber = 1;
+			for (var index = 0; index < LineDetails.length; index++) {
+				sDMultiInputs.SetProperty("LineItem"+linenumber,LineDetails[index]);
+				console.log(LineDetails[index]);
+				if(index == LineDetails.length-1 || ((index+1)%10) == 0){
+					sDMultiOutputs = sDMultiService.InvokeMethod("RunProcess", sDMultiInputs);
+					if(index <= LineDetails.length-1 && LineDetails.length > 10 && ((index+1)%10) == 0){
+						var milliseconds = 20000;
+						sleep(milliseconds);
+						var sClearService = SiebelApp.S_App.GetService("Workflow Process Manager");
+						var sClearInputs = SiebelApp.S_App.NewPropertySet();
+						var sClearOutputs = SiebelApp.S_App.NewPropertySet();
+						sClearInputs.SetProperty("Object Id",orderId);
+						sClearInputs.SetProperty("ProcessName","SC Clear Display Line Items WF");
+						sClearOutputs = sClearService.InvokeMethod("RunProcess", sClearInputs);
+					}
+					linenumber = 0;
+					sDMultiInputs = resetLines(sDMultiInputs);
+				}
+				linenumber += 1;
+			}
+		}
+
+		function resetLines(sDMultiInputs){
+			sDMultiInputs.SetProperty("LineItem1","");
+			sDMultiInputs.SetProperty("LineItem2","");
+			sDMultiInputs.SetProperty("LineItem3","");
+			sDMultiInputs.SetProperty("LineItem4","");
+			sDMultiInputs.SetProperty("LineItem5","");
+			sDMultiInputs.SetProperty("LineItem6","");
+			sDMultiInputs.SetProperty("LineItem7","");
+			sDMultiInputs.SetProperty("LineItem8","");
+			sDMultiInputs.SetProperty("LineItem9","");
+			sDMultiInputs.SetProperty("LineItem10","");
+			return sDMultiInputs;
+		}
+		
+		
+ return SCOUIMethods;
+   }()
+  );
+  return "SiebelApp.SC_OUI_Methods";
+ })
+}

@@ -1,0 +1,2153 @@
+/**********************************
+Author: Harish
+Purpose: Contact 360 html code
+Created Date:
+Modified Date: 
+ 
+*********************************/
+
+
+if (typeof(SiebelAppFacade.SCContact360Markup) === "undefined") {
+
+ SiebelJS.Namespace("SiebelAppFacade.SCContact360Markup");
+ define("siebel/custom/SelectComfort/SCContact360Markup", ["siebel/viewpr","siebel/custom/SelectComfort/SCCreateContactMarkup"],
+  function () {
+   SiebelAppFacade.SCContact360Markup = (function () {
+
+	var Contact360_Markup = new SCContact360Markup();
+	var CreateNewCon = SiebelJS.Dependency("SiebelApp.SCCreateContactMarkup");
+    function SCContact360Markup(pm) {}
+    
+    SCContact360Markup.prototype.MarkupFn = function () {
+     var isiFitRecord =  localStorage.getItem('isiFitRecord');
+	 var Markup_360 = '',SNHrefId;
+	 
+	 //<!-- this is the starting point for making markup. -->
+    Markup_360+='<div id="applet1">';
+        Markup_360+='<div class="container-fluid no-margin no-padding">';
+            //<!-- Header starts here/ make a common function for this header. so you can use anywhere in the app -->
+            Markup_360+='<div class="main-header-container">';
+                Markup_360+='<div class="nav-header">';                   
+                Markup_360+='</div>';
+            Markup_360+='</div>';
+            //<!-- Header ends here -->
+            Markup_360+='<div class="container-fluid no-margin no-padding">';
+                Markup_360+='<div class="SC-360-main-container SC-data-container">';
+                    Markup_360+='<div class="SC-360-left-container" id="SC-360-LeftContainer">';
+                       Markup_360+=' <div class="SC-360-profile-section">';
+                            Markup_360+='<img src="images/custom/contact360.png" id="SC-360-avatar" class="incomplete">';
+                        Markup_360+='</div>';
+                        Markup_360+='<p class="SC-360-profile-name no-margin">Mr. Mark Jacobs</p>';
+                        Markup_360+='<div class="SC-360-actions">';
+							Markup_360+='<button class="SC-360-action-btn" id="SC-360-Convert">Convert</button>';
+							Markup_360+='<button class="SC-360-action-btn" id="SC-360-Finance">Financing</button>';
+							Markup_360+='<button class="SC-360-action-btn" id="SC-360-SalesOrder">New Sales Order</button>';
+						Markup_360+='</div>';
+                        Markup_360+='<div class="SC-360-nav-container">';
+                            Markup_360+='<div class="SC-360-nav-item">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Cust-Details-AppletName">';
+                                    Markup_360+='<img src="images/custom/customer_details_selected.png" class="SC-360-nav-item-image" id="Cust-Details-Img">';
+                                    //Markup_360+='<p class="active" id="Cust-Details">Customer Details</p>';
+									//Markup_360+='<p class="active" id="Cust-Details"><a href="#Cust-Details-Applet">Customer Details</a></p>';
+SNHrefId="'Cust-Details-Applet'";
+									Markup_360+='<p class="active" id="Cust-Details"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Customer Details</a></p>';
+									
+								
+								Markup_360+='</div>';
+                                //Markup_360+='<img src="images/custom/Pinned.png" class="SC-360-nav-item-pin-image" id="Cust-Details-Pin" draggable="true">';
+                            Markup_360+='</div>';
+                        
+                            Markup_360+='<div class="SC-360-nav-item" id="Cust-inter-AppletName-div">';
+                               Markup_360+=' <div class="SC-360-nav-item-name-container" id="Cust-inter-AppletName">';
+                                   Markup_360+='<img src="images/custom/customer_interaction.png" class="SC-360-nav-item-image" id="Cust-inter-Img" alt="Cust-Interaction">';
+                                    //Markup_360+='<p class="" id="Cust-Interacion">Customer Interaction</p>';
+									//Markup_360+='<p class="" id="Cust-Interacion"><a href="#Cust-inter-Applet">Customer Interaction</a></p>';
+SNHrefId="'Cust-inter-Applet'";
+									Markup_360+='<p class="" id="Cust-Interacion"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Customer Interaction</a></p>';
+                                Markup_360+='</div>';
+                                Markup_360+=' <a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();" href="#"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Cust-inter-Pin" draggable="true"></a>';
+                            Markup_360+='</div>';
+							
+                            Markup_360+='<div class="SC-360-nav-item" id="Prof-Info-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Prof-Info-AppletName">';
+                                   Markup_360+=' <img src="images/custom/profile_info.png" class="SC-360-nav-item-image" id="Prof-Info-Img">';
+                                    //Markup_360+='<p class="" id="prof-Info">Profile Information</p>';
+									//Markup_360+='<p class="" id="prof-Info"><a href="#Prof-Info-Applet">Profile Information</a></p>';
+SNHrefId="'Prof-Info-Applet'";
+									Markup_360+='<p class="" id="prof-Info"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Profile Information</a></p>';
+                                Markup_360+='</div>';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Prof-Info-Pin" draggable="true"></a>';
+                            Markup_360+='</div>';
+							
+                            Markup_360+='<div class="SC-360-nav-item" id="Cons-Notes-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Cons-Notes-AppletName">';
+                                    Markup_360+='<img src="images/custom/consolidated_notes.png" class="SC-360-nav-item-image" id="Cons-Notes-Img">';
+                                    //Markup_360+='<p class="" id="Cons-Notes">Consolidated notes</p>';
+									//Markup_360+='<p class="" id="Cons-Notes"><a href="#Cons-Notes-Applet">Consolidated Notes</a></p>';
+SNHrefId="'Cons-Notes-Applet'";
+									Markup_360+='<p class="" id="Cons-Notes"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Consolidated Notes</a></p>';
+                               Markup_360+=' </div>';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Cons-Notes-Pin" draggable="true"></a>';
+                            Markup_360+='</div>';
+							
+                            Markup_360+='<div class="SC-360-nav-item" id="Assets-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Assets-AppletName">';
+                                    Markup_360+='<img src="images/custom/Asset.png" class="SC-360-nav-item-image SC-360-contact-img"" id="Assets-Img">';
+                                    //Markup_360+='<p class="" id="Assets">Assets</p>';
+									//Markup_360+='<p class="" id="Assets"><a href="#Assets-Applet">Assets</a></p>';
+SNHrefId="'Assets-Applet'";
+									Markup_360+='<p class="" id="Assets"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Assets</a></p>';
+                                Markup_360+='</div>';
+								Markup_360+='<div>';//new
+                               //Markup_360+=' <img src="images/custom/plus_circle.png" class="SC-360-add-icon inactive" id="sc-c-create-asset-btn">';
+							   Markup_360+=' <img src="images/custom/plus_circle_inactive.png" class="SC-360-add-icon inactive" id="sc-c-create-asset-btn">';
+                               Markup_360+=' <a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Assets-Pin" draggable="true"></a>';
+                            Markup_360+='</div>';//new
+							Markup_360+='</div>';
+							//Sukumar
+						Markup_360+='<div class="SC-360-nav-item" id="Digital-Assets-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Digital-Assets-AppletName">';
+                                    Markup_360+='<img src="images/custom/Asset.png" class="SC-360-nav-item-image SC-360-contact-img"" id="Assets-Img">';
+                                    //Markup_360+='<p class="" id="Assets">Assets</p>';
+									//Markup_360+='<p class="" id="Assets"><a href="#Assets-Applet">Assets</a></p>';
+SNHrefId="'Digital-Assets-Applet'";
+									Markup_360+='<p class="" id="Digital-Assets"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Digital Product Assets</a></p>';
+                                Markup_360+='</div>';
+								Markup_360+='<div>';//new
+                               //Markup_360+=' <img src="images/custom/plus_circle.png" class="SC-360-add-icon inactive" id="sc-c-create-asset-btn">';
+							  // Markup_360+=' <img src="images/custom/plus_circle_inactive.png" class="SC-360-add-icon inactive" id="sc-c-create-asset-btn">';
+                               Markup_360+=' <a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Digital-Assets-Pin" draggable="true"></a>';
+                            Markup_360+='</div>';//new
+							Markup_360+='</div>';
+						//Sukumar Additional Sleeper
+						
+						Markup_360+='<div class="SC-360-nav-item" id="Additional-Sleeper-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Additional-Sleeper-AppletName-div">';
+                                    Markup_360+='<img src="images/custom/Asset.png" class="SC-360-nav-item-image SC-360-contact-img"" id="Assets-Img">';
+SNHrefId="'Additional-Sleeper-Applet'";
+									Markup_360+='<p class="" id="Additional-Sleeper"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Additional Sleepers</a></p>';
+                                Markup_360+='</div>';
+								Markup_360+='<div>';//new
+                                Markup_360+=' <a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Additional-Sleeper-Pin" draggable="true"></a>';
+                            Markup_360+='</div>';//new
+							Markup_360+='</div>';
+							
+                            Markup_360+='<div class="SC-360-nav-item" id="Orders-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Orders-AppletName">';
+                                    Markup_360+='<img src="images/custom/orders.png" class="SC-360-nav-item-image" id="Orders-Img">';
+									//Markup_360+='<p class="" id="Orders"><a href="#Orders-Applet">Orders</a></p>';
+SNHrefId="'Orders-Applet'";
+									Markup_360+='<p class="" id="Orders"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Orders</a></p>';
+                               Markup_360+=' </div>';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Orders-Pin" draggable="true"></a>';
+                           Markup_360+=' </div>';
+						   
+                            Markup_360+='<div class="SC-360-nav-item" id="HDSR-AppletName-div">';
+                               Markup_360+=' <div class="SC-360-nav-item-name-container" id="HDSR-AppletName">';
+                                  Markup_360+='  <img src="images/custom/truck_round_blue.png" class="SC-360-nav-item-image SC-360-contact-img"" id="HDSR-Img">';
+                                    //Markup_360+='<p class="" id="Serv-Req">Service requests</p>';
+									//Markup_360+='<p class="" id="HDSR"><a href="#HDSR-Applet">Field Services SR</a></p>';
+                                    SNHrefId="'HDSR-Applet'";
+									Markup_360+='<p class="" id="HDSR"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Field Services SR</a></p>';
+                               
+                                    Markup_360+=' </div>';
+							    Markup_360+='<div>';
+							   //Markup_360+='<img src="images/custom/plus_circle.png" class="SC-360-add-icon inactive" id="sc-c-create-sr-btn">';
+							   //Markup_360+='<img src="images/custom/plus_circle_inactive.png" class="SC-360-add-icon inactive" id="sc-c-create-hdsr-btn">';
+                                //Markup_360+='<a href="#HDSR-Applet"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="HDSR-Pin" draggable="true"></a>';
+                                
+								//Markup_360+='<p class="" id="Orders"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Orders</a></p>';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="HDSR-Pin" draggable="true"></a>';
+                                Markup_360+='</div>';
+							 Markup_360+='</div>';                            
+							
+							Markup_360+='<div class="SC-360-nav-item" id="Oppor-AppletName-div">';
+                               Markup_360+=' <div class="SC-360-nav-item-name-container" id="Oppor-AppletName">';
+                                   Markup_360+=' <img src="images/custom/opportunity.png" class="SC-360-nav-item-image" id="Oppor-Img">';
+                                   //Markup_360+=' <p class="" id="Opportunity">Opportunity</p>';
+								   // Markup_360+='<p class="" id="Opportunity"><a href="#Oppor-Applet">Opportunities</a></p>';
+SNHrefId="'Oppor-Applet'";
+								   Markup_360+='<p class="" id="Opportunity"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Opportunities</a></p>';
+                                Markup_360+='</div>';
+								 Markup_360+='<div>';
+								//Markup_360+='<img src="images/custom/plus_circle.png" class="SC-360-add-icon inactive" id="sc-c-create-opp-btn">';
+								Markup_360+='<img src="images/custom/plus_circle_inactive.png" class="SC-360-add-icon inactive" id="sc-c-create-opp-btn">';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Oppor-Pin" draggable="true"></a>';
+                           Markup_360+=' </div>';
+						    Markup_360+='</div>';
+														 
+                            Markup_360+='<div class="SC-360-nav-item" id="SR-AppletName-div">';
+                               Markup_360+=' <div class="SC-360-nav-item-name-container" id="SR-AppletName">';
+                                  Markup_360+='  <img src="images/custom/SR.png" class="SC-360-nav-item-image SC-360-contact-img"" id="SR-Img">';
+                                    //Markup_360+='<p class="" id="Serv-Req">Service requests</p>';
+									//Markup_360+='<p class="" id="Serv-Req"><a href="#SR-Applet">Service Requests</a></p>';
+SNHrefId="'SR-Applet'";
+									Markup_360+='<p class="" id="Serv-Req"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Service Requests</a></p>';
+                               Markup_360+=' </div>';
+							    Markup_360+='<div>';
+							   //Markup_360+='<img src="images/custom/plus_circle.png" class="SC-360-add-icon inactive" id="sc-c-create-sr-btn">';
+							   Markup_360+='<img src="images/custom/plus_circle_inactive.png" class="SC-360-add-icon inactive" id="sc-c-create-sr-btn">';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="SR-Pin" draggable="true"></a>';
+                            Markup_360+='</div>';
+							 Markup_360+='</div>';
+							 
+                            Markup_360+='<div class="SC-360-nav-item" id="Activities-AppletName-div">';
+                               Markup_360+=' <div class="SC-360-nav-item-name-container" id="Activities-AppletName">';
+                                    Markup_360+='<img src="images/custom/Activities-grey.png" class="SC-360-nav-item-image SC-360-contact-img"" id="Activities-Img">';
+                                    //Markup_360+='<p class="" id="Activities">Activities</p>';
+									//Markup_360+='<p class="" id="Activities"><a href="#Activities-Applet">Activities</a></p>';
+SNHrefId="'Activities-Applet'";
+									Markup_360+='<p class="" id="Activities"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Activities</a></p>';
+									
+                                Markup_360+='</div>';
+								Markup_360+='<div>';
+								Markup_360+='<img src="images/custom/plus_circle_inactive.png" class="SC-360-add-icon inactive" id="sc-c-create-Activity-btn">';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Activities-Pin" draggable="true"></a>';
+								Markup_360+='</div>';
+							Markup_360+='</div>';
+							
+                            Markup_360+='<div class="SC-360-nav-item" id="Inn-Circle-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Inn-Circle-AppletName">';
+                                    Markup_360+='<img src="images/custom/ICR.png" class="SC-360-nav-item-image" id="Inn-Circle-Img">';
+                                    //Markup_360+='<p class="" id="Inn-Circle">Inner Circle Rewards</p>';
+									//	Markup_360+='<p class="" id="Inn-Circle"><a href="#Inn-Circle-Applet">Sleep Number Rewards</a></p>';
+									SNHrefId="'Inn-Circle-Applet'";
+									Markup_360+='<p class="" id="Inn-Circle"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Sleep Number Rewards</a></p>';
+
+                                Markup_360+='</div>';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Inn-Circle-Pin" draggable="true"></a>';
+                           Markup_360+=' </div>';
+						   
+						  Markup_360+='<div class="SC-360-nav-item" id="Itemlookup-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Itemlookup-AppletName">';
+                                    Markup_360+='<img src="images/custom/lookup_grey.png" class="SC-360-nav-item-image" id="Itemlookup-Img">';
+                                    //  Markup_360+='<p class="" id="item-lookup"><a href="#Item-lookup-Applet">Item Lookup</a></p>';
+SNHrefId="'Item-lookup-Applet'";
+									Markup_360+='<p class="" id="item-lookup"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Item Lookup</a></p>';
+                                Markup_360+='</div>';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Item-lookup-Pin" draggable="true"></a>';
+                           Markup_360+=' </div>';
+						   
+						   //SWAGH:10192023:SFSTRY0003043
+						   /*
+						   Markup_360+='<div class="SC-360-nav-item" id="Campaigns-AppletName-div">';
+                                Markup_360+='<div class="SC-360-nav-item-name-container" id="Campaigns-AppletName">';
+                                    Markup_360+='<img src="images/custom/Campaign_gray.png" class="SC-360-nav-item-image" id="Campaigns-Img">';
+                                    //  Markup_360+='<p class="" id="Campaigns"><a href="#Campaigns-Applet">Marketing History</a></p>';
+SNHrefId="'Campaigns-Applet'";
+									Markup_360+='<p class="" id="Campaigns"><a onclick="javascript: document.getElementById('+ SNHrefId +').scrollIntoView();" href="#">Marketing History</a></p>';
+									
+                                Markup_360+='</div>';
+                                Markup_360+='<a onclick="javascript: document.getElementById('+SNHrefId+').scrollIntoView();"><img src="images/custom/Pin.png" class="SC-360-nav-item-pin-image SC-contact360-pin inactive" id="Campaigns-Pin" draggable="true"></a>';
+                           Markup_360+=' </div>';
+						   */
+						   
+                         Markup_360+='</div>';
+                       // Markup_360+='<div class="SC-360-sku-block" style="display:none">';
+					   // Markup_360+='<div class="SC-360-sku-block">';
+                            //Markup_360+='<p class="SC-360-sku-label">';
+                                //Markup_360+='FIND REPLACEMENT';
+                            //Markup_360+='</p>';
+                           // Markup_360+='<input type="text" name="" class="SC-360-input" placeholder="SKU# or description" id="SC-360-sku-contact-input">';
+                        //Markup_360+='</div>';
+                    Markup_360+='</div>';
+                    Markup_360+='<div class="SC-360-right-container" id="SC-360-RightContainer">';
+                       
+					   
+					   Markup_360+='<div class="SC-360-card fixed" id="Cust-Details-Applet" style="display:block;">';
+                        Markup_360+='</div>';
+					
+						 Markup_360+=' <div class="SC-360-card" id="Cust-inter-Applet" draggable="true" style="display: none;">';
+                        Markup_360+='</div>';
+						
+                       Markup_360+=' <div class="SC-360-card" id="Prof-Info-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+					 
+                       Markup_360+=' <div class="SC-360-card" id="Cons-Notes-Applet" draggable="true" style="display:none;">';
+                       Markup_360+=' </div>'; 
+					   
+                        Markup_360+='<div class="SC-360-card" id="Assets-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+
+						Markup_360+='<div class="SC-360-card" id="Digital-Assets-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+					Markup_360+='<div class="SC-360-card" id="Additional-Sleeper-Applet" draggable="true" style="display:none;">';
+			                        Markup_360+='</div>';
+						 
+                        Markup_360+='<div class="SC-360-card" id="Orders-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+						
+                        Markup_360+=' <div class="SC-360-card" id="Oppor-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+						
+                        Markup_360+='<div class="SC-360-card" id="HDSR-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+						
+                        Markup_360+='<div class="SC-360-card" id="SR-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+						
+						Markup_360+='<div class="SC-360-card" id="Activities-Applet" draggable="true" style="display:none;">';
+						Markup_360+='</div>';
+						
+                        Markup_360+='<div class="SC-360-card" id="Inn-Circle-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+						Markup_360+='<div class="SC-360-card" id="Item-lookup-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+						//SWAGH:10192023:SFSTRY0003043
+						/*
+						Markup_360+='<div class="SC-360-card" id="Campaigns-Applet" draggable="true" style="display:none;">';
+                        Markup_360+='</div>';
+						*/
+					//Adding to solve bckdrop -- taken from ICR end
+						Markup_360+='</div>';
+                    Markup_360+='</div>';
+                Markup_360+='</div>';
+            Markup_360+='</div>'; 
+						
+        Markup_360+='<div class="modal fade SC-360-sku" id="SC-360-contact-fr" role="dialog">';
+            Markup_360+='<div class="modal-dialog" id="SKU-PopUp">';
+                //<!-- Modal content-->
+                Markup_360+='<div class="modal-content">';
+                    Markup_360+='<div class="modal-header">';
+                        //Markup_360+='<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" id="SC-360-contact-fr-close">&times;</button>';
+                        Markup_360+='<div class="header-content">';
+                            Markup_360+='<div class="sku-head-title">';
+                                Markup_360+='<p class="no-margin">Substitutes for <span>SKU #</span><span>5554251252</span></p>';
+                                Markup_360+='<span>$133.99</span>';
+                            Markup_360+='</div>';
+                            Markup_360+='<p class="description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries,</p>';
+                        Markup_360+='</div>';
+                    Markup_360+='</div>';
+                    Markup_360+='<div class="modal-body">';
+                       Markup_360+=' <div class="SC-table-with-scroll-main">';
+                           Markup_360+=' <table class="SC-table">';
+                                Markup_360+='<thead>';
+                                    Markup_360+='<tr class="no-bg">';
+                                        Markup_360+='<th>SUBSTITUTE SKU#</th>';
+                                        Markup_360+='<th>SKU Description</th>';
+                                        Markup_360+='<th>SKU Price</th>';
+                                    Markup_360+='</tr>';
+                                Markup_360+='</thead>';
+                                Markup_360+='<tbody>';
+                                    Markup_360+='<tr>';
+                                        Markup_360+='<td>85558545</td>';
+                                        Markup_360+='<td>Lorem Ipsum</td>';
+                                        Markup_360+='<td>SKU Price</td>';
+                                    Markup_360+='</tr>';
+                                Markup_360+='</tbody>';
+                            Markup_360+='</table>';
+                            Markup_360+='<div class="SC-single-button-container less-padding">';
+                                Markup_360+='<button id="sku-close">Close</button>';
+                            Markup_360+='</div>';
+                        Markup_360+='</div>';
+                    Markup_360+='</div>';
+                Markup_360+='</div>';
+            Markup_360+='</div>';
+        Markup_360+='</div>';
+    //Markup_360+='</div>';
+	
+		Markup_360+='<div class="modal fade sc-c-create-assets" id="SC-360-create-assets" role="dialog">';
+			Markup_360+='<form name="sc-c-create-assets-from" autocomplete="off" id="sc-Asset-Create-Form">';
+				Markup_360+=' <div class="modal-dialog">';
+               // <!-- Modal content-->
+					Markup_360+='<div class="modal-content">';
+						Markup_360+=' <div class="modal-header">';
+							//Markup_360+=' <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" id="SC-360-contact-fr-close">&times;</button>';
+							Markup_360+=' <div class="header-content">';
+								Markup_360+='  <p>Create Manual Asset</p>';
+							Markup_360+='</div>';
+						Markup_360+='</div>';
+                    //Markup_360+='<form name="sc-c-create-assets-from" id="sc-Asset-Create-Form">';
+						Markup_360+='  <div class="modal-body clearfix">';
+							Markup_360+='  <div class="row no-margin clearfix">';
+								Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6 ">';
+									Markup_360+=' <div class="SC-input-container">';
+										Markup_360+='  <label class="SC-label mandatory">Whole Sale Order?</label>';
+                                        //Markup_360+='<input type="text" name="" class="SC-input" id="Asset-IsWholeSalesOrder">';
+										Markup_360 +='<select class="SC-input" name="WholeSaleOrder" id="Asset-IsWholeSalesOrder">';														
+										Markup_360 +='<option></option>';
+										Markup_360 +='<option>Y</option>';
+										Markup_360 +='<option>N</option>';
+										Markup_360 +='</select>';
+									Markup_360+=' </div>';
+								Markup_360+=' </div>';
+								Markup_360+='  <div class="col-md-6 col-lg-6 col-sm-6 ">';
+									Markup_360+=' <div class="SC-input-container">';
+										Markup_360+='  <label class="SC-label mandatory">Installed Date</label>';
+										Markup_360+='<input type="text" name="InstalledDate" class="SC-input" autocomplete="off" id="Asset-InstaledDate">';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+                            Markup_360+='</div>';
+                            Markup_360+='<div class="row no-margin clearfix">';
+								Markup_360+='  <div class="col-md-6 col-lg-6 col-sm-6 ">';
+									Markup_360+=' <div class="SC-input-container">';
+										Markup_360+='  <label class="SC-label mandatory">Warranty Name</label>';
+                                       //Markup_360+=' <input type="text" name="" class="SC-input" id="Asset-WarentyName">';
+										Markup_360+='<input list="warranty" name="warrantyList" class="SC-input" id="Asset-WarentyName">';
+										Markup_360+='<datalist id="warranty">';
+										Markup_360+='</datalist>';
+									Markup_360+=' </div>';
+                                Markup_360+='</div>';
+								Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6">';
+									Markup_360+='   <div class="SC-input-container">';
+										Markup_360+='    <label class="SC-label mandatory">SKU#</label>';
+                                       //Markup_360+=' <input type="text" name="" class="SC-input" id="Asset-SKU">';
+									    Markup_360+='<input list="sku" name="SKU" class="SC-input" id="Asset-SKU">';
+										Markup_360+='<datalist id="sku">';
+										Markup_360+='</datalist>';
+									Markup_360+=' </div>';
+                                Markup_360+='</div>';
+                            Markup_360+='</div>';
+                            Markup_360+='<div class="row no-margin clearfix">';
+								Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6">';
+									Markup_360+='  <div class="SC-input-container">';
+										Markup_360+='   <label class="SC-label mandatory">Quantity</label>';
+                                       //Markup_360+=' <input type="text" name="" class="SC-input" id="Asset-Quantity">';
+										Markup_360 +='<select class="SC-input" name="Quantity" id="Asset-Quantity">';	
+										Markup_360 +='</select>';
+									Markup_360+='</div>';
+                                Markup_360+='</div>';
+                                Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6">';
+									Markup_360+='  <div class="SC-input-container">';
+										Markup_360+='  <label class="SC-label">Order # Reference</label>';
+                                        Markup_360+='<input type="text" name="OrderRef" class="SC-input" id="Asset-OrderRef">';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+                            Markup_360+='</div>';
+                        Markup_360+='</div>';
+                    //Markup_360+='</form>';
+						Markup_360+='<div class="modal-footer">';
+							Markup_360+='<div class="SC-two-buttons-container">';
+								Markup_360+='  <button class="cancel" type="reset" id="Cancel-Asset">Cancel</button>';
+								Markup_360+=' <button type="submit" class="submit" id="Create-Asset">Submit</button>';
+							Markup_360+='</div>';
+						Markup_360+='</div>';
+					Markup_360+=' </div>';
+				Markup_360+='</div>';
+			Markup_360+='</form>';
+		Markup_360+=' </div>';
+		
+		
+		Markup_360+='<div class="modal fade SC-create-entity" id="SC-add-contact">';
+		Markup_360+='</div>';
+		
+		Markup_360+='<div class="modal fade SC-add-storelocation" id="SC-add-storelocation" role="dialog">';
+		Markup_360+='</div>';
+		
+		Markup_360+='<div class="modal fade HDSR-notes-details" id="HDSR-notes-details" role="dialog">';
+		Markup_360+='</div>';
+		
+		//start;;
+		
+		
+		Markup_360+='<div class="modal fade sc-c-create-assets" id="SC-360-create-opportunity" role="dialog">';
+            Markup_360+='<div class="modal-dialog">';
+                //<!-- Modal content-->
+                Markup_360+='<div class="modal-content">';
+                    Markup_360+='<div class="modal-header">';
+                        //Markup_360+='<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" id="SC-360-contact-fr-close">&times;</button>';
+                        Markup_360+='<div class="header-content">';
+                            Markup_360+='<p>Create Opportunity</p>';
+                        Markup_360+='</div>';
+                    Markup_360+='</div>';
+                    Markup_360+='<form name="sc-c-create-assets-from" id="sc-create-Opportunity">';
+                        Markup_360+='<div class="modal-body clearfix">';
+                           Markup_360+=' <div class="row no-margin">';
+                               Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6 ">';
+                                   Markup_360+=' <div class="SC-input-container">';
+                                      Markup_360+='  <label class="SC-label mandatory">Opportunity Name</label>';
+                                        Markup_360+='<input type="text" name="optyname" class="SC-input" id="OpptyName" value="">';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+                                Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6 ">';
+                                   Markup_360+=' <div class="SC-input-container">';
+                                        Markup_360+='<label for="Customer Type" class="SC-label" >Probability</label>';
+										//Markup_360+='<div class="sc-opportunity-dropdown" id="OppProb">';
+                                        Markup_360+='<select class="SC-input" id="OppProb">';
+                                          
+                                       Markup_360+=' </select>';
+									  // Markup_360+= '  <input type="text" name="format" value="Sale"/>';*/
+                            //Markup_360 += '      </div>';
+                                    Markup_360+='</div>';
+                               Markup_360+=' </div>';
+                           Markup_360+=' </div>';
+                            Markup_360+='<div class="row no-margin">';
+								//SPATIBAN: 11/28/2018: Added markup for CHG0034565
+                                Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6 ">';
+                                    Markup_360+='<div class="SC-input-container">';
+                                       Markup_360+=' <label for="Customer Type" class="SC-label">Channel</label>';
+									   //Markup_360+='<div class="sc-opportunity-dropdown" id="OppChannel">';
+                                       Markup_360+=' <select class="SC-input" id="OppChannel">';
+                                           
+                                        Markup_360+='</select>';
+										// Markup_360 += '      </div>';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+								
+								Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6 ">';
+                                    Markup_360+='<div class="SC-input-container">';
+										Markup_360+=' <label for="Customer Type" class="SC-label">Revenue</label>';
+									    Markup_360+='<input type="text" name="screvenue" class="SC-input padding-for-currency" id="SC_Revenue" data-original-title="" title="">';
+										//Markup_360+='<span class="currency">$</span>';
+									Markup_360+='</div>';
+                                Markup_360+='</div>';
+                            Markup_360+='</div>';
+                        Markup_360+='</div>';
+                    Markup_360+='<div class="modal-footer">';
+                       Markup_360+=' <div class="SC-two-buttons-container">';
+                           Markup_360+=' <button class="cancel" type="reset" id="cancel-opportunity">Cancel</button>';
+                            Markup_360+='<button class="submit" id="create-opportunity">Submit</button>';
+                        Markup_360+='</div>';
+                   Markup_360+=' </div>';
+                     Markup_360+='</form>';
+               Markup_360+=' </div>';
+            Markup_360+='</div>';
+        Markup_360+='</div>';
+		//Start--Bom At Asset Level
+		//Start: pop up for Activity Creation
+		Markup_360+='<div class="modal fade sc-c-create-assets" id="SC-360-create-Activity" role="dialog">';
+            Markup_360+='<div class="modal-dialog">';
+                //<!-- Modal content-->
+                Markup_360+='<div class="modal-content">';
+                    Markup_360+='<div class="modal-header">';
+                        //Markup_360+='<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" id="SC-360-contact-fr-close">&times;</button>';
+                        Markup_360+='<div class="header-content">';
+                            Markup_360+='<p>Create Activity</p>';
+                        Markup_360+='</div>';
+                    Markup_360+='</div>';
+                    Markup_360+='<form name="sc-c-create-assets-from" id="sc-create-activity">';
+                        Markup_360+='<div class="modal-body clearfix">';
+							Markup_360+=' <div class="row no-margin">';
+                                Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6" style="height: 78px !important">';
+                                   Markup_360+=' <div class="SC-input-container">';
+                                        Markup_360+='<label for="Customer Type" class="SC-label mandatory" >Type</label>';
+										Markup_360+='<select class="SC-input mandatory" name="conacttype" id="con360-ActType">';
+                                        Markup_360+=' </select>';
+									Markup_360+='</div>';
+								Markup_360+=' </div>';
+								Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6" style="height: 78px !important">';
+									Markup_360+=' <div class="SC-input-container">';
+										Markup_360+='  <label class="SC-label">Planned Start Date</label>';
+                                        Markup_360+='<input type="text" name="optyname" autocomplete="off" class="SC-input" id="con-Act-Startdate" value="">';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+							Markup_360+=' </div>';
+							Markup_360+=' <div class="row no-margin">';
+								Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6 ">';
+										Markup_360+='<div class="SC-input-container">';
+										   Markup_360+=' <label class="SC-label">Description</label>';
+											Markup_360+='<textarea  name="detdes" class="SC-input" id="con-Act-Description" value=""></textarea>';
+										Markup_360+='</div>';
+								Markup_360+='</div>';
+								Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6 ">';
+										Markup_360+='<div class="SC-input-container">';
+										   Markup_360+=' <label class="SC-label">Comments</label>';
+											Markup_360+='<textarea  name="detdes" class="SC-input" id="con-Act-comments" value=""></textarea>';
+										Markup_360+='</div>';
+									Markup_360+='</div>';
+							Markup_360+='</div>';
+							Markup_360+=' <div class="row no-margin">';
+								Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6 ">';
+										Markup_360+='<div class="SC-input-container">';
+											Markup_360+='<label for="Customer Type" class="SC-label" >Status</label>';
+										   Markup_360+='<select class="SC-input" name="con-Act-Status" id="con360-ActStatus">';
+										Markup_360+=' </select>';
+										Markup_360+='</div>';
+								Markup_360+='</div>';
+								Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6 ">';
+								Markup_360+='</div>';
+							Markup_360+='</div>';							
+                        Markup_360+='</div>';
+                    Markup_360+='<div class="modal-footer">';
+                       Markup_360+=' <div class="SC-two-buttons-container">';
+                           Markup_360+=' <button class="cancel" type="reset" id="contact360-cancel-Activity">Cancel</button>';
+                            Markup_360+='<button class="submit" id="contact360-create-Activity">Submit</button>';
+                        Markup_360+='</div>';
+                   Markup_360+=' </div>';
+                     Markup_360+='</form>';
+               Markup_360+=' </div>';
+            Markup_360+='</div>';
+        Markup_360+='</div>';
+		//END: pop up for Activity Creation
+		//Start: pop up for Edit Activity
+		Markup_360+='<div class="modal fade sc-c-create-assets" id="SC-360-Edit-Activity" role="dialog">';
+            Markup_360+='<div class="modal-dialog">';
+                //<!-- Modal content-->
+                Markup_360+='<div class="modal-content">';
+                    Markup_360+='<div class="modal-header">';
+                        //Markup_360+='<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" id="SC-360-contact-fr-close">&times;</button>';
+                        Markup_360+='<div class="header-content">';
+                            Markup_360+='<p>Edit Activity</p>';
+                        Markup_360+='</div>';
+                    Markup_360+='</div>';
+                    Markup_360+='<form name="sc-c-create-assets-from" id="sc-con360-edit-activity">';
+                        Markup_360+='<div class="modal-body clearfix">';
+							Markup_360+=' <div class="row no-margin">';
+                                Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6" style="height: 78px !important">';
+                                   Markup_360+=' <div class="SC-input-container">';
+                                        Markup_360+='<label for="Customer Type" class="SC-label mandatory" >Status</label>';
+										Markup_360+='<select class="SC-input mandatory" name="conact360-status" id="con360-Act-Status">';
+                                        Markup_360+=' </select>';
+									Markup_360+='</div>';
+								Markup_360+=' </div>';
+								Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6" style="height: 78px !important">';
+									Markup_360+=' <div class="SC-input-container">';
+										Markup_360+='  <label class="SC-label mandatory">Planned Start Date</label>';
+                                        Markup_360+='<input type="text" name="optyname" autocomplete="off" class="SC-input" id="con-edit-Act-Startdate" value="">';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+							Markup_360+=' </div>';
+							Markup_360+=' <div class="row no-margin">';
+								Markup_360+='<div class="col-md-12 col-lg-12 col-sm-12">';
+										Markup_360+='<div class="SC-input-container">';
+										   Markup_360+=' <label class="SC-label">Description</label>';
+											Markup_360+='<textarea  name="detdes" class="SC-input" id="con-Act-edit-Description" value=""></textarea>';
+										Markup_360+='</div>';
+								Markup_360+='</div>';
+							Markup_360+='</div>';
+							Markup_360+=' <div class="row no-margin">';
+								Markup_360+='<div class="col-md-12 col-lg-12 col-sm-12 ">';
+										Markup_360+='<div class="SC-input-container">';
+										   Markup_360+=' <label class="SC-label">Comments</label>';
+											Markup_360+='<textarea  name="detdes" class="SC-input" id="con-Act-edit-comments" value=""></textarea>';
+										Markup_360+='</div>';
+									Markup_360+='</div>';
+							Markup_360+='</div>';
+						Markup_360+='</div>';
+                    Markup_360+='<div class="modal-footer">';
+                       Markup_360+=' <div class="SC-two-buttons-container">';
+                           Markup_360+=' <button class="cancel" type="reset" id="contact360-cancel-EditActivity"  data-dismiss="modal">Cancel</button>';
+                            Markup_360+='<button class="submit" id="contact360-create-EditActivity">Save</button>';
+                        Markup_360+='</div>';
+                   Markup_360+=' </div>';
+                     Markup_360+='</form>';
+               Markup_360+=' </div>';
+            Markup_360+='</div>';
+        Markup_360+='</div>';
+		//END: pop up for Activity Creation
+		//Valla_27
+			Markup_360 +='<div class="modal fade SC-SO-add-popup" id="SC-Other-App-popup" role="dialog">';
+            Markup_360 +='    <div class="SC-modal modal-orange-bg">';
+            Markup_360 +='     <div class="modal-dialog">';
+            Markup_360 +='            <!-- Modal content-->';
+            Markup_360 +='            <div class="modal-content less-height">';
+            Markup_360 +='                <div class="text">';
+            Markup_360 +='                    <span class="SC-span-width add-margin">Have you asked the customer for permission to text them?</span>';
+            Markup_360 +='                   <div class="SC-two-buttons">';
+            Markup_360 +='                        <button  id="sc-App-No">No</button>';
+            Markup_360 +='                        <button id="sc-App-Yes">Yes</button>';
+            Markup_360 +='                   </div>';
+            Markup_360 +='                </div>';
+            Markup_360 +='            </div>';
+            Markup_360 +='        </div>';
+            Markup_360 +='    </div>';
+            Markup_360 +='</div>';
+		//END: Valla_27
+		/*Markup_360 += '      <div class="modal fade SC-product-popup" id="SC-bom-tree" role="dialog">';
+             Markup_360 += '      <div class="modal-dialog select-payment-width">';
+             Markup_360 += '       <div class="modal-content">';
+             Markup_360 += '     <div class="modal-header">';
+             Markup_360 += '            <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal">&times;</button>';
+             Markup_360 += '          <div class="header-content">';
+             Markup_360 += '             <div class="sc-head-title">';
+             Markup_360 += '               <div class="sc-icon-text">';
+             Markup_360 += '                <div>';
+             Markup_360 += '               <img src="images/custom/sc-logo.png" class="sc-order-icon">';
+             Markup_360 += '           </div>';
+            Markup_360 += '          <div class="sc-header-text">';
+             Markup_360 += '              <p>Product Tree</p>';
+             Markup_360 += '                 </div>';
+             Markup_360 += '              </div>';
+             Markup_360 += '          </div>';
+             Markup_360 += '        </div>';
+            Markup_360 += '      </div>';
+            Markup_360 += '        <div class="modal-body modal-panel-color" id="SC-Produc-Tree-Body">';
+            Markup_360 += '     </div>';
+           Markup_360 += '     </div>';
+           Markup_360 += '     </div>';
+          Markup_360 += '    </div>';*/
+		//End--Bom At Asset Level
+		
+		Markup_360+='            <div class="modal fade SC-SO-order-line-details" id="SC-Asset-addon-line-details" role="dialog">';
+		Markup_360+='            </div>';
+		
+		/* <!--Start--Addded popup for P2PE --> */
+			 Markup_360 += '     <div class="modal fade SC-SO-add-popup" id="SC-SO-P2PE-change" role="dialog">';
+             Markup_360 += '       <div class="SC-modal">';
+             Markup_360 += '           <div class="modal-dialog">';
+             Markup_360 += '               <!-- Modal content-->';
+             Markup_360 += '               <div class="modal-content modal-another-color">';
+			 Markup_360 += '    			 <div >';
+             Markup_360 += '                   <img src="images/custom/sc-logo.png">';
+             Markup_360 += '               </div>';
+             Markup_360 += '                   <div class="text">';
+             Markup_360 += '                       <span class="SC-span-width add-margin">Please update customer’s information.</span>';
+             Markup_360 += '                       <button class="SC-ok-button" id="SC-SO-P2PE-ok">ok</button>';
+             Markup_360 += '                   </div>';
+             Markup_360 += '               </div>';
+             Markup_360 += '           </div>';
+            Markup_360 += '        </div>';
+            Markup_360 += '    </div>';
+			/* <!--End--Addded popup for P2PE --> */
+       Markup_360+=' <div class="modal fade sc-c-create-assets" id="SC-360-create-sr" role="dialog">';
+          Markup_360+='  <div class="modal-dialog">';
+               // <!-- Modal content-->
+               Markup_360+=' <div class="modal-content">';
+                  Markup_360+='  <div class="modal-header">';
+                       //Markup_360+=' <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" id="SC-360-contact-fr-close">&times;</button>';
+                       Markup_360+=' <div class="header-content">';
+                            Markup_360+='<p>Create Service Request</p>';
+                        Markup_360+='</div>';
+                    Markup_360+='</div>';
+                    Markup_360+='<form name="sc-c-create-assets-from" id="sc-create-sr">';
+                       Markup_360+=' <div class="modal-body clearfix">';
+                          Markup_360+='  <div class="row no-margin">';
+                               Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6" style="display:none">';
+                                   Markup_360+=' <div class="SC-input-container" id="srtypelable">';
+                                        Markup_360+='<label for="Customer Type" class="SC-label mandatory">SR Type</label>';
+                                        Markup_360+='<select class="SC-input" name="srtype" id="SR-Type">';
+                                         Markup_360+=' </select>';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+								 Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6">';
+                                   Markup_360+=' <div class="SC-input-container">';
+                                       Markup_360+=' <label for="Customer Type" class="SC-label mandatory">Type</label>';
+                                        Markup_360+='<select class="SC-input" name="type" id="SRSubType">';
+                                           
+                                        Markup_360+='</select>';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+								Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6">';
+                                    Markup_360+=' <div class="SC-input-container">';
+                                        Markup_360+=' <label for="Customer Type" class="SC-label mandatory">Area</label>';
+                                        Markup_360+='<select class="SC-input" name="area" id="SRArea">';
+                                            Markup_360+='<option></option>';   
+                                        Markup_360+=' </select>';
+                                    Markup_360+='</div>';
+                                Markup_360+=' </div>';
+                            Markup_360+='</div>';
+                            Markup_360+=' <div class="row no-margin">';
+							    Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6">';
+                                    Markup_360+='  <div class="SC-input-container">';
+                                        Markup_360+=' <label for="Customer Type" class="SC-label mandatory">Sub Area</label>';
+                                        Markup_360+='<select class="SC-input" name="subarea" id="SRSubArea">';
+                                           Markup_360+='<option></option>'; 
+                                        Markup_360+='</select>';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+							Markup_360+='</div>';
+                            Markup_360+=' <div class="row no-margin" style="display:none">';
+                                Markup_360+=' <div class="col-md-6 col-lg-6 col-sm-6">';
+                                    Markup_360+=' <div class="SC-input-container">';
+                                       Markup_360+=' <label for="Customer Type" class="SC-label">Priority</label>';
+                                        Markup_360+='<select class="SC-input" id="SRPrority">';
+                                          
+                                        Markup_360+='</select>';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';
+								Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6">';
+                                    Markup_360+='<div class="SC-input-container">';
+                                        Markup_360+=' <label for="Customer Type" class="SC-label mandatory">Status</label>';
+                                        Markup_360+='<select class="SC-input" name="status" id="SRStatus">';
+                                        Markup_360+=' </select>';
+                                    Markup_360+='</div>';
+                                Markup_360+=' </div>';
+                            Markup_360+='</div>';
+                            Markup_360+='<div class="row no-margin clearfix">';
+                                Markup_360+='<div class="col-md-12 col-lg-12 col-sm-12">';
+                                   Markup_360+=' <div class="SC-input-container">';
+                                       Markup_360+=' <label class="SC-label mandatory">Detailed Description</label>';
+                                        Markup_360+='<textarea  name="detdes" class="SC-input mandatory" id="SRDetailedDescription" value=""></textarea>';
+                                   Markup_360+='</div>';
+                               Markup_360+=' </div>';
+							   /*Markup_360+='<div class="col-md-6 col-lg-6 col-sm-6">';
+                                    Markup_360+='<div class="SC-input-container">';
+                                        Markup_360+='<label class="SC-label">Order Number</label>';
+                                        Markup_360+='<input type="text" name="" class="SC-input">';
+                                    Markup_360+='</div>';
+                                Markup_360+='</div>';*/
+                            Markup_360+='</div>';
+                        Markup_360+='</div>';
+                        Markup_360+='<div class="modal-footer">';
+                            Markup_360+=' <div class="SC-two-buttons-container">';
+                                Markup_360+='<button class="cancel" type="reset" id="sr-cancel">Cancel</button>';
+                                Markup_360+='<button class="submit" id="SCcreateservicerequest">Submit</button>';
+                            Markup_360+='</div>';
+                        Markup_360+='</div>';
+                    Markup_360+='</form>';
+               Markup_360+=' </div>';
+            Markup_360+=' </div>';
+        Markup_360+='</div>';
+		
+		//end;;
+	//<!-- Apply for Finance popup starts here-->
+             Markup_360+='<div class="modal fade SC-SO-add-popup" id="SC-finance-join" role="dialog">';
+               Markup_360+=' <div class="SC-modal">';
+                    Markup_360+='<div class="modal-dialog">';
+                        //<!-- Modal content-->
+                       Markup_360+=' <div class="modal-content modal-another-color">';
+                            Markup_360+='<div>';
+                                Markup_360+='<img src="images/custom/sc-logo.png" class="sc-order-icon">';
+                            Markup_360+='</div>';
+                            Markup_360+='<div class="text">';
+                               Markup_360+=' <span class="add-margin">Do you want to apply Joint Application?</span>';
+								Markup_360+='<div class="SC-two-buttons">';
+                                    Markup_360+='<button id="sc-join-yes-button" style="margin-right: 10px !important">Yes</button>';
+                                    Markup_360+='<button id="sc-join-no-button">No</button>';
+                                Markup_360+='</div>';
+                           Markup_360+='</div>'
+                        Markup_360+='</div>';
+                    Markup_360+='</div>';
+                Markup_360+='</div>';
+            Markup_360+='</div>';
+		 
+		
+	
+	//<!--  Apply for Finance popup ends here-->
+			//<!-- CheckID popup Starts here -->
+	     Markup_360+='<div class="modal fade aff-manual-update" id="app-info-popup" role="dialog">';
+            Markup_360+='<div class="modal-dialog">';
+                //<!-- Modal content-->
+                Markup_360+='<div class="modal-content">';
+                Markup_360+='<div class="modal-header height60">';
+                Markup_360+='<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" id="SC-360-contact-fr-close">&times;</button>';
+                Markup_360+='<div class="header-content addpadding">';
+                Markup_360+='<p>Primary Applicant ID Information</p>';
+                Markup_360+='</div>';
+                        
+                Markup_360+='</div>';
+                Markup_360+='<form name="aff-manual-update-form" id="sc-finance-app">';
+                Markup_360+='<div class="modal-body no-padding clearfix" style="padding:0px !important">';
+
+                Markup_360+='<div class="row no-margin clearfix paddingtop lpadding">';
+                Markup_360+='<div class="col-md-4 col-lg-4 col-sm-4">';
+                Markup_360+='<div class="aff-value-container">';
+                Markup_360+='<label class="label">Primary ID Type</label>';
+                Markup_360 +='<select class="aff-input" name="" id="SC_applicant_PrimaryId">';		
+				Markup_360 +='</select>';
+                Markup_360+='</div>';									
+                Markup_360+='</div>';
+			    Markup_360+='<div class="col-md-4 col-lg-4 col-sm-4">';
+                Markup_360+='<div class="aff-value-container">';
+                Markup_360+='<label class="label">Issuing State</label>';
+                //Markup_360+='<input type="text" name="" class="aff-input">';
+			    Markup_360+='<select class="aff-input" name="" id="SC_fin_IssueState">';
+				Markup_360+='</Select>';
+                Markup_360+='</div>';
+
+									
+                                Markup_360+='</div>';
+                                Markup_360+='<div class="col-md-2 col-lg-2 col-sm-2">';
+                                    Markup_360+='<div class="aff-value-container">';
+                                        Markup_360+='<label class="label">Exp. Month</label>';
+                                       Markup_360 +='<select class="aff-input" name="WholeSaleOrder">';														
+										Markup_360 +='<option>01</option>';
+										Markup_360 +='<option>02</option>';
+										Markup_360 +='<option>03</option>';
+										Markup_360 +='<option>04</option>';
+										Markup_360 +='<option>05</option>';
+										Markup_360 +='<option>06</option>';
+										Markup_360 +='<option>07</option>';
+										Markup_360 +='<option>08</option>';
+										Markup_360 +='<option>09</option>';
+										Markup_360 +='<option>10</option>';
+										Markup_360 +='<option>11</option>';
+										Markup_360 +='<option>12</option>';
+										Markup_360 +='</select>';
+                                    Markup_360+='</div>';
+									
+                                 Markup_360+='</div>';
+								 Markup_360+='<div class="col-md-2 col-lg-2 col-sm-2">';
+                                 Markup_360+='<div class="aff-value-container">';
+                                 Markup_360+='<label class="label">Exp. Year</label>';
+                                 Markup_360+='<input type="number" name="" class="aff-input">';
+                                 Markup_360+='</div>';
+									
+                                 Markup_360+='</div>';
+                               
+                                 Markup_360+='</div>';
+							     Markup_360+='<div class="row no-margin clearfix lpadding">';
+                                 Markup_360+='<div class="col-md-8 col-lg-8 col-sm-8">';
+                                 Markup_360+='<div class="aff-value-container">';
+                                 Markup_360+='<label class="label">Secondary ID Type</label>';
+                                    Markup_360 +='<select class="aff-input" name="" id="SC_applicant_SecondaryId">';		
+							    Markup_360 +='</select>';
+                                 Markup_360+='</div>';
+	
+                                 Markup_360+='</div>';
+								
+                                        Markup_360+='<div class="col-md-2 col-lg-2 col-sm-2">';
+                                        Markup_360+='<div class="aff-value-container">';
+                                        Markup_360+='<label class="label">Exp. Month</label>';
+                                        Markup_360 +='<select class="aff-input" name="WholeSaleOrder">';														
+										Markup_360 +='<option>01</option>';
+										Markup_360 +='<option>02</option>';
+										Markup_360 +='<option>03</option>';
+										Markup_360 +='<option>04</option>';
+										Markup_360 +='<option>05</option>';
+										Markup_360 +='<option>06</option>';
+										Markup_360 +='<option>07</option>';
+										Markup_360 +='<option>08</option>';
+										Markup_360 +='<option>09</option>';
+										Markup_360 +='<option>10</option>';
+										Markup_360 +='<option>11</option>';
+										Markup_360 +='<option>12</option>';
+										Markup_360 +='</select>';
+                                        Markup_360+='</div>';
+									
+                                        Markup_360+='</div>';
+								Markup_360+='<div class="col-md-2 col-lg-2 col-sm-2">';
+                                Markup_360+='<div class="aff-value-container">';
+                                Markup_360+='<label class="label">Exp. Year</label>';
+                                Markup_360+='<input type="number" name="" class="aff-input">';
+                                Markup_360+='</div>';
+                                Markup_360+='</div>';
+                                Markup_360+='</div>';
+							    Markup_360+='<div class="row no-margin fheader clearfix SCConcoApplicant">';
+							    Markup_360+='<div class="col-md-12 col-lg-12 col-sm-12 fcol">';
+							    Markup_360+='<p>Co-Applicant ID Information</p>';
+							    Markup_360+='</div>';
+							    Markup_360+='</div>';
+								
+							    Markup_360+='<div class="row no-margin clearfix  paddingtop lpadding SCConcoApplicant">';
+                                Markup_360+='<div class="col-md-4 col-lg-4 col-sm-4">';
+                                Markup_360+='<div class="aff-value-container">';
+                                Markup_360+='<label class="label">Primary ID Type</label>';
+                                  Markup_360 +='<select class="aff-input" name="" id="SC_co_applicant_PrimaryId">';		
+							    Markup_360 +='</select>'; 
+                                Markup_360+='</div>';
+                                Markup_360+='</div>';
+								
+								Markup_360+='<div class="col-md-4 col-lg-4 col-sm-4">';
+                                Markup_360+='<div class="aff-value-container">';
+                                Markup_360+='<label class="label">Issuing State</label>';
+                                //Markup_360+='<input type="text" name="" class="aff-input">';
+								Markup_360+='<select class="aff-input" name="" id="SC_fin_co_IssueState">';
+								Markup_360+='</Select>';
+                                Markup_360+='</div>';
+
+									
+                                    Markup_360+='</div>';
+                                    Markup_360+=' <div class="col-md-2 col-lg-2 col-sm-2">';
+                                    Markup_360+='<div class="aff-value-container">';
+									Markup_360+='<label class="label">Exp. Month</label>';
+                                       Markup_360 +='<select class="aff-input" name="WholeSaleOrder">';														
+										Markup_360 +='<option>01</option>';
+										Markup_360 +='<option>02</option>';
+										Markup_360 +='<option>03</option>';
+										Markup_360 +='<option>04</option>';
+										Markup_360 +='<option>05</option>';
+										Markup_360 +='<option>06</option>';
+										Markup_360 +='<option>07</option>';
+										Markup_360 +='<option>08</option>';
+										Markup_360 +='<option>09</option>';
+										Markup_360 +='<option>10</option>';
+										Markup_360 +='<option>11</option>';
+										Markup_360 +='<option>12</option>';
+										Markup_360 +='</select>';
+                                        Markup_360+='</div>';
+                                        Markup_360+='</div>';
+								 Markup_360+='<div class="col-md-2 col-lg-2 col-sm-2">';
+                                 Markup_360+='<div class="aff-value-container">';
+                                 Markup_360+='<label class="label">Exp. Year</label>';
+                                 Markup_360+='<input type="number" name="" class="aff-input">';
+                                 Markup_360+='</div>';
+                                 Markup_360+='</div>';
+                                 Markup_360+='</div>';
+							Markup_360+='<div class="row no-margin clearfix lpadding SCConcoApplicant">';
+                            Markup_360+='<div class="col-md-8 col-lg-8 col-sm-8">';
+                            Markup_360+='<div class="aff-value-container">';
+                            Markup_360+='<label class="label">Secondary ID Type</label>';
+                             Markup_360 +='<select class="aff-input" name="" id="SC_co_applicant_SecondaryId">';		
+							Markup_360 +='</select>'; 
+                            Markup_360+='</div>';
+
+									
+                                Markup_360+='</div>';
+								 Markup_360+='<div class="col-md-2 col-lg-2 col-sm-2">';
+                                   Markup_360+=' <div class="aff-value-container">';
+                                        Markup_360+='<label class="label">Exp. Month</label>';
+                                       Markup_360 +='<select class="aff-input" name="">';														
+										Markup_360 +='<option>01</option>';
+										Markup_360 +='<option>02</option>';
+										Markup_360 +='<option>03</option>';
+										Markup_360 +='<option>04</option>';
+										Markup_360 +='<option>05</option>';
+										Markup_360 +='<option>06</option>';
+										Markup_360 +='<option>07</option>';
+										Markup_360 +='<option>08</option>';
+										Markup_360 +='<option>09</option>';
+										Markup_360 +='<option>10</option>';
+										Markup_360 +='<option>11</option>';
+										Markup_360 +='<option>12</option>';
+										Markup_360 +='</select>';
+                                    Markup_360+='</div>';
+									
+                                Markup_360+='</div>';
+								Markup_360+='<div class="col-md-2 col-lg-2 col-sm-2">';
+                                Markup_360+='<div class="aff-value-container">';
+                                Markup_360+='<label class="label">Exp. Year</label>';
+                                Markup_360+=' <input type="number" name="" class="aff-input">';
+                                Markup_360+='</div>';
+									
+                                Markup_360+='</div>';
+                               
+                                Markup_360+='</div>';
+                                Markup_360+='</div>';
+                                Markup_360+='</form>';
+                                Markup_360+='<div class="modal-footer">';
+                                Markup_360+='<div class="SC-single-button-container no-padding">';
+                                Markup_360+='<button  id="sc-next-button">Next</button>';
+                                Markup_360+='</div>';
+                                Markup_360+='</div>';
+                                Markup_360+='</div>';
+                                Markup_360+='</div>';
+                                Markup_360+='</div>';
+		//<!-- CheckID popup Ends here -->
+		//<!-- check Finance credit term popup starts here-->
+            Markup_360+='<div class="modal fade SC-SO-add-popup" id="SC-SO-CT-popup" role="dialog">';
+            Markup_360+='<div class="SC-modal">';
+            Markup_360+='<div class="modal-dialog">';
+         //<!-- Modal content-->
+            Markup_360+='<div class="modal-content modal-another-color finance-height">';
+            Markup_360+='<div class="text">';
+		    Markup_360+='<p class="Info">Did you receive the Credit Terms and Disclosures document?</p>';
+            Markup_360+='<span class="SC-span-width add-margin">Federal Law requires Synchrony Bank to obtain, verify and record information that identifies you when you open an account. Synchrony Bank will use your name, address, date of birth, and other information for this purpose. By applying, you agree that if approved, Synchrony Bank may provide you with a Sleep Number Credit Card.</span>';
+            Markup_360+='<div class="SC-two-buttons">';
+            Markup_360+='<button id="sc-yes-button" style="margin-right: 10px !important">Yes</button>';
+            Markup_360+='<button id="sc-no-button">No</button>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            //<!--check Finance  credit term popup ends here-->
+	     	//<!-- check Finance  credit term no popup starts here-->
+            Markup_360+='<div class="modal fade SC-SO-add-popup" id="SC-SO-CTN-popup" role="dialog">';
+            Markup_360+='<div class="SC-modal">';
+            Markup_360+='<div class="modal-dialog">';
+                        //<!-- Modal content-->
+            Markup_360+='<div class="modal-content less-height modal-another-color">';
+            Markup_360+='<div class="text">';
+            Markup_360+='<span class="SC-span-width add-margin">The Sales associate must provide you the Credit Terms and Disclosure document for the credit application to proceed.</span>';
+            Markup_360+='<button class="SC-ok-button" id="SC-CTN-okay">Okay</button>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            Markup_360+='</div>';
+            //<!--  check Finance  credit term no ends here-->
+		
+			//Markup_360+=' </div>';					
+
+	
+
+	 return Markup_360;
+    }
+	
+	SCContact360Markup.prototype.CustomerDetailsMarkupFn = function(ConFormApp_RS,Order_RS,isiFitRecord,divisionType,divisionSubType){
+		
+		var custDetails_Markup = '';
+			//custDetails_Markup+='<div class="SC-360-card" id="Cust-Details-Applet" draggable="true" style="display:block;">';
+				custDetails_Markup+=' <form name="SC-360-customer-details" id="SC-360-Customer-Details-Form">';
+				custDetails_Markup+='<div class="SC-360-card-header">';
+					custDetails_Markup+='<div class="SC-360-title-and-icon">';
+					custDetails_Markup+='<div class="icon-and-title">'; //new
+						custDetails_Markup+='<img src="images/custom/customer_details_selected.png">';
+						custDetails_Markup+='<p class="no-margin">Customer Details</p>';
+						custDetails_Markup+='<img src="images/custom/about_record.png" class="info-icon" id="Button">';
+						custDetails_Markup+='</div>'; //new
+						custDetails_Markup+='<div class="SC-360-save-container" id="SC-360-cd-save" style="display: none;">';
+						   custDetails_Markup+=' <p class="no-margin save-changes">Save changes ? &nbsp;</p>';
+							custDetails_Markup+='<input type="image" name="submit" src="images/custom/done.png" id="SC-cd-save" class="SC-vali-img"> <span>&nbsp; &nbsp;</span>';
+							custDetails_Markup+='<img src="images/custom/close.png" id="SC-cd-close">';
+						custDetails_Markup+='</div>';
+					custDetails_Markup+=' </div>';
+					if(isiFitRecord != "Y"){
+						custDetails_Markup+='<span class="SC-360-edit" id="SC-360-customer-details-edit">Edit</span>';
+					}
+					custDetails_Markup+='</div>';
+					custDetails_Markup+='<div class="SC-360-card-body clearfix">';
+					// custDetails_Markup+=' <form name="SC-360-customer-details">';
+					   custDetails_Markup+=' <div class="row no-margin no-padding clearfix">';
+						  custDetails_Markup+='  <div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item" id="cd-prefix-div">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin" id="cd-prefix-label">Title:</label>';
+									//custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" id="cd-Prefix" value="'+ConFormApp_RS[0]["M/M"]+'">';
+								custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" value="'+ConFormApp_RS[0]["M/M"]+'">';
+								custDetails_Markup+='</div>';
+						   custDetails_Markup+=' </div>';
+						   custDetails_Markup+=' <div class="col-md-6 col-lg-6">';							  
+								custDetails_Markup+='<div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Customer #:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value" id="cd-Customer-Num" value="'+ConFormApp_RS[0]["Person UId"]+'" disabled="disabled">';
+							   custDetails_Markup+=' </div>';							
+						custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						custDetails_Markup+='  <div class="col-md-6 col-lg-6">';
+							custDetails_Markup+='  <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin mandatory">First Name:</label>';
+								   custDetails_Markup+=' <input type="text" name="SC_360_FirstName" class="SC-360-item-value SC-360-cd" title="'+ConFormApp_RS[0]["First Name"]+'" id="cd-First-Name" value="'+ConFormApp_RS[0]["First Name"]+'">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+							 custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+									custDetails_Markup+='<label class="SC-360-item-label no-margin">Address (Mail To):</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value" id="cd-Address" title="'+ConFormApp_RS[0]["Personal Street Address"]+'" value="'+ConFormApp_RS[0]["Personal Street Address"]+'" disabled="disabled">';
+								//custDetails_Markup+='<button id="MVG" disabled="disabled">MVG</button>';
+								custDetails_Markup+='<img src="images/custom/mvg.png" class="mvg-icon" id="MVG" style="display: none">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+					   custDetails_Markup+=' </div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						    custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Middle Name:</label>';
+									custDetails_Markup+='<input type="text" name="SC_360_MiddleName" class="SC-360-item-value SC-360-cd" id="cd-Middle-Name" title="'+ConFormApp_RS[0]["Middle Name"]+'" value="'+ConFormApp_RS[0]["Middle Name"]+'">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+							custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">City:</label>';
+								   custDetails_Markup+=' <input type="text" name="" class="SC-360-item-value" id="cd-City" value="'+ConFormApp_RS[0]["Personal City"]+'" disabled="disabled">';
+							   custDetails_Markup+=' </div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						   custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin mandatory">Last Name:</label>';
+								  if(isiFitRecord == "Y"){
+									custDetails_Markup+='<input type="text" name="SC_360_LastName" class="SC-360-item-value SC-360-cd" id="cd-Last-Name" title="'+ConFormApp_RS[0]["Last Name"]+'" value="'+ConFormApp_RS[0]["Last Name"]+'">';
+								  }else{
+									  custDetails_Markup+='<input type="text" name="SC_360_LastName" class="SC-360-item-value SC-360-cd add-color sc-navigate-contact" id="cd-Last-Name" title="'+ConFormApp_RS[0]["Last Name"]+'" value="'+ConFormApp_RS[0]["Last Name"]+'">';
+								  }
+								  custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+							custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">State:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value" id="cd-State" value="'+ConFormApp_RS[0]["Personal State"]+'" disabled="disabled">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						  custDetails_Markup+='  <div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item" id="cd-Suffix-div">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Suffix:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" id="cd-Suffix" value="'+ConFormApp_RS[0]["Suffix"]+'">';
+								custDetails_Markup+='</div>';
+						   custDetails_Markup+=' </div>';
+							custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Postal Code:</label>';
+								   custDetails_Markup+=' <input type="text" name="" class="SC-360-item-value" id="cd-Postal-Code" value="'+ConFormApp_RS[0]["Personal Postal Code"]+'" disabled="disabled">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+							custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item" id="cd-Sleep-Number-div">';
+									custDetails_Markup+='<label class="SC-360-item-label no-margin">Sleep Number Setting:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" id="cd-Sleep-Number" value="'+ConFormApp_RS[0]["SC Sleep Number"]+'">';
+							   custDetails_Markup+=' </div>';
+							custDetails_Markup+='</div>';
+							custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Country:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value" id="cd-Country" value="'+ConFormApp_RS[0]["Personal Country"]+'" disabled="disabled">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+					   custDetails_Markup+=' </div>';
+					   custDetails_Markup+=' <div class="row no-margin no-padding clearfix">';
+						  custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Email Address:</label>';
+								  
+								  custDetails_Markup+='<input type="text" name="SC_360_Email" class="SC-360-item-value SC-360-cd" id="cd-Email-Address" title="'+ConFormApp_RS[0]["Email Address"]+'" value="'+ConFormApp_RS[0]["Email Address"]+'">';
+							   custDetails_Markup+=' </div>';
+							custDetails_Markup+='</div>';			
+						  
+						
+						   custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+								custDetails_Markup+='<div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Closest Store #1:</label>';
+								   custDetails_Markup+=' <input type="text" name="" class="SC-360-item-value" id="cd-close-store1" title="'+ConFormApp_RS[0]["SC Closest Store 1"]+'" value="'+ConFormApp_RS[0]["SC Closest Store 1"]+'" disabled="disabled">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Alternate Email Address:</label>';
+								  
+								  custDetails_Markup+='<input type="text" name="SC_360_Email" class="SC-360-item-value" id="cd-Email-Address" title="'+ConFormApp_RS[0]["Email Address 2"]+'" value="'+ConFormApp_RS[0]["Email Address 2"]+'"disabled="disabled">';
+							   custDetails_Markup+=' </div>';
+							custDetails_Markup+=' </div>';   
+						
+							custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+								custDetails_Markup+='<div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Closest Store #2:</label>';
+								   custDetails_Markup+=' <input type="text" name="" class="SC-360-item-value" id="cd-close-store2" title="'+ConFormApp_RS[0]["SC Closest Store 2"]+'" value="'+ConFormApp_RS[0]["SC Closest Store 2"]+'" disabled="disabled">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						   custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								   //custDetails_Markup+=' <div><img class="phone-icon" id="cellularphoneicon" src="images/custom/phone-360.png" style="width:20px;height:20px;margin-left:-16%" /><label class="SC-360-item-label no-margin">Mobile Phone #:</label></div>';
+									custDetails_Markup+='<label class="SC-360-item-label no-margin">Mobile Phone #:</label>';
+									custDetails_Markup+='<input type="text" name="CellPhone" class="SC-360-item-value SC-360-cd" id="cd-Mobile-Phone" value="">';
+									if(divisionType == 'STORE' || divisionType == 'SHOW' || (divisionType == 'DIRECT' && divisionSubType == 'CSC')){
+										//SPATIBAN: Updated below code for #STRY0025130
+										if(divisionType == 'DIRECT' && divisionSubType == 'CSC'){
+											//custDetails_Markup+='<img src="images/custom/Message-360.jpg" class="mvg-icon phone-icon" id="cellularmessageicon" style="right: -10px; top: 0px;">';
+											custDetails_Markup+='<img src="images/custom/phone-360.jpg" class="mvg-icon phone-icon phone-360" id="cellularphoneicon" >';
+										}
+										//else
+										//custDetails_Markup+='<img src="images/custom/Message-360.jpg" class="mvg-icon phone-icon" id="cellularmessageicon" >';
+									}
+									else
+										custDetails_Markup+='<img src="images/custom/phone-360.jpg" class="mvg-icon phone-icon phone-360" id="cellularphoneicon" >';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						
+						
+							custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+								custDetails_Markup+='<div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">HD Service Level:</label>';
+								   custDetails_Markup+=' <input type="text" name="" class="SC-360-item-value" id="cd-HD-Service-Level" value="'+ConFormApp_RS[0]["SC Cust HD Service Level"]+'" disabled="disabled">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+							custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						    custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+							  // custDetails_Markup+=' <div><img class="phone-icon" id="homephoneicon" src="images/custom/phone-360.png" style="width:20px;height:20px;margin-left:-12%" /><label class="SC-360-item-label no-margin">Secondary Phone #1:</label></div>';
+								custDetails_Markup+='<label class="SC-360-item-label no-margin">Alternate Phone #1:</label>';
+									custDetails_Markup+='<input type="text" name="SC_360_SecondaryPhone" class="SC-360-item-value SC-360-cd" id="cd-Secondary-Phone" value="">';
+									custDetails_Markup+='<img src="images/custom/phone-360.jpg" class="mvg-icon phone-icon phone-360" id="homephoneicon" >';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						
+							
+							custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Customer Category:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value" id="cd-Customer-Category" value="'+ConFormApp_RS[0]["SN Customer Category Calc"]+'" disabled="disabled">';
+							   custDetails_Markup+=' </div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						    custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+							    //custDetails_Markup+=' <div><img class="phone-icon" id="workphoneicon" src="images/custom/phone-360.png" style="width:20px;height:20px;margin-left:-12%" /><label class="SC-360-item-label no-margin">Secondary Phone #2:</label></div>';
+								custDetails_Markup+='<label class="SC-360-item-label no-margin">Alternate Phone #2:</label>';
+									custDetails_Markup+='<input type="text" name="SecondaryPhone2" class="SC-360-item-value SC-360-cd" id="cd-Secondary-Phone2" value="">';
+									custDetails_Markup+='<img src="images/custom/phone-360.jpg" class="mvg-icon phone-icon phone-360" id="workphoneicon" >';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						   custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item" id="cd-Preferred-Contact-Method-div">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Preferred Contact Method:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" id="ci-Preferred-Contact-Method" value="'+ConFormApp_RS[0]["Preferred Communications"]+'">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+							
+						
+						   custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Partner Name:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" id="cd-Partner-Name" title="'+ConFormApp_RS[0]["Family"]+'" value="'+ConFormApp_RS[0]["Family"]+'">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix">';
+						   custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item" id="cd-Partner-Sleep-Number-div">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Partner Sleep Number Setting:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" id="cd-Partner-Sleep-Number" value="'+ConFormApp_RS[0]["SC Partner Sleep Number"]+'">';
+								custDetails_Markup+='</div>';
+						   custDetails_Markup+=' </div>';
+							custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item" id="cd-NPS-div">';
+								   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Net Promoter Score(NPS):</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value" id="cd-NPS" value="'+ConFormApp_RS[0]["SC Net Promoter Score (NPS)"]+'">';
+								custDetails_Markup+='</div>';
+						   custDetails_Markup+=' </div>';
+						custDetails_Markup+='</div>';
+						if(ConFormApp_RS[0]["SC Check Responsibility"]=='Y'){
+						custDetails_Markup+='<div class="row no-margin no-padding clearfix" id="Blacklist-row">';
+							custDetails_Markup+=' <div class="col-md-6 col-lg-6">';
+							  custDetails_Markup+='  <div class="SC-360-item checkbox-item">';
+							   custDetails_Markup+=' <label class="SC-360-item-label no-margin">Blocked List:</label>';
+								custDetails_Markup+='<div class="SC-360-checkbox">';
+								if(ConFormApp_RS[0]["SC Blacklisted"] == "Y"){
+								custDetails_Markup+='  <input type="checkbox" name="" id="cd-Blacklisted" checked="checked"/>';}
+								  else{
+								  custDetails_Markup+='  <input type="checkbox" name="" id="cd-Blacklisted" />';}
+									custDetails_Markup+='<label for="cd-Blacklisted" class="SC-360-cd" ></label>';
+							   custDetails_Markup+=' </div>';
+						   custDetails_Markup+=' </div>';
+						   custDetails_Markup+=' </div>';
+						   custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item" id="cd-add-balcklisted-reason">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Blocked List Reason:</label>';
+									custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" id="cd-Blacklisted-Reason" title="'+ConFormApp_RS[0]["SC Blackisted Reason"]+'" value="'+ConFormApp_RS[0]["SC Blackisted Reason"]+'">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+						}
+					//custDetails_Markup+='</form>';
+					      custDetails_Markup+='<div class="row no-margin no-padding clearfix" id="scconrecentord">';
+						   custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Most Recent Order:</label>';
+								    if(Order_RS.length > 0){
+										custDetails_Markup+='<input type="text" name="'+Order_RS[0]["Order Number"]+'" class="SC-360-item-value SC-360-cd add-color" id="cd-scconrecentord" title="'+Order_RS[0]["Order Number"]+'" value="'+Order_RS[0]["Order Number"]+'">';
+									}
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+		custDetails_Markup+='<div class="row no-margin no-padding clearfix" id="cd-scconprimsleeper">';
+						   custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Primary Smart Sleeper:</label>';
+								custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd add-color sc-navigate-primary-contact" id="cd-scconprimsleeper" value="'+ConFormApp_RS[0]["SC Primary Slpr Customer Number"]+'">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+		custDetails_Markup+='<div class="row no-margin no-padding clearfix" >';
+						   custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								  custDetails_Markup+='  <label class="SC-360-item-label no-margin">Digital Products:</label>';
+								custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd" id="UserType" value="'+ConFormApp_RS[0]["User Type"]+'">';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+		custDetails_Markup+='<div class="row no-margin no-padding clearfix" id="scconrecentord">';
+						   custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								//  custDetails_Markup+='  <label class="SC-360-item-label no-margin">User Type:</label>';
+								    
+									//	custDetails_Markup+='<input type="text" name="" class="SC-360-item-value SC-360-cd add-color" id="cd-scconrecentord" title="'+ConFormApp_RS[0]["User Type"]+'" value="'+ConFormApp_RS[0]["User Type"]+'">';
+									
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+							custDetails_Markup+='<div class="col-md-6 col-lg-6">';
+							   custDetails_Markup+=' <div class="SC-360-item">';
+								   /*custDetails_Markup+='  <label class="SC-360-item-label no-margin">Available Amount:</label>';
+								    custDetails_Markup+='<input type="text" name="'+ConFormApp_RS[0]["SC Available Amount"]+'" class="SC-360-item-value SC-360-cd"  title="'+ConFormApp_RS[0]["SC Available Amount"]+'" value="'+ConFormApp_RS[0]["SC Available Amount"]+'">';*/
+									custDetails_Markup+='<span id="SC-Synchrony-label"></span>';
+									 custDetails_Markup+='<div class="SC-360-search-button" id="SC-Synchrony-refresh">';
+										custDetails_Markup+='<img src="images/custom/arrow_refresh.png" class="search-icon" style="width: 20px;height: 20px; cursor: pointer;">';
+									custDetails_Markup+='</div>';
+								custDetails_Markup+='</div>';
+							custDetails_Markup+='</div>';
+						custDetails_Markup+='</div>';
+				custDetails_Markup+='</div>';
+				custDetails_Markup+='</form>';
+			//custDetails_Markup+='</div>';
+		return custDetails_Markup;
+	}
+	
+	SCContact360Markup.prototype.CustomerInteractionMarkupFn = function(ConFormApp_RS){
+		
+		var cust_inter_markup = '';					
+					//cust_inter_markup+=' <div class="SC-360-card" id="Cust-inter-Applet" draggable="true" style="display:none;">';
+                          cust_inter_markup+='  <div class="SC-360-card-header">';						
+                               cust_inter_markup+=' <div class="SC-360-title-and-icon">';
+							   cust_inter_markup+='<div class="icon-and-title">'; //new
+                                  cust_inter_markup+='  <img src="images/custom/customer_interaction_selected.png">';
+                                    cust_inter_markup+='<p class="no-margin">Customer Interaction</p>';
+									cust_inter_markup+='</div>'; 
+                                   cust_inter_markup+=' <div class="SC-360-save-container" id="SC-360-cusin-save" style="display: none;">';
+                                       cust_inter_markup+=' <p class="no-margin save-changes">Save changes ? </p>';
+                                        cust_inter_markup+='<img src="images/custom/done.png" id="SC-cusin-save">';
+                                        cust_inter_markup+='<img src="images/custom/close.png" id="SC-cusin-close">';
+                                    cust_inter_markup+='</div>';
+                                cust_inter_markup+='</div>';
+                               cust_inter_markup+=' <span class="SC-360-edit" id="SC-360-customer-interaction-edit">Edit</span>';
+                            cust_inter_markup+='</div>';
+                            cust_inter_markup+='<div class="SC-360-card-body clearfix">';
+                              cust_inter_markup+='  <form name="SC-360-contact-info">';
+                                  cust_inter_markup+='  <div class="row no-margin no-padding clearfix">';
+                                     cust_inter_markup+=' <div class="col-md-4 col-lg-4">';
+                                           cust_inter_markup+=' <div class="SC-360-item">';
+                                              cust_inter_markup+='  <label class="SC-360-item-label no-margin">Date Of First Activity:</label>';
+                                              cust_inter_markup+='  <input type="text" name="" class="SC-360-item-value" id="cin-Date-First-Activity" value="'+ConFormApp_RS[0]["SC Date Of First Activity"]+'" disabled="disabled">';
+                                           cust_inter_markup+=' </div>';
+                                        cust_inter_markup+='</div>';
+										
+										cust_inter_markup+='<div class="col-md-4 col-lg-4">';
+                                          cust_inter_markup+='  <div class="SC-360-item checkbox-item">';
+                                             cust_inter_markup+='   <label class="SC-360-item-label no-margin">Smart Sleeper Opt In:</label>';
+                                               // cust_inter_markup+='<input type="text" name="" class="SC-360-item-value SC-360-cusin" id="cin-QVC-Customer-Opt-In" value="'+ConFormApp_RS[0]["SC QVC Customer Opt In"]+'">';
+											   cust_inter_markup+='<div class="SC-360-checkbox">';
+											   if(ConFormApp_RS[0]["SN Customer Category Calc"] == 'Owner')
+                                                  cust_inter_markup+='  <input type="checkbox" name="" id="cin-qvc" value="Y"/>';
+												else
+													cust_inter_markup+='  <input type="checkbox" name="" id="cin-qvc" value="Y" disabled="disabled"/>';
+                                                    cust_inter_markup+='<label for="cin-qvc" class="SC-360-cusin" ></label>';
+												cust_inter_markup+=' </div>';
+                                           cust_inter_markup+=' </div>';
+                                        cust_inter_markup+='</div>';
+										
+										cust_inter_markup+='<div class="col-md-4 col-lg-4">';
+                                          cust_inter_markup+='  <div class="SC-360-item checkbox-item">';
+                                               cust_inter_markup+=' <label class="SC-360-item-label no-margin">Sales Text Opt-in:</label>';
+                                                cust_inter_markup+='<div class="SC-360-checkbox">';
+												if(ConFormApp_RS[0]["SC Text Opt In"] == 'Y')
+                                                  cust_inter_markup+='  <input type="checkbox" name="" id="cin-toin" value="Y" checked/>';
+											    else
+                                                  cust_inter_markup+='  <input type="checkbox" name="" id="cin-toin" value="N"/>';
+                                                    cust_inter_markup+='<label for="cin-toin" class="SC-360-cusin" ></label>';
+                                               cust_inter_markup+=' </div>';
+                                           cust_inter_markup+=' </div>';
+										cust_inter_markup+='</div>'
+															 
+                                    cust_inter_markup+='</div>';
+                                    cust_inter_markup+='<div class="row no-margin no-padding clearfix">';
+                                       cust_inter_markup+=' <div class="col-md-4 col-lg-4">';
+                                           cust_inter_markup+=' <div class="SC-360-item">';
+                                              cust_inter_markup+='  <label class="SC-360-item-label no-margin">Customer Created By:</label>';
+                                              cust_inter_markup+='  <input type="text" name="" class="SC-360-item-value" id="cin-Customer-Created-By" value="'+ConFormApp_RS[0]["SC Created By"]+'" disabled="disabled">';
+                                           cust_inter_markup+=' </div>';
+                                        cust_inter_markup+='</div>';
+										cust_inter_markup+='  <div class="col-md-4 col-lg-4">';
+                                          cust_inter_markup+='  <div class="SC-360-item">';
+                                               cust_inter_markup+=' <label class="SC-360-item-label no-margin">Referring Smart Sleeper:</label>';
+											   //NGOLLA: D.N0:568 Refferring Insider field made as readonly
+                                               cust_inter_markup+=' <input type="text" name="" class="SC-360-item-value" id="cin-Referring-Insider" value="'+ConFormApp_RS[0]["Refferal Insider Name"]+'">';
+                                            cust_inter_markup+='</div>';
+                                        cust_inter_markup+='</div>';
+										cust_inter_markup+='<div class="col-md-4 col-lg-4">';
+										  cust_inter_markup+='  <div class="SC-360-item checkbox-item">';
+											   cust_inter_markup+=' <label class="SC-360-item-label no-margin">Do Not Call:</label>';
+												cust_inter_markup+='<div class="SC-360-checkbox">';
+												  cust_inter_markup+='  <input type="checkbox" name="" id="cin-dnc" value="Y"/>';
+													cust_inter_markup+='<label for="cin-dnc" class="SC-360-cusin" ></label>';
+											   cust_inter_markup+=' </div>';
+										   cust_inter_markup+=' </div>';
+										cust_inter_markup+='</div>';
+									cust_inter_markup+=' </div>';
+								   
+                                    cust_inter_markup+='<div class="row no-margin no-padding clearfix">';
+									cust_inter_markup+=' <div class="col-md-4 col-lg-4">';
+                                        cust_inter_markup+=' <div class="SC-360-item">';
+										  cust_inter_markup+='  <label class="SC-360-item-label no-margin">NPS Purchase:</label>';
+										  cust_inter_markup+='  <input type="text" name="" class="SC-360-item-value SC-360-cusin" id="cin-NPS-Purchase" value="">';
+                                        cust_inter_markup+=' </div>';
+                                    cust_inter_markup+='</div>';
+									cust_inter_markup+='  <div class="col-md-4 col-lg-4">';
+									  cust_inter_markup+=' <div class="SC-360-item">';
+										cust_inter_markup+='<label class="SC-360-item-label no-margin">Employee Number:</label>';
+										cust_inter_markup+=' <input type="text" name="" class="SC-360-item-value" id="cd-Employee-Number" value="'+ConFormApp_RS[0]["Employee Number"]+'" disabled="disabled">';
+									  cust_inter_markup+='</div>';
+									cust_inter_markup+='</div>';
+									  cust_inter_markup+=' <div class="col-md-4 col-lg-4">';
+									  cust_inter_markup+='  <div class="SC-360-item checkbox-item">';
+										 cust_inter_markup+='   <label class="SC-360-item-label no-margin">Do Not Mail:</label>';
+											cust_inter_markup+='<div class="SC-360-checkbox">';
+												cust_inter_markup+='<input type="checkbox" name="" id="cin-dnm" />';
+												cust_inter_markup+='<label for="cin-dnm" class="SC-360-cusin" ></label>';
+											cust_inter_markup+='</div>';
+										cust_inter_markup+='</div>';
+									cust_inter_markup+='</div>';
+                                   cust_inter_markup+=' </div>';
+								   cust_inter_markup+=' <div class="row no-margin no-padding clearfix">';
+                                     cust_inter_markup+=' <div class="col-md-4 col-lg-4">';
+                                           cust_inter_markup+=' <div class="SC-360-item">';
+                                              cust_inter_markup+='  <label class="SC-360-item-label no-margin">NPS Ownership:</label>';
+                                              cust_inter_markup+='  <input type="text" name="" class="SC-360-item-value SC-360-cusin" id="cin-NPS-Ownership" value="">';
+                                           cust_inter_markup+=' </div>';
+                                        cust_inter_markup+='</div>';
+									 cust_inter_markup+='<div class="col-md-4 col-lg-4">';
+                                          cust_inter_markup+='  <div class="SC-360-item checkbox-item">';
+                                               cust_inter_markup+=' <label class="SC-360-item-label no-margin">National Do Not Call:</label>';
+                                                cust_inter_markup+='<div class="SC-360-checkbox">';
+												if(ConFormApp_RS[0]["SC DNC Do Not Call"] == 'Y')
+                                                  cust_inter_markup+='  <input type="checkbox" name="" id="cin-ndnc" value="Y" checked disabled="disabled"/>';
+											    else
+                                                  cust_inter_markup+='  <input type="checkbox" name="" id="cin-ndnc" value="N" disabled="disabled"/>';
+                                                    cust_inter_markup+='<label for="cin-ndnc" class="" ></label>';
+                                               cust_inter_markup+=' </div>';
+                                           cust_inter_markup+=' </div>';
+										cust_inter_markup+='</div>'
+									 cust_inter_markup+=' <div class="col-md-4 col-lg-4">';
+                                            cust_inter_markup+='<div class="SC-360-item checkbox-item">';
+                                                cust_inter_markup+='<label class="SC-360-item-label no-margin">Do Not Email:</label>';
+                                                cust_inter_markup+='<div class="SC-360-checkbox">';
+                                                   cust_inter_markup+=' <input type="checkbox" name="" id="cin-dne" />';
+                                                    cust_inter_markup+='<label for="cin-dne" class="SC-360-cusin" ></label>';
+													cust_inter_markup+='</div>';
+                                           cust_inter_markup+=' </div>';
+                                        cust_inter_markup+='</div>';										
+                                    cust_inter_markup+='</div>';
+									
+									// cust_inter_markup+=' <div class="row no-margin no-padding clearfix">';
+                                    // cust_inter_markup+='</div>';
+
+                                cust_inter_markup+='</form>';
+                            cust_inter_markup+='</div>';
+                       // cust_inter_markup+='</div>';
+		return cust_inter_markup;
+		
+	}
+	
+    SCContact360Markup.prototype.ProfileInfoMarkupFn = function (ConFormApp_RS){
+	   
+	    var prof_Info_markup='';
+					   //prof_Info_markup+=' <div class="SC-360-card" id="Prof-Info-Applet" draggable="true" style="display:none;">';
+                          prof_Info_markup+='  <div class="SC-360-card-header">';						  
+                               prof_Info_markup+=' <div class="SC-360-title-and-icon">';
+							   prof_Info_markup+='<div class="icon-and-title">'; 
+                                   prof_Info_markup+=' <img src="images/custom/profile_info_selected.png">';
+                                    prof_Info_markup+='<p class="no-margin">Profile Information</p>';
+									prof_Info_markup+='</div>'; 
+                                    prof_Info_markup+='<div class="SC-360-save-container" id="SC-360-pi-save" style="display: none;">';
+                                        prof_Info_markup+='<p class="no-margin save-changes">Save changes ? </p>';
+                                      prof_Info_markup+='  <img src="images/custom/done.png" id="SC-pi-save">';
+                                       prof_Info_markup+=' <img src="images/custom/close.png" id="SC-pi-close">';
+                                    prof_Info_markup+='</div>';
+                                prof_Info_markup+='</div>';
+                                prof_Info_markup+='<span class="SC-360-edit" id="SC-360-profile-information-edit">Edit</span>';
+                            prof_Info_markup+='</div>';
+                            prof_Info_markup+='<div class="SC-360-card-body clearfix">';
+                              prof_Info_markup+='  <form name="SC-360-contact-info">';
+                                     prof_Info_markup+='<div class="row no-margin no-padding clearfix">';
+                                       prof_Info_markup+=' <div class="col-md-6 col-lg-6">';
+                                           prof_Info_markup+=' <div class="SC-360-item" id="pi-Lead-Rank-div">';
+                                              prof_Info_markup+='  <label class="SC-360-item-label no-margin">Lead Rank:</label>';
+                                                prof_Info_markup+='<input type="text" name="" class="SC-360-item-value SC-360-pi" id="pi-Lead-Rank" value="'+ConFormApp_RS[0]["SC Lead Rank"]+'">';
+                                            prof_Info_markup+='</div>';
+                                       prof_Info_markup+=' </div>';
+                                       prof_Info_markup+='<div class="col-md-6 col-lg-6">';
+                                           prof_Info_markup+=' <div class="SC-360-item" id="pi-Bedding-Collection-div">';
+                                              prof_Info_markup+='  <label class="SC-360-item-label no-margin">Bedding Collection:</label>';
+                                                prof_Info_markup+='<input type="text" name="" class="SC-360-item-value SC-360-pi" id="pi-Bedding-Collection" value="'+ConFormApp_RS[0]["SC Bedding Collection"]+'">';
+                                            prof_Info_markup+='</div>';
+                                        prof_Info_markup+='</div>';
+                                    prof_Info_markup+='</div>';
+									
+									
+                                    prof_Info_markup+='<div class="row no-margin no-padding clearfix">';
+                                     prof_Info_markup+='<div class="col-md-6 col-lg-6">';
+                                         prof_Info_markup+='   <div class="SC-360-item" id="pi-Series-div">';
+                                              prof_Info_markup+='  <label class="SC-360-item-label no-margin" >Series:</label>';
+                                                prof_Info_markup+='<input type="text" name="" class="SC-360-item-value SC-360-pi" id="pi-Series" value="'+ConFormApp_RS[0]["SC Series"]+'">';
+                                            prof_Info_markup+='</div>';
+                                       prof_Info_markup+=' </div>';
+                                        prof_Info_markup+='<div class="col-md-6 col-lg-6">';
+                                           prof_Info_markup+=' <div class="SC-360-item" id="pi-Personality-Type-div">';
+                                              prof_Info_markup+='  <label class="SC-360-item-label no-margin">Personality Type:</label>';
+                                                prof_Info_markup+='<input type="text" name="" class="SC-360-item-value SC-360-pi" id="pi-Personality-Type" value="'+ConFormApp_RS[0]["SC Personality Type"]+'">';
+                                            prof_Info_markup+='</div>';
+                                        prof_Info_markup+='</div>';
+                                    prof_Info_markup+='</div>';
+									
+									
+                                    prof_Info_markup+='<div class="row no-margin no-padding clearfix">';                                       
+                                       prof_Info_markup+='  <div class="col-md-6 col-lg-6">';
+                                           prof_Info_markup+=' <div class="SC-360-item" id="pi-Base-div">';
+                                              prof_Info_markup+='  <label class="SC-360-item-label no-margin">Base:</label>';
+                                               prof_Info_markup+=' <input type="text" name="" class="SC-360-item-value SC-360-pi" id="pi-Base" value="'+ConFormApp_RS[0]["SC Base"]+'">';
+                                            prof_Info_markup+='</div>';
+                                        prof_Info_markup+='</div>';
+										
+										 prof_Info_markup+=' <div class="col-md-6 col-lg-6">';
+                                          prof_Info_markup+='  <div class="SC-360-item" id="pi-Promo-Hot-Button-div">';
+                                                prof_Info_markup+='<label class="SC-360-item-label no-margin">Promotional Hot Button:</label>';
+                                                prof_Info_markup+='<input type="text" name="" class="SC-360-item-value SC-360-pi" id="pi-Promo-Hot-Button" value="'+ConFormApp_RS[0]["SC Promotional Hot Button"]+'">';
+                                            prof_Info_markup+='</div>';
+                                        prof_Info_markup+='</div>';
+                                    prof_Info_markup+='</div>';
+									
+									 prof_Info_markup+='<div class="row no-margin no-padding clearfix">';                                       
+                                       prof_Info_markup+='<div class="col-md-6 col-lg-6">';
+                                           prof_Info_markup+=' <div class="SC-360-item" id="pi-Size-div">';
+                                              prof_Info_markup+='  <label class="SC-360-item-label no-margin">Size:</label>';
+                                                prof_Info_markup+='<input type="text" name="" class="SC-360-item-value SC-360-pi" id="pi-Size" value="'+ConFormApp_RS[0]["SC Size"]+'">';
+                                            prof_Info_markup+='</div>';
+                                        prof_Info_markup+='</div>';
+										
+										 prof_Info_markup+=' <div class="col-md-6 col-lg-6">';
+                                          prof_Info_markup+='  <div class="SC-360-item" id="pi-Speciality-Groups-div">';
+                                                prof_Info_markup+='<label class="SC-360-item-label no-margin">Specialty Groups:</label>';
+                                                prof_Info_markup+='<input type="text" name="" class="SC-360-item-value SC-360-pi" id="pi-Speciality-Groups" value="'+ConFormApp_RS[0]["SC Speciality Groups"]+'">';
+                                            prof_Info_markup+='</div>';
+                                        prof_Info_markup+='</div>';
+                                    prof_Info_markup+='</div>';
+                                prof_Info_markup+='</form>';
+                           prof_Info_markup+=' </div>';
+						   //prof_Info_markup+='</div>';
+	   return prof_Info_markup;
+   }
+	
+	
+	SCContact360Markup.prototype.ConsolidatedNoteMarkupFn = function(){
+		
+					var cons_Notes_Markup ='';
+                       //cons_Notes_Markup+=' <div class="SC-360-card" id="Cons-Notes-Applet" draggable="true" style="display:none;">';
+                            cons_Notes_Markup+='  <div class="SC-360-card-header">';
+							    cons_Notes_Markup+='  <div class="SC-360-title-and-icon">';
+							        cons_Notes_Markup+='  <div class="icon-and-title">';
+										cons_Notes_Markup+='  <img src="images/custom/consolidated_notes_selected.png">';
+											cons_Notes_Markup+='  <p class="no-margin">Consolidated Notes</p>';
+									cons_Notes_Markup+='  </div>';
+								cons_Notes_Markup+='  <div class="SC-360-save-container search-save" id="SC-360-cn-save" style="display: none;">';
+									cons_Notes_Markup+='  <img src="images/custom/arrow-right.png" id="SC-cn-save" class="more-width-save">';
+									cons_Notes_Markup+='  <img src="images/custom/close.png" id="SC-cn-close" class="more-width-close">';
+								cons_Notes_Markup+='  </div>';
+							cons_Notes_Markup+='  </div>';
+							cons_Notes_Markup+='  <div class="SC-360-search-button" id="SC-360-consolidated-notes-edit"><img src="images/custom/search.png" class="search-icon"></div>';
+							cons_Notes_Markup+='  </div>';
+						    cons_Notes_Markup+=' <div>';
+						    cons_Notes_Markup+=' </div>';
+						   
+                           cons_Notes_Markup+=' <div class="SC-360-card-body clearfix">';						   
+                             cons_Notes_Markup+='   <div class="SC-table-with-scroll-main">';							 
+                                  //cons_Notes_Markup+=' <table class="SC-table add-table" id="SC-360-ConsolidatedNotes-Table">';
+								  cons_Notes_Markup+=' <table class="SC-table" id="SC-360-ConsolidatedNotes-Table">';
+                                     cons_Notes_Markup+='<thead>';
+                                         cons_Notes_Markup+=' <tr>';
+												cons_Notes_Markup+='<th class="sort-by small-th" id="Updated" title="Updated">Updated</th>';
+												cons_Notes_Markup+='<th class="sort-by second-th" id="NoteType">Note Type</th>';
+												cons_Notes_Markup+='<th class="sort-by max-th" id="Note">Note</th>';
+                                                cons_Notes_Markup+='<th class="sort-by small-th" id="Status_CN">Status</th>';
+												cons_Notes_Markup+='<th class="sort-by second-th" id="ScheduledDate_CSN" title="Scheduled Date">Scheduled Date</th>';
+                                                cons_Notes_Markup+='<th class="sort-by small-th" id="Owner_CN" title="Owner">Owner</th>';
+												cons_Notes_Markup+='<th class="sort-by small-th" title="Reason 1" id="Reason1">Reason 1</th>';//SPATIBAN:Added code for #CHG0034381
+												cons_Notes_Markup+='<th class="sort-by small-th" title="Reason 2" id="Reason2">Reason 2</th>';
+                                            cons_Notes_Markup+='</tr>';
+                                        cons_Notes_Markup+='</thead>';
+                                       cons_Notes_Markup+=' <tbody id="ConsolidatedNotes-Body">';									  
+                                        cons_Notes_Markup+='</tbody>';
+                                    cons_Notes_Markup+='</table>';
+                                cons_Notes_Markup+='</div>';
+								    cons_Notes_Markup+='<div class="pagination sc-pagination pull-right" id="cons-pagenation">';
+									cons_Notes_Markup+='</div>';
+                            cons_Notes_Markup+='</div>';
+                       //cons_Notes_Markup+=' </div>';
+		
+		return cons_Notes_Markup;
+	}
+	
+	
+	SCContact360Markup.prototype.AssetsMarkupFn = function(){
+		
+		var assets_markup='';
+                        //assets_markup+='<div class="SC-360-card" id="Assets-Applet" draggable="true" style="display:none;">';
+                           assets_markup+=' <div class="SC-360-card-header">';
+                                assets_markup+='<div class="SC-360-title-and-icon">';
+								assets_markup+='<div class="icon-and-title">'; 
+                                   assets_markup+=' <img src="images/custom/Assets-selected.png" class="contact-icon">';
+                                    assets_markup+='<p class="no-margin">Assets</p>';
+									assets_markup+='</div>'; 
+                                assets_markup+='</div>';
+                            assets_markup+='</div>';
+                            assets_markup+='<div class="SC-360-card-body clearfix">';
+                               assets_markup+=' <div class="SC-table-with-scroll-main" id="SC-Asset-table">';
+                                   assets_markup+=' <table class="SC-table">';
+                                       assets_markup+=' <thead>';
+                                         assets_markup+='   <tr>';
+										     assets_markup+='<th>BOM</th>';
+											 assets_markup+='<th id="ProductName">Product Name</th>';
+											 assets_markup+='<th class="sort-by" id="SKU">SKU #</th>';
+											 assets_markup+='<th class="sort-by" id="ProductLine">Product Line</th>';
+											 assets_markup+='<th class="sort-by" id="Purchased">Purchased</th>';
+											 assets_markup+='<th class="sort-by" id="InstalledDate">Installed Date</th>';
+                                              assets_markup+='<th class="sort-by" id="Status_asst">Status</th>'; 
+											   assets_markup+='<th class="sort-by" id="OrderNumber_asst">Order #</th>';
+											   assets_markup+='<th class="sort-by" id="StartPrice">Start Price</th>';
+											   assets_markup+='<th class="sort-by" id="CurrentAssetValue">Current Asset Value</th>';
+											    //SCHERKU: for defect number 883
+											   assets_markup+='   <th id="lockedflg">Locked Flg</th>';
+										        assets_markup+='<th class="sort-by" id="Warranty">Warranty</th>';
+												  assets_markup+='<th class="sort-by" id="WarrantyEndDate">Warranty End Date</th>';
+										       assets_markup+=' <th class="sort-by" id="Displayflag">Display</th>';
+                                                assets_markup+='<th class="sort-by" id="Asset">Asset #</th>';
+                                                assets_markup+='<th class="sort-by" id="AssetSaleLocation">Sale Location</th>';
+												assets_markup+='</tr>';
+                                        assets_markup+='</thead>';
+                                       assets_markup+=' <tbody id="Assets-Body">';
+									   assets_markup+='</tbody>';
+                                    assets_markup+='</table>';
+                                assets_markup+='</div>';
+								
+                            assets_markup+='<div class="pagination sc-pagination pull-right" id="assets-pagenation">';
+							assets_markup+='</div>';
+								
+                            assets_markup+='</div>';
+                        assets_markup+='</div>';
+						
+		return assets_markup;				
+	}
+	SCContact360Markup.prototype.DigitalAssetsMarkupFn = function(){
+		//digital_assets_markup_Records
+		
+		var digital_assets_markup='';
+                        //assets_markup+='<div class="SC-360-card" id="Assets-Applet" draggable="true" style="display:none;">';
+                           digital_assets_markup+=' <div class="SC-360-card-header">';
+                                digital_assets_markup+='<div class="SC-360-title-and-icon">';
+								digital_assets_markup+='<div class="icon-and-title">'; 
+                                   digital_assets_markup+=' <img src="images/custom/Assets-selected.png" class="contact-icon">';
+                                    digital_assets_markup+='<p class="no-margin">Digital Product Assets</p>';
+									digital_assets_markup+='</div>'; 
+                                digital_assets_markup+='</div>';
+                            digital_assets_markup+='</div>';
+                            digital_assets_markup+='<div class="SC-360-card-body clearfix">';
+                               digital_assets_markup+=' <div class="SC-table-with-scroll-main" id="SC-Asset-table">';
+                                   digital_assets_markup+=' <table class="SC-table">';
+                                       digital_assets_markup+=' <thead>';
+                                         digital_assets_markup+='   <tr>';
+										     //assets_markup+='<th>BOM</th>';
+											 digital_assets_markup+='<th id="ProductName">Digital Product Plan Name</th>';
+											 //assets_markup+='<th class="sort-by" id="SKU">Digital Services Plan</th>';
+											 //assets_markup+='<th class="sort-by" id="ProductLine">Product Line</th>';
+											 digital_assets_markup+='<th class="sort-by" id="Purchased">Purchase/Activation Date</th>';
+											 //assets_markup+='<th class="sort-by" id="InstalledDate">Installed Date</th>';
+                                              digital_assets_markup+='<th class="sort-by" id="Status_asst">Status</th>'; 
+											   digital_assets_markup+='<th class="sort-by" id="OrderNumber_asst">Order #</th>';
+											   //assets_markup+='<th class="sort-by" id="StartPrice">Start Price</th>';
+											  // assets_markup+='<th class="sort-by" id="CurrentAssetValue">Current Asset Value</th>';
+											    //SCHERKU: for defect number 883
+											   //assets_markup+='   <th id="lockedflg">Locked Flg</th>';
+										        //assets_markup+='<th class="sort-by" id="Warranty">Warranty</th>';
+												 // assets_markup+='<th class="sort-by" id="WarrantyEndDate">Warranty End Date</th>';
+										       //assets_markup+=' <th class="sort-by" id="Displayflag">Display</th>';
+                                                digital_assets_markup+='<th class="sort-by" id="Asset">Digital Product Asset #</th>';
+                                                digital_assets_markup+='<th class="sort-by" id="AssetSaleLocation">Sale Location</th>'
+													digital_assets_markup+='<th class="sort-by" id="SubscriptionID">Subscription ID</th>';;
+												digital_assets_markup+='</tr>';
+                                        digital_assets_markup+='</thead>';
+                                       digital_assets_markup+=' <tbody id="Digital-Assets-Body">';
+									   digital_assets_markup+='</tbody>';
+                                    digital_assets_markup+='</table>';
+                                digital_assets_markup+='</div>';
+								
+                            digital_assets_markup+='<div class="pagination sc-pagination pull-right" id="digital-assets-pagenation">';
+							digital_assets_markup+='</div>';
+								
+                            digital_assets_markup+='</div>';
+                        digital_assets_markup+='</div>';
+						
+		return digital_assets_markup;				
+	}
+	
+//Sukumar Additional_Sleeper
+SCContact360Markup.prototype.AdditionalSleeperMarkupFn = function(){
+		//digital_assets_markup_Records
+		
+		var additional_sleeper_markup='';                        
+                           additional_sleeper_markup+=' <div class="SC-360-card-header">';
+                                additional_sleeper_markup+='<div class="SC-360-title-and-icon">';
+								additional_sleeper_markup+='<div class="icon-and-title">'; 
+                                   additional_sleeper_markup+=' <img src="images/custom/Assets-selected.png" class="contact-icon">';
+                                    additional_sleeper_markup+='<p class="no-margin">Additional Sleepers</p>';
+									additional_sleeper_markup+='</div>'; 
+                                additional_sleeper_markup+='</div>';
+                            additional_sleeper_markup+='</div>';
+                            additional_sleeper_markup+='<div class="SC-360-card-body clearfix">';
+                               additional_sleeper_markup+=' <div class="SC-table-with-scroll-main" id="SC-Asset-table">';
+                                   additional_sleeper_markup+=' <table class="SC-table">';
+                                       additional_sleeper_markup+=' <thead>';
+                                         additional_sleeper_markup+='   <tr>';
+											additional_sleeper_markup+='<th id="Customer#">Customer #</th>';
+										     additional_sleeper_markup+='<th id="LastName">Last Name</th>';
+											 additional_sleeper_markup+='<th class="sort-by" id="FirstName">First Name</th>';
+											 additional_sleeper_markup+='<th class="sort-by" id="CustomerCategory">Customer Category</th>'; 
+											   additional_sleeper_markup+='<th class="sort-by" id="EmailAddress">Email Address</th>';
+											   additional_sleeper_markup+='<th class="sort-by" id="AltEmailAddress">Alternate Email Address</th>';
+                                                additional_sleeper_markup+='<th class="sort-by" id="Address">Address</th>';
+												//additional_sleeper_markup+='<th class="sort-by" id="Relation Type">Realtion Type</th>';
+												additional_sleeper_markup+='<th class="sort-by" id="HomePhone">Mobile Phone #</th>';
+												additional_sleeper_markup+='</tr>';
+                                        additional_sleeper_markup+='</thead>';
+                                       additional_sleeper_markup+=' <tbody id="additional-sleeper-Body">';
+									   additional_sleeper_markup+='</tbody>';
+                                    additional_sleeper_markup+='</table>';
+                                additional_sleeper_markup+='</div>';								
+                            additional_sleeper_markup+='<div class="pagination sc-pagination pull-right" id="additional-sleeper-pagenation">';
+							additional_sleeper_markup+='</div>';								
+                            additional_sleeper_markup+='</div>';
+                        additional_sleeper_markup+='</div>';						
+		return additional_sleeper_markup;				
+	}
+    
+	SCContact360Markup.prototype.OrdersMarkupFn = function(){
+		
+		var orders_markup='';
+                        //orders_markup+='<div class="SC-360-card" id="Orders-Applet" draggable="true" style="display:none;">';
+                           orders_markup+=' <div class="SC-360-card-header">';
+                              orders_markup+='  <div class="SC-360-title-and-icon">';
+							  orders_markup+='<div class="icon-and-title">'; 
+                                    orders_markup+='<img src="images/custom/orders_selected.png">';
+                                   orders_markup+=' <p class="no-margin">Orders</p>';
+								   orders_markup+='</div>'; 
+                                orders_markup+='</div>';
+                            orders_markup+='</div>';
+                            orders_markup+='<div class="SC-360-card-body clearfix">';
+                              orders_markup+='  <div class="SC-table-with-scroll-main">';
+                                   orders_markup+=' <table class="SC-table">';
+                                       orders_markup+=' <thead>';
+                                           orders_markup+=' <tr>';
+                                              orders_markup+='  <th class="sort-by" id="OrderDate">Order Date</th>';
+                                               orders_markup+=' <th class="sort-by" id="OrderNumber_ord">Order Number</th>';
+                                               orders_markup+=' <th class="sort-by" id="OrderSubType">Order Sub Type</th>';
+                                                orders_markup+='<th class="sort-by" id="Status_ord">Status</th>';
+                                                orders_markup+='<th class="sort-by" id="OrderTotal">Order Total</th>';
+												orders_markup+='<th class="sort-by" id="OrderSaleLC">Sale Location</th>';
+												orders_markup+='<th class="sort-by" id="OrderSalesOT">Sales Order Team</th>';
+												orders_markup+='<th class="sort-by" id="OrderRev">Rev #</th>';
+                                                orders_markup+='<th class="sort-by" id="SleepIQStatus">SleepIQ Status</th>';
+                                            orders_markup+='</tr>';
+                                       orders_markup+=' </thead>';
+                                        orders_markup+='<tbody id="Orders-Body">';
+										 orders_markup+='</tbody>';
+                                    orders_markup+='</table>';
+                                orders_markup+='</div>';
+                           
+								    orders_markup+='<div class="pagination sc-pagination  pull-right" id="orders-pagenation">';
+									orders_markup+='</div>';
+								
+                           orders_markup+=' </div>';
+                        //orders_markup+='</div>';
+		return orders_markup;
+	}
+	
+	SCContact360Markup.prototype.OpportunityMarkupFn = function(){
+		
+		var opportunity_markup='';
+                       //opportunity_markup+=' <div class="SC-360-card" id="Oppor-Applet" draggable="true" style="display:none;">';
+                            opportunity_markup+='<div class="SC-360-card-header">';
+                               opportunity_markup+=' <div class="SC-360-title-and-icon">';
+							   opportunity_markup+='<div class="icon-and-title">'; 
+                                   opportunity_markup+=' <img src="images/custom/opportunity_selected.png">';
+                                    opportunity_markup+='<p class="no-margin">Opportunities</p>';
+									opportunity_markup+='</div>'; 
+                                opportunity_markup+='</div>';
+                            opportunity_markup+='</div>';
+                           opportunity_markup+=' <div class="SC-360-card-body clearfix">';
+                              opportunity_markup+='  <div class="SC-table-with-scroll-main">';
+                                  opportunity_markup+='  <table class="SC-table">';
+                                      opportunity_markup+='  <thead>';
+                                           opportunity_markup+=' <tr>';
+                                                opportunity_markup+='<th class="sort-by" id="OpportunityName">Opportunity Name</th>';
+                                                opportunity_markup+='<th class="sort-by" id="Created_opp">Created</th>';
+                                                opportunity_markup+='<th class="sort-by" id="CreatedBy">Created By</th>';
+                                               opportunity_markup+=' <th class="sort-by" id="Probability">Probability</th>';
+                                                opportunity_markup+='<th class="sort-by" id="SalesTeam">Sales Team</th>';
+                                                opportunity_markup+='<th class="sort-by" id="Channel">Channel</th>';
+                                                opportunity_markup+='<th class="sort-by" id="Status_opp">Status</th>';
+												opportunity_markup+='<th class="sort-by" id="Revenue_opp">Revenue</th>';//SPATIBAN:Added code for CR#CHG0034565
+                                            opportunity_markup+='</tr>';
+                                        opportunity_markup+='</thead>';
+                                        opportunity_markup+='<tbody id="Opportunities-Body">';
+										opportunity_markup+='</tbody>';
+                                    opportunity_markup+='</table>';
+                               opportunity_markup+=' </div>';
+                            
+								    opportunity_markup+='<div class="pagination sc-pagination pull-right" id="opp-pagenation">';
+									opportunity_markup+='</div>';
+							
+                            opportunity_markup+='</div>';
+                        //opportunity_markup+='</div>';
+		return opportunity_markup;
+	}
+	
+	SCContact360Markup.prototype.HDSRMarkupFn = function(){
+		
+		
+				 var hdsr_markup='';
+						//serv_req_markup+='<div class="SC-360-card" id="SR-Applet" draggable="true" style="display:none;">';
+                            hdsr_markup+='<div class="SC-360-card-header">';
+                                hdsr_markup+='<div class="SC-360-title-and-icon">';
+								hdsr_markup+='<div class="icon-and-title">'; 
+                                   hdsr_markup+=' <img src="images/custom/truck_round_blue.png" class="contact-icon">';
+                                    hdsr_markup+='<p class="no-margin">Field Services SR</p>';
+									hdsr_markup+='</div>'; 
+                                hdsr_markup+='</div>';
+                            hdsr_markup+='</div>';
+                            hdsr_markup+='<div class="SC-360-card-body clearfix">';
+                                hdsr_markup+='<div class="SC-table-with-scroll-main">';
+                                    hdsr_markup+='<table class="SC-table" id="hdsr-360-table">';
+                                        hdsr_markup+='<thead>';
+                                           hdsr_markup+=' <tr>';
+                                                hdsr_markup+='<th class="sort-by" id="HDSR-OpenedDate">Date Opened</th>';
+                                                hdsr_markup+='<th class="sort-by" id="HDSR-OrderNumber_sr">Order #</th>';                                                
+												hdsr_markup+='<th class="sort-by" id="HDSR-SR">SR #</th>';
+												hdsr_markup+='<th class="sort-by" id="HDSR-DeliveryType">Delivery Type</th>';
+                                                hdsr_markup+='<th class="sort-by" id="HDSR-Status_sr">Status</th>';												
+                                                hdsr_markup+='<th class="sort-by" id="HDSR-SchStartDate">Scheduled Start Date</th>';												
+                                                hdsr_markup+='<th class="sort-by" id="HDSR-SchEndDate">Scheduled End Date</th>';												
+												hdsr_markup+='<th class="sort-by" id="HDSR-Priority">Priority</th>';
+												hdsr_markup+='<th class="sort-by" id="HDSR-DeliveryPhone">Delivery Phone #</th>';
+												hdsr_markup+='<th class="sort-by" id="HDSR-Notes">Notes</th>';                                            
+											hdsr_markup+='</tr>';
+                                        hdsr_markup+='</thead>';
+                                        hdsr_markup+='<tbody id="HDSR-Body">';
+										hdsr_markup+='</tbody>';
+                                    hdsr_markup+='</table>';
+                                hdsr_markup+='</div>';
+                            
+								    hdsr_markup+='<div class="pagination sc-pagination pull-right" id="hdsr-pagenation">';
+									hdsr_markup+='</div>';
+								
+                            hdsr_markup+='</div>';
+                       //serv_req_markup+=' </div>';
+		return hdsr_markup;
+	}
+	
+	SCContact360Markup.prototype.SRMarkupFn = function(){
+		
+		
+				 var serv_req_markup='';
+						//serv_req_markup+='<div class="SC-360-card" id="SR-Applet" draggable="true" style="display:none;">';
+                            serv_req_markup+='<div class="SC-360-card-header">';
+                                serv_req_markup+='<div class="SC-360-title-and-icon">';
+								serv_req_markup+='<div class="icon-and-title">'; 
+                                   serv_req_markup+=' <img src="images/custom/SR-selected.png" class="contact-icon">';
+                                    serv_req_markup+='<p class="no-margin">Service Requests</p>';
+									serv_req_markup+='</div>'; 
+                                serv_req_markup+='</div>';
+                            serv_req_markup+='</div>';
+                            serv_req_markup+='<div class="SC-360-card-body clearfix">';
+                                serv_req_markup+='<div class="SC-table-with-scroll-main">';
+                                    serv_req_markup+='<table class="SC-table" id="sr-360-table">';
+                                        serv_req_markup+='<thead>';
+                                           serv_req_markup+=' <tr>';
+                                                serv_req_markup+='<th class="sort-by" id="OpenedDate">Opened Date</th>';
+                                                serv_req_markup+='<th class="sort-by" id="SR">SR #</th>';
+                                                serv_req_markup+='<th class="sort-by" id="Type_sr">Type</th>';
+                                                serv_req_markup+='<th class="sort-by" id="Area">Area</th>';
+                                                serv_req_markup+='<th class="sort-by" id="SubArea">Sub Area</th>';
+                                                serv_req_markup+='<th class="sort-by" id="DetailedDescription">Detailed Description</th>';
+                                                serv_req_markup+='<th class="sort-by" id="Status_sr"> Status</th>';
+												serv_req_markup+='<th class="sort-by" id="Priority">Priority</th>';
+                                                serv_req_markup+='<th class="sort-by" id="OrderNumber_sr">Order Number</th>';
+                                                serv_req_markup+='<th class="sort-by" id="Owner_sr">Owner</th>';
+                                                
+                                            serv_req_markup+='</tr>';
+                                        serv_req_markup+='</thead>';
+                                        serv_req_markup+='<tbody id="SR-Body">';
+										serv_req_markup+='</tbody>';
+                                    serv_req_markup+='</table>';
+                                serv_req_markup+='</div>';
+                            
+								    serv_req_markup+='<div class="pagination sc-pagination pull-right" id="serv-req-pagenation">';
+									serv_req_markup+='</div>';
+								
+                            serv_req_markup+='</div>';
+                       //serv_req_markup+=' </div>';
+		return serv_req_markup;
+	}
+	
+	SCContact360Markup.prototype.ActivityMarkupFn = function(customerType){
+		
+		
+				 var activities_markup='';
+						//activities_markup+='<div class="SC-360-card" id="Activities-Applet" draggable="true" style="display:none;">';
+                            activities_markup+='<div class="SC-360-card-header">';
+                                activities_markup+='<div class="SC-360-title-and-icon">';
+								activities_markup+='<div class="icon-and-title">'; 
+                                    activities_markup+='<img src="images/custom/Activities-selected.png" class="contact-icon">';
+                                    activities_markup+='<p class="no-margin">Activities</p>';
+									activities_markup+='</div>'; 
+									activities_markup+='<div class="SC-360-search-button" id="SC-refresh">';
+                                     activities_markup+='<img src="images/custom/arrow_refresh.png" class="search-icon">';
+                                activities_markup+='</div>';
+                                activities_markup+='</div>';
+                            activities_markup+='</div>';
+                            activities_markup+='<div class="SC-360-card-body clearfix">';
+                                activities_markup+='<div class="SC-table-with-scroll-main">';
+                                    activities_markup+='<table class="SC-table">';
+                                        activities_markup+='<thead>';
+                                            activities_markup+='<tr>';
+												if (customerType == 'STORE' || customerType == 'SHOW'){
+												activities_markup+='<th style="min-width: 0px !important;" id="SC360ActEditIcon"></th>';
+												}
+                                            	activities_markup+='<th class="sort-by" id="Act_Startdate">Planned Start Date</th>';
+												activities_markup+='<th class="sort-by" id="Status_act">Status</th>';
+												activities_markup+='<th class="sort-by" id="Type">Type</th>';  
+                                                activities_markup+='<th class="sort-by" id="Description">Description</th>'; 
+												activities_markup+='<th class="sort-by" id="Comments">Comments</th>';
+												activities_markup+='<th class="sort-by" id="Owner">Owner</th>';
+												activities_markup+='<th class="sort-by" id="Created">Created</th>';
+												activities_markup+='<th class="sort-by" id="actCategory1">Category 1</th>';//APRAKASH: Added for SFSTRY0001329
+												activities_markup+='<th class="sort-by" id="Subchannel">Sub-Channel</th>';
+												activities_markup+='<th class="sort-by" id="SR_act">SR#</th>';
+                                                activities_markup+='<th class="sort-by" id="Activity">Activity #</th>';
+												activities_markup+='<th class="sort-by" id="actReason1">Reason 1</th>';//SPATIBAN:Added code for #CHG0034381
+                                                activities_markup+='<th class="sort-by" id="actReason2">Reason 2</th>';
+												activities_markup+='<th class="sort-by" id="ordernumber">Order Number</th>';
+												//activities_markup+='<th class="sort-by" id="actCategory1">Category 1</th>';//APRAKASH: Added for SFSTRY0001329
+									       activities_markup+='</tr>';
+                                        activities_markup+='</thead>';
+                                        activities_markup+='<tbody id="Activities-Body">';
+										activities_markup+='</tbody>';
+                                    activities_markup+='</table>';
+                                    activities_markup+='</div>';
+								    activities_markup+='<div class="pagination sc-pagination pull-right" id="activities-pagenation">';
+									activities_markup+='</div>';
+								
+                            activities_markup+='</div>';
+                        //activities_markup+='</div>';
+			return activities_markup;
+	}
+	
+	SCContact360Markup.prototype.ICRMarkupFn = function(){
+		
+		
+				var InnerCircle_markup='';
+						//InnerCircle_markup+='<div class="SC-360-card" id="Inn-Circle-Applet" draggable="true" style="display:none;">';
+                            InnerCircle_markup+='<div class="SC-360-card-header">';
+                                InnerCircle_markup+='<div class="SC-360-title-and-icon">';
+								InnerCircle_markup+='<div class="icon-and-title">'; 
+                                    InnerCircle_markup+='<img src="images/custom/icr_selected.png">';
+                                    InnerCircle_markup+='<p class="no-margin">Sleep Number Rewards</p>';
+								InnerCircle_markup+='</div>'; 
+                                InnerCircle_markup+='</div>';
+                            InnerCircle_markup+='</div>';
+							
+                            InnerCircle_markup+='<div class="SC-360-card-body clearfix">';
+                                InnerCircle_markup+='<div class="SC-table-with-scroll-main">';
+                                    InnerCircle_markup+='<table class="SC-table">';
+                                        InnerCircle_markup+='<thead>';
+                                            InnerCircle_markup+='<tr>';
+                                                InnerCircle_markup+='<th id="Innercirclereward">Sleep Number Reward#</th>';
+                                                InnerCircle_markup+='<th id="Innercirclerewardtype">Sleep Number Reward Type</th>';
+                                                InnerCircle_markup+='<th id="Status_in">Status</th>';
+                                                InnerCircle_markup+='<th id="Issueddate">Issued Date</th>';
+                                                InnerCircle_markup+='<th id="Expirationdate">Expiration Date</th>';
+                                            InnerCircle_markup+='</tr>';
+                                        InnerCircle_markup+='</thead>';
+                                        InnerCircle_markup+='<tbody id="IC-Body">';
+                                            InnerCircle_markup+='</tbody>';
+                                    InnerCircle_markup+='</table>';
+                                InnerCircle_markup+='</div>';
+								//NGOLLA: D.No:562 Added Pagination for ICR
+								InnerCircle_markup+='<div class="pagination sc-pagination pull-right" id="ICR-pagenation">';
+							InnerCircle_markup+='</div>';
+                            InnerCircle_markup+='</div>';                    
+						//InnerCircle_markup+='</div>';
+		return InnerCircle_markup;
+	}
+	
+	SCContact360Markup.prototype.ItemlookupMarkupFn = function(){
+		
+		
+				var Itemlookup_markup='';
+						//Itemlookup_markup+='<div class="SC-360-card" id="Itemlookup-Applet" draggable="true" style="display:none;">';
+                            Itemlookup_markup+='<div class="SC-360-card-header">';
+                                Itemlookup_markup+='<div class="SC-360-title-and-icon">';
+								Itemlookup_markup+='<div class="icon-and-title">'; 
+                                    Itemlookup_markup+='<img src="images/custom/lookup_blue.png">';
+                                    Itemlookup_markup+='<p class="no-margin">Item Lookup</p>';
+								Itemlookup_markup+='</div>'; 
+								Itemlookup_markup+='<div class="SC-360-save-container search-save" id="SC-360-il-save" style="display: none;">';
+									Itemlookup_markup+='<img src="images/custom/arrow-right.png" id="SC-il-save" class="more-width-save">';
+									Itemlookup_markup+='<img src="images/custom/close.png" id="SC-il-close" class="more-width-close">';
+								Itemlookup_markup+='</div>';
+								Itemlookup_markup+='</div>';
+								Itemlookup_markup+='<div class="SC-360-search-button" id="SC-360-item-lookup-search">';
+									Itemlookup_markup+='<button class="SC-SO-search-button proceed SC-disabled" id="find_sku">Find</button>';
+									Itemlookup_markup+='<img src="images/custom/search.png" class="search-icon" id="search_itemlookup_button">';
+								Itemlookup_markup+='</div>';
+								Itemlookup_markup+='</div>';
+								Itemlookup_markup+='<div class="SC-360-card-body clearfix">';
+									Itemlookup_markup+='<div class="SC-table-with-scroll-main">';
+									Itemlookup_markup+='<table class="SC-table" id="item-lookup-table">';
+										Itemlookup_markup+='<thead>';
+											Itemlookup_markup+='<tr>';
+											Itemlookup_markup+='<th class="sort-by" id="skunumber">SKU #</th>';
+											Itemlookup_markup+='<th class="sort-by" id="skudescription">Product Description</th>';
+											Itemlookup_markup+='<th class="sort-by" id="skuproductline">Product Line</th>';
+											Itemlookup_markup+='<th class="sort-by" id="versionstatus">Version Status</th>';
+											Itemlookup_markup+='</tr>';
+										Itemlookup_markup+='</thead>';
+										Itemlookup_markup+='<tbody id="Itemlookup-Body">';
+										//Itemlookup_markup+='<tr class="" id="sc-searched-row"  id="Itemlookup-Body">';
+										Itemlookup_markup+='<tr class="" id="sc-searched-row" style="display:none">';
+										Itemlookup_markup+='<form id="sc-il-form">';
+										Itemlookup_markup+='<td>';
+										Itemlookup_markup+='<input type="text" name="" class="SC-input input-padding keep-border" id="sku_il_number">';
+										Itemlookup_markup+='</td>';
+										Itemlookup_markup+='<td>';
+										Itemlookup_markup+='<input type="text" name="" class="SC-input input-padding keep-border" id="sku_il_desc">';
+										Itemlookup_markup+='</td>';
+										Itemlookup_markup+=' <td></td>';
+										Itemlookup_markup+=' <td></td>';
+										Itemlookup_markup+='</form>';
+										Itemlookup_markup+='</tr>';
+										Itemlookup_markup+='<tr id="Itemlookup-Body-Initial"><td colspan="4">';
+										Itemlookup_markup += ' <div class="SC-noresults-container clearfix no-padding margin-top">';
+										Itemlookup_markup += '                <div class="text-block">';
+										Itemlookup_markup += '                    <p>Please click search icon to enter search criteria</p>';
+										Itemlookup_markup += '                </div>';
+										Itemlookup_markup += ' </div></td>';
+										Itemlookup_markup+='</tr>';
+										
+										Itemlookup_markup+='</tbody>';
+									Itemlookup_markup+='</table>';
+								Itemlookup_markup+='</div>';
+								Itemlookup_markup+='<div class="pagination sc-pagination pull-right" id="Itemlookup-pagination">';
+								Itemlookup_markup+='</div>';
+							Itemlookup_markup+='</div>';
+							//Itemlookup_markup+='        </div>';
+        return Itemlookup_markup;
+	}
+	
+	//SWAGH:10192023:SFSTRY0003043
+	/*
+	SCContact360Markup.prototype.CampaignMarkupFn = function(){
+		
+		
+				 var campaigns_markup='';
+						//campaigns_markup+='<div class="SC-360-card" id="Campaigns-Applet" draggable="true" style="display:none;">';
+                            campaigns_markup+='<div class="SC-360-card-header">';
+                                campaigns_markup+='<div class="SC-360-title-and-icon">';
+								campaigns_markup+='<div class="icon-and-title">'; 
+                                    campaigns_markup+='<img src="images/custom/Campaign_blue.png" class="contact-icon">';
+                                    campaigns_markup+='<p class="no-margin">Marketing History</p>';
+									campaigns_markup+='</div>'; 
+									campaigns_markup+='<div class="SC-360-search-button" id="SC-refresh">';
+                                     //campaigns_markup+='<img src="images/custom/arrow_refresh.png" class="search-icon">';
+                                campaigns_markup+='</div>';
+                                campaigns_markup+='</div>';
+                            campaigns_markup+='</div>';
+                            campaigns_markup+='<div class="SC-360-card-body clearfix">';
+							campaigns_markup+='<div class="SC-360-card-tabs">'
+                             campaigns_markup+='<div class="SC-360-card-tabs-one tab-active" id="Active-tab">Active</div>'
+                             campaigns_markup+='<div class="SC-360-card-tabs-one" id="Inactive-tab">Inactive</div>'
+                              campaigns_markup+='</div>'
+                                campaigns_markup+='<div class="SC-table-with-scroll-main">';
+                                    campaigns_markup+='<table class="SC-table">';
+                                        campaigns_markup+='<thead>';
+                                            campaigns_markup+='<tr>';
+											     campaigns_markup+='<th class="sort-by" id="Campaign Name">Campaign Name</th>';
+                                                 campaigns_markup+='<th class="sort-by" id="Promotioninformation">Promotion Information</th>'; 												 
+                                            	campaigns_markup+='<th class="sort-by" id="Startdate">Start Date</th>';
+												campaigns_markup+='<th class="sort-by" id="Enddate">End Date</th>';  
+												campaigns_markup+='<th class="sort-by" id="Couponcode">Coupon Code</th>';
+									       campaigns_markup+='</tr>';
+                                        campaigns_markup+='</thead>';
+                                        campaigns_markup+='<tbody id="Active-Campaigns-Body">';
+										campaigns_markup+='</tbody>';
+										 campaigns_markup+='<tbody id="Inactive-Campaigns-Body" style="display:none">';
+										campaigns_markup+='</tbody>';
+                                    campaigns_markup+='</table>';
+                                    campaigns_markup+='</div>';
+								    campaigns_markup+='<div class="pagination sc-pagination pull-right" id="Campaigns-pagenation">';
+									campaigns_markup+='</div>';
+								
+                            campaigns_markup+='</div>';
+                        //campaigns_markup+='</div>';
+			return campaigns_markup;
+	}
+	*/
+	return Contact360_Markup;
+   }() //SCContact360Markup close
+  );
+  return "SiebelAppFacade.SCContact360Markup";
+ })
+}

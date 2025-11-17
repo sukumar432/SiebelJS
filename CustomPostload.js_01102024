@@ -1,0 +1,53 @@
+if (typeof(SiebelAppFacade.CustomPostload) == "undefined") {
+	Namespace('SiebelAppFacade.CustomPostload');
+
+	(function () {
+		SiebelApp.EventManager.addListner("postload", OnPostload, this);
+		function OnPostload() {
+			try
+			{
+				SiebelJS.Log ("Custom Postloader is Alive!");
+				// add code here
+				 $(document).ready(function() {
+
+					 $("#HTMLMessageBar").css("display","none");
+					 $("#siebui-toolbar-automation").css("display","none");
+				 });
+				var currview = SiebelApp.S_App.GetActiveView().GetName();
+				if(currview=="Home Page View (WCC)" || currview=="LOY Home Page View")
+				{
+				  $(document).ready(function() {
+					$('[class="siebui-salutation-title"]').html("My Homepage");
+					$("#cal_prev_button").css("padding","0px 0px 0px 5px");
+					$("#cal_next_button").css("padding","0px 5px 0px 0px");
+					$("#cal_prev_button").css("margin-bottom","5px");
+					$("#cal_next_button").css("margin-bottom","5px");
+					  //$(".btn-icon siebui-icon-calendar").css("font-size","x-large");
+					  $(".btn-icon siebui-icon-calendar").css("padding"," 0px 10px");
+					     
+					var d = new Date();
+					var weekday = new Array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday","Saturday");
+					var n = weekday[d.getDay()];
+					var day = d.getUTCDate();
+					var year = d.getUTCFullYear();
+					if (day < 10)
+					{
+						day = "0" + day;
+					}
+					var monthl = new Array("January", "February", "March", "April", "May", "June","July", "August","September","October","November","December");
+					var month = monthl[d.getUTCMonth()];
+					var firstname = SiebelApp.S_App.GetProfileAttr("UpgradeFirstName");
+					var lastName  = SiebelApp.S_App.GetProfileAttr("UpgradeLastName");
+					newdate = "Welcome Back " + firstname +" "+ lastName +". Today is " + n +", "+ month + " " + day +", " + year+".";
+					$('[class="siebui-salutation-applet-title"]').replaceWith("<div class='Welcome'›</div>");
+					$('[class="Welcome"]').text (newdate);
+					$('[class="Welcome"]').css('font-weight','bold');
+				  });
+				}
+			}
+			catch(error){
+				//YashodeepJ
+			}
+		}
+	}());
+}

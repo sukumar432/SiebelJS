@@ -1,0 +1,1451 @@
+if (typeof(SiebelAppFacade.SCCTIInfoPR) === "undefined") {
+
+ SiebelJS.Namespace("SiebelAppFacade.SCCTIInfoPR");
+ define("siebel/custom/SelectComfort/SCCTIInfoPR", ["siebel/jqgridrenderer","siebel/custom/SelectComfort/SCANIContactsMarkup","siebel/custom/SelectComfort/bootstrap.min.js","siebel/custom/SelectComfort/SC_OUI_Methods","siebel/custom/SelectComfort/SC_OUI_Definitions","siebel/custom/SelectComfort/SCCreateContactMarkup","siebel/custom/SelectComfort/SCCreateContactFunctionality","siebel/custom/SelectComfort/SC_OUI_Markups"],
+  function () {
+   SiebelAppFacade.SCCTIInfoPR = (function () {
+	 var SCANIMarkup = SiebelJS.Dependency("SiebelApp.SCANIContactsMarkup");
+	 var SiebelConstant = SiebelJS.Dependency("SiebelApp.Constants");
+	 var SCOUIMethods = SiebelJS.Dependency("SiebelApp.SC_OUI_Methods");
+	 var SC_OUI_Markups = SiebelJS.Dependency("SiebelApp.SC_OUI_Markups");
+	 var SCOUIDefinitions = SiebelJS.Dependency("SiebelApp.SC_OUI_Definitions");
+	 var CreateNewCon = SiebelJS.Dependency("SiebelApp.SCCreateContactMarkup");
+	 var ContactCreatefn = SiebelJS.Dependency("SiebelAppFacade.SCCreateContactFunctionality");
+	   
+	 var sFields = [];
+	 var pm,records;
+	 var contactInfo="",assertInfo="",DigitalassertInfo="",orderInfo="",activityId="",contactId="",CustomerNumber="",CurrentRow,refsearchfields="",DivSubType="";
+	 var contactAppletSeq="",FieldQueryPairSearch="",searchCount=2,refsearchCount=2,next,prevSort="",a=true;
+	 var contactsPM,assertsPM,DigitalassertsPM,ordersPM,scANIPM,stateSpanText;
+	 var toolbarflag = "N";
+	 
+    function SCCTIInfoPR(pm) {
+     SiebelAppFacade.SCCTIInfoPR.superclass.constructor.apply(this, arguments);
+    }
+
+    SiebelJS.Extend(SCCTIInfoPR, SiebelAppFacade.JQGridRenderer);
+
+    SCCTIInfoPR.prototype.Init = function () {
+		/*if($('#CommunicationPanelContainer').siblings().not('.forcehide') && $('#CommunicationPanelContainer').siblings().not('.siebui-comm-panel-float')){
+			//if CTI tool bar is opened in the side then automatically make it float
+			$('#commPanelDockToShowUnpin').click();
+		}*/
+		//for white screen
+		localStorage.setItem('whitescreen', 0);
+     // Init is called each time the object is initialised.
+     // Add code here that should happen before default processing
+     SiebelAppFacade.SCCTIInfoPR.superclass.Init.apply(this, arguments);
+     SiebelJS.Log(this.GetPM().Get("GetName")+": SCCTIInfoPR:      Init method reached.");
+     // Add code here that should happen after default processing
+	    	sFields = ['Last Name','Postal Code'];
+	  // Hiding navigation tabs
+		 $('#S_A1').hide();
+		 $('#S_A3').hide();
+		 $('#S_A4').hide();
+		 $('#S_A5').hide();
+		 $('#S_A7').hide(); //Sukumar
+		 $('#S_A2').hide();
+		$("#_swescrnbar").hide();
+		$("#_swethreadbar").hide();
+		$("#_sweappmenu").hide();
+		$("#s_vctrl_div").hide();
+		$(".siebui-button-toolbar").hide();
+		//$("#_swecontent").css("height","99%");
+		$('#_sweview').css("overflow","auto");
+	 
+    }
+
+    SCCTIInfoPR.prototype.ShowUI = function () {
+		 SiebelAppFacade.SCCTIInfoPR.superclass.ShowUI.apply(this, arguments);
+		 //for white screen
+		 //SCOUIMethods.SCGetProfileAttrValue("CTI_ACT_ID,SC Primary Division Type,SC Store User,SC Store Number");
+		$(".whitescreentimer").remove();
+		$("#custommaskoverlay").hide();
+		$('#_sweview').show();
+		 pm = this.GetPM();
+		 records = pm.Get("GetRecordSet");
+		 
+		 var appletname = pm.Get("GetName");
+		 var Appletid = pm.Get("GetFullId");
+		
+		 var AppletSeq = Appletid[Appletid.length -1];
+		
+		 var SCANI_Markup = SCANIMarkup.SCANIInfoMarkup();
+		 $('#s_S_A6_div').hide();
+		 $("#s_"+Appletid+"_div").hide();
+		 $('#'+Appletid).append(SCANI_Markup);
+		 contactAppletSeq = Appletid[Appletid.length -1];
+		 
+		 scANIPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC ANI Details"].GetPModel().GetRenderer().GetPM();
+		 assertsPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC ANI Contact Assets List Applet"].GetPModel().GetRenderer().GetPM();
+		 DigitalassertsPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SN ANI Asset Management Digital List Applet"].GetPModel().GetRenderer().GetPM();
+		 ordersPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC ANI Contact Orders List Applet"].GetPModel().GetRenderer().GetPM();
+		 var scContactListPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC ANI Contact List Applet"].GetPModel().GetRenderer().GetPM();
+		 var addupdateRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Add/Update Contact Applet"].GetPModel().GetRenderer().GetPM().Get("GetRecordSet");
+		//Start:SPATIBAN:19-JAN-2023: Added below code for CTI enchanment
+		var scaniAppletRecordSet=scANIPM.Get("GetRecordSet"),scANI="",onlyANIsrc="",enteredPhn="",EneterdArray,Zipcode;
+		if(scaniAppletRecordSet.length>0){
+			scANI=scaniAppletRecordSet[0]['ANI'];
+			enteredPhn=scaniAppletRecordSet[0]['SN IVR Number'];
+		}
+		//enteredPhn='5404673433/43232';
+		if(enteredPhn!="" && enteredPhn !=null && enteredPhn!="NoProfile" && enteredPhn !="TokenError" && enteredPhn !="APIError" && enteredPhn !="SeibelDown"){
+			if(enteredPhn.includes("/")){
+				EneterdArray=enteredPhn.split('/');
+				if(scANI!=EneterdArray[0])
+					scANI=EneterdArray[0];
+				if(EneterdArray[1]!="noZIP" && EneterdArray[1]!="NoProfile"){
+					Zipcode=EneterdArray[1];
+					onlyANIsrc="N";
+				}
+				else{
+					Zipcode='';
+					onlyANIsrc="Y";
+					
+				}
+			}
+			else{
+				
+				 onlyANIsrc="Y";
+				 scANI=scANI;
+			}
+		}
+		else{
+			if(scANI!="" && scANI!=null)
+				onlyANIsrc="Y";
+			
+		}
+
+		var srchexpr="[Cellular Phone #] LIKE '"+scANI+"' OR [Home Phone #] LIKE '" + scANI + "' OR [Work Phone #] LIKE '" + scANI+ "'";
+		
+		
+		if(onlyANIsrc=="Y"){
+			scContactListPM.ExecuteMethod("InvokeMethod","NewQuery",null,false);
+			scContactListPM.Get("GetBusComp").SetFieldSearchSpec("Cellular Phone #",srchexpr);
+			scContactListPM.ExecuteMethod("InvokeMethod","ExecuteQuery",null,false);
+			$("#sn-Verified").text("NO");
+			$("#sn-Verified").attr("style","color: #c33838;");
+		}
+		else if(onlyANIsrc=="N" ){
+			$("#sn-zip-code").text(Zipcode);
+			scContactListPM.ExecuteMethod("InvokeMethod","NewQuery",null,false);
+			scContactListPM.Get("GetBusComp").SetFieldSearchSpec("Personal Postal Code",Zipcode+"*");
+			scContactListPM.Get("GetBusComp").SetFieldSearchSpec("Cellular Phone #",srchexpr);
+			scContactListPM.ExecuteMethod("InvokeMethod","ExecuteQuery",null,false);
+			if(pm.Get("GetRecordSet").length>0){
+				$("#sn-Verified").text("YES");
+				$("#sn-Verified").attr("style","color: #6ed106;");
+			}
+			else{
+				scContactListPM.ExecuteMethod("InvokeMethod","NewQuery",null,false);
+				scContactListPM.Get("GetBusComp").SetFieldSearchSpec("Cellular Phone #",srchexpr);
+				scContactListPM.ExecuteMethod("InvokeMethod","ExecuteQuery",null,false);
+				$("#sn-Verified").text("NO");
+				$("#sn-Verified").attr("style","color: #c33838;");
+			}
+		}
+		else{
+			$("#sn-Verified").text("NO");
+			$("#sn-Verified").attr("style","color: #c33838;");
+		}
+		//End:SPATIBAN:19-JAN-2023: Added below code for CTI enchanment
+		 activityId = SiebelApp.S_App.GetProfileAttr("CTI_ACT_ID");
+		 
+		 csearchfields = SCOUIDefinitions.cticontactsearchfields();
+		 refsearchfields = SCOUIDefinitions.referralcontactsearchfields();
+		 //Contact Search Markup Starts Here
+		var Markup = "";
+		Markup += '<div class="maxwidth SC-search-container container row no-padding">';
+		Markup += '<div class="col-lg-2 col-md-2 no-padding">';
+			Markup += '<p class="SC-search-title margin-top no-margin-bottom">Contacts</p>';
+		Markup += '</div>';
+		Markup += '<div class="col-lg-8 col-md-10">';
+			Markup += '<form name="search">';
+			   Markup += ' <div id="field">';
+					Markup += '<select class="select-box select-cti-box margin-top diff-bg" autocomplete="off" id="field0" name="field1">';
+						for(i=0;i<csearchfields.length;i++){
+							if(i==0){
+								Markup+='                                    <option id="'+csearchfields[i]+'" value="'+csearchfields[i]+'" selected="selected">'+csearchfields[i]+'</option>';
+							}else{
+								Markup+='                                    <option id="'+csearchfields[i]+'" value="'+csearchfields[i]+'">'+csearchfields[i]+'</option>';
+							}
+						}
+					Markup += '</select>';
+					Markup += '<input type="text" id="ifield0" class="search-box  cti-search-box margin-top diff-bg">';
+					Markup += '<div id="b1" class="add-more margin-top diff-bg"></div>';
+				Markup += '</div>';
+				Markup += '<div id="field">';
+					Markup += '<select class="select-box select-cti-box margin-top diff-bg" autocomplete="off" id="field1" name="field1">';
+						for(i=0;i<csearchfields.length;i++){
+							if(i==1){
+								Markup+='                                    <option id="'+csearchfields[i]+'" value="'+csearchfields[i]+'" selected="selected">'+csearchfields[i]+'</option>';
+							}else{
+								Markup+='                                    <option id="'+csearchfields[i]+'" value="'+csearchfields[i]+'">'+csearchfields[i]+'</option>';
+							}
+						}
+					Markup += '</select>';
+					Markup += '<input type="text" id="ifield1" class="search-box cti-search-box margin-top diff-bg">';
+					Markup += '<div id="b1" class="add-more margin-top diff-bg"> <span class="glyphicon glyphicon-plus-sign icon-img cti-icon-img add-item" style="display:none"></span></div>';
+				Markup += '</div>';
+			Markup += '</form>';
+	   Markup += ' </div>';
+		Markup += '<div class="col-lg-2 col-md-2 no-padding sc-set-at-bottom">';
+			Markup += '<div>';
+				Markup += '<button class="SC-search-button pull-right SC-disabled" id="sc-cti-search">Search</button>';
+			Markup += '</div>';
+		Markup += '</div>';
+	Markup += '</div>';
+
+	$('#SC-card-header').html(Markup);
+	
+	$("#_svf0").css("height", "0%");
+	$(".main-header-container").css("position", "absolute");
+	$(".SC-data-container").css("position", "absolute");
+	
+	
+	 //SNARRA:Added CTI Toolbar Issue 
+	   if($("#CommunicationPanelContainer").is(":visible") && (localStorage.getItem('CTIToolbar')== "Y")){
+		   $(".SC-data-container").css("position","inherit");
+		   $("#sc-orange").show();
+		   $("#sc-white").hide();
+	   }
+	   if($("#CommunicationPanelContainer").is(":visible")){
+			$("#sc-orange").show();
+			$("#sc-white").hide();
+	   }
+	
+	// loading waiting time
+		$(document).ready(function (){
+			$("body").bind('Custom.Start', function(ev) {
+			  $('#maskoverlay').show();
+			});
+
+			$("body").bind('Custom.End', function(ev) {
+				$('#maskoverlay').hide();
+			});
+		});
+	
+	// hiding the dropdown values
+		$(".select-cti-box").each(function(){
+			var value = $(this).val();
+			 for(var i=0;i<sFields.length;i++){
+				 if(value!=sFields[i]){
+					  $( "#"+$(this).attr("id")+" option[value='"+sFields[i]+"']" ).wrap("<span>");
+				 }
+			 }
+		  $( "#"+$(this).attr("id")+" option[value='"+value+"']" ).attr('selected', 'selected');
+		});
+	
+	 // enabling search box
+		$(".cti-search-box").each(function(){
+			 if($(this).val().length!=0&&$(this).val()!="*"){
+				 $("#sc-cti-search").removeClass('SC-disabled');
+				  return false;
+			 }else{
+				 $("#sc-cti-search").addClass('SC-disabled');
+			 }
+		});
+	
+     // ANI Exit Code
+		$(document).ready(function() {
+			$("#SC-exit-ani-btn").click(function(event) {
+				event.preventDefault();
+				var AniMarkup = AniContactsMarkup();
+				$("#sc-exit-ani").html(AniMarkup);
+				$("#sc-exit-ani").modal({
+					backdrop: "static"
+				});
+				$(".modal-backdrop").css('background', '#ffffff');
+				// Vamsi : 05APR18 : Inactivated the CTI Toolbar Hidden code
+				/*//SADDALA for cti issue
+				if($('#CommunicationPanelContainer').siblings().not('.forcehide')){
+					//if CTI tool bar is opened in the side then automatically make it float
+					$('#CommunicationPanelContainer').addClass('forcehide');
+				}*/
+			});
+
+		
+		 });
+	 
+	 next = 1;
+	 //adding search fields onclick of +
+		$(".cti-icon-img").click(function(e) {
+		 if(searchCount<=csearchfields.length-1){
+			e.preventDefault();
+			next = parseInt(next);
+			var addto = "#ifield" + next;
+			var addRemove = "#ifield" + (next);
+			next = parseInt(next) + 1;
+			var newIn = '<select class="select-box  select-cti-box margin-top diff-bg" autocomplete="off" id="field' + next + '" name="field' + next + '">';
+			for(i=0;i<csearchfields.length;i++){
+			 newIn+='<option value="'+csearchfields[i]+'">'+csearchfields[i]+'</option>';
+			}
+			
+			newIn+='</select><input type="text" id="ifield' + next + '" class="search-box cti-search-box margin-top diff-bg">';
+			var newInput = $(newIn);
+			
+			var removeBtn = '<div id="remove' + (next - 1) + '" class="remove-me cti-remove-me margin-top diff-bg"> <span id="removeicon" class="glyphicon glyphicon-minus-sign icon-img-remove"></span></div>';
+			var removeButton = $(removeBtn);
+			$(addto).after(newInput);
+			$(addRemove).after(removeButton);
+			
+			for(var j=0;j<sFields.length;j++){
+				$( "#field"+next+" option[value='"+sFields[j]+"']" ).wrap( "<span>");
+			}
+			
+			next = parseInt(next);
+			var e = document.getElementById("field"+next);
+			var seletedvalue = e.options[e.selectedIndex].value;
+			$("#field"+next+" option[value='"+seletedvalue+"']").attr('selected', 'selected');
+			
+			$(".select-cti-box").each(function(){
+				$(this).attr("id"); //this.id
+				if($(this).attr("id")!="field"+next){
+					$( "#"+$(this).attr("id")+" option[value='"+seletedvalue+"']" ).wrap( "<span>" );
+				}
+			});
+			
+			sFields.push(seletedvalue);
+			$(".add-item").hide();
+			$("#pfield" + next - 1).attr('data-source', $(addto).attr('data-source'));
+			$("#count").val(next);
+			storesearchfields();
+			searchCount++;
+			}
+		});
+		
+		// Removing the search fields onclik of - icon
+		$(document).unbind('.cti-remove-me').on('click','.cti-remove-me',function(e){
+            e.preventDefault();
+			var idString = this.id.toString();
+			
+            var fieldNum = idString.substring(6, idString.length);
+            var fieldID = "#field" + fieldNum;
+            var ifieldID = "#ifield" + fieldNum;
+			
+			var e = document.getElementById("field"+fieldNum);
+			var seletedvalue = e.options[e.selectedIndex].value;
+			$(".select-cti-box").each(function(){
+			if($(this).attr("id")!="field"+parseInt(fieldNum)){
+				 if ( $( "#"+$(this).attr("id")+" option[value='"+seletedvalue+"']" ).parent().is( "span" ) ){
+					$( "#"+$(this).attr("id")+" option[value='"+seletedvalue+"']" ).unwrap();
+				}
+			 }
+			});
+			
+			var sIndex = sFields.indexOf(seletedvalue);
+			sFields.splice(sIndex,1);
+			$(this).remove();
+            $(fieldID).remove();
+            $(ifieldID).remove();
+			storesearchfields();
+			searchCount--;
+		});
+		
+		//Below code is to sort the fields
+		$(document).on("click",".sort-by",function(){
+			$("body").trigger('Custom.Start');
+			SiebelApp.S_App.uiStatus.Busy({});
+			var sortField = $(this).text();
+			var sortOrder,sortPM;
+			if(prevSort.length==0){
+				prevSort = sortField;
+			}
+			if(prevSort == sortField){
+				sortOrder="SortAscending";
+			}else{
+				if(a==true){
+					sortOrder="SortAscending";
+					a=false;
+				}else{
+					sortOrder="SortDescending";
+					a=true;
+				}
+			}
+			sortPM = $(this).attr("id").indexOf("_");
+			sortPM = $(this).attr("id").substring(0,sortPM);
+			if(sortPM == "Contacts"){
+				SortRecords(pm,sortField,sortOrder,sortPM);
+			}else if(sortPM == "Assets"){
+				SortRecords(assertsPM,sortField,sortOrder,sortPM);
+			}else if(sortPM == "Orders"){
+				SortRecords(ordersPM,sortField,sortOrder,sortPM);
+			}else{
+				SiebelJS.Log("Unable to sort the records");
+			}
+		});
+		
+		setInterval(function(){
+			//stateSpanText = $('#MessageSpan').text();
+			stateSpanText = window.status;
+			$("#agent-status").text(stateSpanText);
+			if(stateSpanText === 'Agent state: Voice active' || stateSpanText === 'Agent state: Voice wrapup'){
+				$(".sc-cti-agent-state").css("border","3px solid #72B62A");
+				$(".sc-cti-agent-state").css("background","#A4E85C");
+			}else if(stateSpanText === 'Agent state: Voice ready'){
+				$(".sc-cti-agent-state").css("border","3px solid #9eb0c2");
+				$(".sc-cti-agent-state").css("background","#c9dbed");
+			}else{
+				$(".sc-cti-agent-state").css("border","3px solid #e14a4a");
+				$(".sc-cti-agent-state").css("background","#fb7b7b");
+			}
+			if(stateSpanText === ""){
+				$("#agent-status").text("Agent state: ");
+			}
+		},2000);
+	}
+
+    SCCTIInfoPR.prototype.BindData = function (bRefresh) {
+     SiebelAppFacade.SCCTIInfoPR.superclass.BindData.apply(this, arguments);
+	 
+     // Add code here that should happen after default processing
+		ANIInfoUI();
+		contactsUI();
+		assertsUI();
+		DigitalassertsUI();
+		ordersUI();
+	 // pagination
+	    MiniPagination(pm,"SC-CON-Pagination","Contacts");
+		MiniPagination(assertsPM,"SC-ASSERT-Pagination","Asserts");
+		MiniPagination(DigitalassertsPM,"SC-DIGITAL-ASSERT-Pagination","DigitalAsserts");
+		MiniPagination(ordersPM,"SC-ORDER-Pagination","Orders");
+		
+	}
+
+    SCCTIInfoPR.prototype.BindEvents = function () {
+		SiebelAppFacade.SCCTIInfoPR.superclass.BindEvents.apply(this, arguments);
+		// Add code here that should happen after default processing
+		
+		$(document).on('click','#sc-exit-ani-close',function(){
+	 		 			$("#sc-exit-ani").modal('hide');
+	    });
+		$(document).on('click','#sc-exit-ani-close-btn',function(){
+	 		 		$("#sc-exit-ani").modal('hide');
+	    });
+		
+		$(document).on('click','#SC-close-add-contact',function(){
+	 		 		//SiebelJS.Log("New Contact Closed");
+				 		$("#SC-add-contact").modal('hide');
+	    });
+		//on click of search functionality
+		$("#sc-cti-search").unbind().click(function(event) {
+			refByFlag="N";
+			searchContact();
+		});
+		
+		// search fields and search box code
+		$(document).on('keyup','.cti-search-box',function(){
+			selectedFieldId = $(this).attr("id").substring(1,$(this).attr("id").length);
+			var e = document.getElementById(selectedFieldId);
+			var selectedvalue = e.options[e.selectedIndex].value;
+			if(selectedvalue == "Phone Number" || selectedvalue == "Customer Number" || selectedvalue == "Employee Number"){
+				this.value = this.value.replace(/[^0-9\.]/g,'');
+			}
+			
+			if($(this).attr("id")!="ifield0"&&$("#ifield0").val().length!=0&&$("#ifield0").val()!="*"&&$(this).val().length!=0&&$(this).val()!="*"){
+				if(searchCount!=csearchfields.length){
+					$(".add-item").show();
+				}else{
+					$("#removeicon").show();
+				}
+			}else if($(this).attr("id")=="ifield0"&&$("#ifield0").val().length!=0){
+				$(".cti-search-box").each(function(){
+					if($(this).attr("id")!="ifield0"){
+						if($(this).val().length!=0&&$(this).val()!="*"){
+							$(".add-item").show();
+						}
+					}
+				});
+			}else{
+				$(".add-item").hide();
+			}
+			
+			$(".cti-search-box").each(function(){
+				 if($(this).val().length!=0&&$(this).val()!="*"){
+					 $("#sc-cti-search").removeClass('SC-disabled');
+					  return false;
+				 }else{
+					 $("#sc-cti-search").addClass('SC-disabled');
+				 }
+			});
+		 });
+	 
+			// dynamic values change for dropdowns
+		  $(document).on('click','.select-cti-box',function(){
+			var currentid = this.id;
+			var e = document.getElementById(currentid);
+			currentValue = e.options[e.selectedIndex].value;
+		  });
+		  
+		  $(document).on('change','.select-cti-box',function(){
+			var currentid = this.id;
+			var e = document.getElementById(currentid);
+			var seletedvalue = e.options[e.selectedIndex].value;
+			$(".select-cti-box").each(function(){
+			 $(this).attr("id"); //this.id
+			 if($(this).attr("id")!=currentid){
+				 $( "#"+$(this).attr("id")+" option[value='"+seletedvalue+"']" ).wrap("<span>");
+				 if ( $( "#"+$(this).attr("id")+" option[value='"+currentValue+"']" ).parent().is( "span" ) ){
+					$( "#"+$(this).attr("id")+" option[value='"+currentValue+"']" ).unwrap();
+				}
+			 }
+			 $( "#"+currentid+" option[value='"+seletedvalue+"']" ).attr('selected', 'selected');
+			});
+			sFields.push(seletedvalue);
+			var sIndex = sFields.indexOf(currentValue);
+			sFields.splice(sIndex,1);
+		 });
+		
+		$(document).on('click', '#SC-ANI-Contacts tr', function(){
+			$(this).addClass('cti-active').siblings().removeClass('cti-active');    
+			var rowId=this.rowIndex;//s_S_A1_div
+			CurrentRow = rowId;
+			$("#s_"+contactAppletSeq+"_l tr#"+rowId+"").trigger("click");
+			pm.ExecuteMethod("getCustomerNumber");
+			$("#SC-ANI-Contacts tbody tr").find('.submit-container').css({visibility: 'hidden'});
+			$(this).addClass("cti-active");
+			$(this).find('.submit-container').css({visibility: 'visible'});
+			assertsUI();
+			ordersUI();
+		});
+
+		$(document).on('click', '#SC-ANI-Asserts tr', function(){ 
+			$(this).addClass('cti-active').siblings().removeClass('cti-active');    
+			var rowId=this.rowIndex;//s_S_A1_div
+			$("#s_"+contactAppletSeq+"_l tr#"+rowId+"").trigger("click");
+		});
+		
+		$(document).on('click', '#SC-ANI-Orders tr', function(){ 
+			$(this).addClass('cti-active').siblings().removeClass('cti-active');    
+			var rowId=this.rowIndex;//s_S_A1_div
+			$("#s_"+contactAppletSeq+"_l tr#"+rowId+"").trigger("click");
+		});
+		
+		// SC-Profile toggle
+		$(document).on('click', '#SC-profile', function(){ 
+			$(".SC-Profile-container").toggle();
+		});
+		
+		//on click of logout
+		$("#logout").click(function() {
+			SiebelApp.S_App.LogOff();
+		});
+		
+		//close the logout model
+		 $(document).click(function(e) {
+			if (!$(e.target).closest('#SC-profile, .SC-Profile-container').length){
+				$(".SC-Profile-container").hide();
+			}
+		});
+		
+		// on click of the enter in contact search
+		//$(".cti-search-box").keyup(function(event) {
+		$(document).on('keyup','.cti-search-box',function(event){
+			if (event.keyCode === 13) {
+				if(!$("#sc-cti-search").hasClass("SC-disabled")){
+					refByFlag="N";
+					searchContact();
+				}
+			}
+		});
+		
+		$(document).on('click', '.submit-container', function(evt){
+		    evt.preventDefault();
+			//SPATIBAN:JUNE2019:Added logic to trigger UPT
+			 if(localStorage.getItem("EnableUPT")=="Y")
+				 SCOUIMethods.SCInvokeUPT("CTIClickedoncontactIcon");
+				pm.SetProperty("ActivityId",activityId);
+				pm.ExecuteMethod("submitRecord");
+				//SPATIBAN:JUNE2019:Added logic to trigger UPT
+				if(localStorage.getItem("EnableUPT")=="Y")
+				 SCOUIMethods.SCInvokeUPT("CTIContactId:"+pm.Get("ContactId"));
+				FieldQueryPairSearch={"First Name":"Id='"+pm.Get("ContactId")+"'"};
+				SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant,FieldQueryPairSearch,"SC ANI Contact List Applet");
+				$("#_swescrnbar").show();
+				$("#_swethreadbar").show();
+				$("#_sweappmenu").show();
+				$("#s_vctrl_div").show();
+				$(".siebui-button-toolbar").show();
+				$("#_sweview").show();
+				localStorage.setItem('whitescreen', 1);
+				pm.ExecuteMethod("OnDrillDown", "Last Name", CurrentRow);
+		   /*var ScANIApplet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC ANI Contact List Applet"];
+			ScANIApplet.InvokeMethod("GotoActivities");*/
+			//SiebelApp.S_App.GotoView("SC Contact 360 Degree View","Contact","","");
+		});
+		
+		$(document).on('click', '#SC-ANI-SearchButton', function(){ 
+		 var CustomerId = document.getElementById("SC-ANI-SearchInput").value;
+		 FieldQueryPairSearch = {"Customer Number":CustomerId};
+		 ExecuteListAppletFrame(SiebelConstant,FieldQueryPairSearch,"SC ANI Contact List Applet");
+		 setTimeout(function(){QueryAppletsUI();},1000);
+		});
+		
+		$(document).on('click', '#SC-ExitANI', function(){ 
+		 var e = document.getElementById("SC-ExitANI-Reason");
+		 var exitReason = e.options[e.selectedIndex].value;
+		 var Bservice = '',inPS = '', outPS = '';
+		 //SPATIBAN:JUNE2019:Added logic to trigger UPT
+		 if(localStorage.getItem("EnableUPT")=="Y")
+			 SCOUIMethods.SCInvokeUPT("ExitANI");
+		 if(activityId != null && activityId.length!= 0){
+			 inPS  = SiebelApp.S_App.NewPropertySet();
+			 outPS = SiebelApp.S_App.NewPropertySet();
+			 inPS.SetProperty("BusObj","SC Simplified Action");
+			 inPS.SetProperty("BusComp","SC Simplified Action");
+			 inPS.SetProperty("Id",activityId);
+			 inPS.SetProperty("Field: Call Type",exitReason);
+			 if($("#sn-Verified").text()=="YES")
+				inPS.SetProperty("Field: SN Verified","Y"); 
+			 else
+				inPS.SetProperty("Field: SN Verified","N"); 
+			 Bservice = SiebelApp.S_App.GetService("Inbound E-mail Database Operations");
+			 Bservice.InvokeMethod("UpdateRecord",inPS,outPS);
+		 }
+		 $("#sc-exit-ani").modal('hide');
+		 localStorage.setItem('whitescreen', 1);
+		 var Bservice = '',inPS = '', outPS = '';
+		 inPS  = SiebelApp.S_App.NewPropertySet();
+		 outPS = SiebelApp.S_App.NewPropertySet();
+		 inPS.SetProperty("Name","ALLOW_NAVIGATION");
+		 inPS.SetProperty("Value","Y");
+		 Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+		 Bservice.InvokeMethod("SetProfileAttr",inPS,outPS);
+		 SiebelApp.S_App.GotoView("Activity List View","Action","","");
+		});
+		
+		
+		//Start: show CTI Toolbar
+		$(document).on('click','#SC-ANI-CTItool',function() {
+			$(this).find('img').toggle();
+			//Commented for IP23 by peeyush.kumar on Dec 22 2023
+          // $('#tb_1')[0].click();
+          //Added for IP23 by peeyush.kumar on  Dec 22 2023
+          $("li[name='Toggle Communication Panel']").click();
+			setTimeout(function(){
+				//$('.siebui-comm-panel-container').removeClass('ui-draggable-disabled').addClass('siebui-comm-panel-float');
+				$('#commPanelDockToShowUnpin').click();
+			},500);
+		});		
+		
+		$(document).on('click','#commPanelClose',function() {
+			$('#SC-ANI-CTItool').find('img').toggle();
+		});
+		//End: show an hide of CTI tiolbar
+		
+		
+		//START -- CONTACT CREATION PROCESS
+			//Start: contact create pop up
+			$(document).on('click','#SC-ANI-AddContact',function() {
+				//ContactCreatefn = SiebelJS.Dependency("SiebelAppFacade.SCCreateContactFunctionality");
+				//Start loader 
+				$("body").trigger('Custom.Start');
+				setTimeout(function(){
+				ContactCreatefn.CreateNewContact();
+				//$(".SC-data-container").css("position","inherit");
+				if($("#sc-orange").is(":visible")){
+					toolbarflag = "Y";
+				}else{
+					toolbarflag = "N";
+				}
+				//hiding the Loader
+				$("body").trigger('Custom.End');
+				},1000);
+				//ContactCreatefn.CreateNewContact();
+			});
+			//End: contact create pop up
+			
+			
+			//sushma
+			 $(".modal").on('hide.bs.modal', function(){
+				if(toolbarflag=="Y"){
+				 /* $('#tb_1')[0].click();
+				setTimeout(function(){
+					//$('.siebui-comm-panel-container').removeClass('ui-draggable-disabled').addClass('siebui-comm-panel-float');
+					$('#commPanelDockToShowUnpin').click();
+				},500);	*/
+				$(".SC-data-container").css("position","inherit");
+				localStorage.setItem('CTIToolbar', "Y");
+				}else{
+					localStorage.setItem('CTIToolbar', "N");
+				}	
+				
+			  });
+			//Start: Create contact modal- closing
+				/*$(document).ready(function() { 				  
+					$("#SC-close-add-contact").click(function() {
+						$("#SC-add-contact").modal('hide');						
+					});
+				});*/
+			//End: Create contact modal-closing
+			
+			//Start: contact field validation & contact creation
+				$(document).on('click',"#gotoContactAccount",function(e) {
+						var ValidateTab1 = ContactCreatefn.ContactFieldValidation1();
+				});
+			
+				$(document).on('click',"#createContact",function(e) {
+					inPS  = SiebelApp.S_App.NewPropertySet();
+					outPS = SiebelApp.S_App.NewPropertySet();
+					inPS.SetProperty("Name","ALLOW_NAVIGATION");
+					inPS.SetProperty("Value","Y");
+					Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+					Bservice.InvokeMethod("SetProfileAttr",inPS,outPS);
+					var conCreate = ContactCreatefn.ContactFieldValidation2("SCContact360ViewPR");
+				});
+			//End: contact field validation & contact creation
+			
+			//Start: Email Validation 
+				$(document).on("click","#email",function(){
+					var emailValidain =  ContactCreatefn.Cont_Create_EmailValidation();
+				});
+			//End: Email Validation
+				 //Start: Referred by  checkbox
+				$(document).on("click","#referredby",function(){
+					var referredBy =  ContactCreatefn.Cont_Create_ReferredBY();
+				});
+			//End: Referred by  checkbox
+			
+			//Start: Goto previous page
+				$(document).on('click',"#gotoContactContact", function(event) {
+					var emailValidain =  ContactCreatefn.GotoPreviousPage();
+				});
+			//End: Goto previous page
+				 //Start:referredBy logic for new Contact
+				 //Start:Get the order date selected drop down id
+					var dateInptId="";
+					$(".sc-referred-search-box").each(function(){
+						var dateid=$(this).attr("id");
+						if($("#i"+dateid+" option:selected").text()=="Date Of First Activity")
+							dateInptId=dateid;
+					});
+					//End:Get the order date selected drop down id
+					next = 1;
+					//Start: Search Functionality for Referred by Insider pop-up
+					$(document).on('click','.ref-icon-img',function(e){
+						if(refsearchCount<=refsearchfields.length-1){
+							e.preventDefault();
+							next = parseInt(next);
+							var addto = "#rcfield" + next;
+							var addRemove = "#rcfield" + (next);
+							//SCHERKU: For date of first activity
+							var refOrderdate="N";
+							next = parseInt(next) + 1;
+							var newIn = '<select class="select-box margin-top sc-select-box" id="cfield' + next + '" name="field' + next + '">';
+							for(i=0;i<refsearchfields.length;i++){
+								newIn+='<option value="'+refsearchfields[i]+'">'+refsearchfields[i]+'</option>';
+							}
+							
+							newIn+='</select><input type="text" tabindex="'+(next+1)+'" id="rcfield' + next + '" class="search-box sc-referred-search-box margin-top" autocomplete="off">';
+							var newInput = $(newIn);
+							
+							var removeBtn = '<div id="remove' + (next - 1) + '" class="remove-me referred-remove-me margin-top"> <span id="referredremoveicon" class="glyphicon glyphicon-minus-sign icon-img-remove"></span></div>';
+							var removeButton = $(removeBtn);
+							$(addto).after(newInput);
+							$(addRemove).after(removeButton);
+							
+							for(var j=0;j<sFields.length;j++){
+								$( "#cfield"+next+" option[value='"+sFields[j]+"']" ).wrap( "<span>");
+							}
+							
+							var e = document.getElementById("cfield"+next);
+							var seletedvalue = e.options[e.selectedIndex].value;
+							$("#cfield"+next+" option[value='"+seletedvalue+"']").attr('selected', 'selected');
+							if(seletedvalue=="Date Of First Activity")
+							{
+									refOrderdate='Y';
+									
+							}
+							$(".sc-select-box").each(function(){
+								$(this).attr("id"); //this.id
+								if($(this).attr("id")!="cfield"+next){
+									$( "#"+$(this).attr("id")+" option[value='"+seletedvalue+"']" ).wrap( "<span>" );
+								}
+							});
+							
+							sFields.push(seletedvalue);
+							if(refOrderdate=='Y'){
+							$("#rcfield" + next).datepicker({
+									onSelect: function () {
+									$(".sc-referred-search-box").trigger("keyup");
+									
+									},
+									showButtonPanel: true
+									});
+							}
+							$(".ref-icon-img").hide();
+							$("#rcfield" + next - 1).attr('data-source', $(addto).attr('data-source'));
+							$("#count").val(next);
+							storesearchfields();
+							refsearchCount++;
+							
+						}
+		          });
+		//End: Search Functionality for Referred by Insider pop-up
+		// Removing the search fields onclik of - icon
+		$(document).on('click','.referred-remove-me',function(e){
+            e.preventDefault();
+			var idString = this.id.toString();
+			
+            var fieldNum = idString.substring(6, idString.length);
+            var fieldID = "#cfield" + fieldNum;
+            var rfieldID = "#rcfield" + fieldNum;
+			
+			var e = document.getElementById("cfield"+fieldNum);
+			var seletedvalue = e.options[e.selectedIndex].value;
+			$(".sc-select-box").each(function(){
+			if($(this).attr("id")!="cfield"+parseInt(fieldNum)){
+				 if ( $( "#"+$(this).attr("id")+" option[value='"+seletedvalue+"']" ).parent().is( "span" ) ){
+					$( "#"+$(this).attr("id")+" option[value='"+seletedvalue+"']" ).unwrap();
+				}
+			 }
+			});
+			
+			var sIndex = sFields.indexOf(seletedvalue);
+			sFields.splice(sIndex,1);
+			$(this).remove();
+            $(fieldID).remove();
+            $(rfieldID).remove();
+			storesearchfields();
+			
+			refsearchCount--;
+		});
+		
+		
+		$(document).on('click','#sc-referredby-con-search',function(e){
+			e.stopImmediatePropagation();
+			refByFlag="Y";
+		   searchContact();
+		   
+		});
+		
+		// on click of the enter in referred contact search
+		//$(".sc-referred-search-box").keyup(function(event) {
+		$(document).on('keyup','.sc-referred-search-box',function(event){
+			if (event.keyCode === 13) {
+				if(!$("#sc-referredby-con-search").hasClass("SC-disabled")){
+					refByFlag="Y";
+					searchContact();
+				}
+			}
+		});		
+		// search fields and search box code
+	$(document).on('keyup','.sc-referred-search-box',function(){
+		selectedFieldId = $(this).attr("id").substring(2,$(this).attr("id").length);
+		var e = document.getElementById("c"+selectedFieldId);
+		var selectedvalue = e.options[e.selectedIndex].value;
+		//SCHERKU: For date of first activity
+		 if(selectedvalue == "Date Of First Activity"){
+            this.value = this.value.replace(/[a-zA-Z ]+/g,'');
+			}
+			
+		//NGOLLA commented the code for defect no:737
+		/*if(selectedvalue == "Phone Number" || selectedvalue == "Customer Number" || selectedvalue == "Employee Number"){
+			this.value = this.value.replace(/[^0-9\.]/g,'');
+		}
+		*/
+		if($(this).attr("id")!="rcfield0"&&$("#rcfield0").val().length!=0&&$("#rcfield0").val()!="*"&&$(this).val().length!=0&&$(this).val()!="*"){
+			if(refsearchCount!=refsearchfields.length){
+				$(".ref-icon-img").show();
+			}else{
+				$("#referredremoveicon").show();
+			}
+		}else if($(this).attr("id")=="rcfield0"&&$("#rcfield0").val().length!=0){
+			$(".sc-referred-search-box").each(function(){
+				if($(this).attr("id")!="rcfield0"){
+					if($(this).val().length!=0&&$(this).val()!="*"){
+						$(".ref-icon-img").show();
+					}
+				}
+			});
+		}else{
+			$(".ref-icon-img").hide();
+		}
+		
+		$(".sc-referred-search-box").each(function(){
+			 if($(this).val().length!=0&&$(this).val()!="*"){
+				 $("#sc-referredby-con-search").removeClass('SC-disabled');
+				  return false;
+			 }else{
+				 $("#sc-referredby-con-search").addClass('SC-disabled');
+			 }
+		});
+	 });
+	 
+	  // dynamic values change for dropdowns
+	  $(document).on('click','.sc-select-box',function(){
+		var currentid = this.id;
+		var e = document.getElementById(currentid);
+		//SCHERKU: For adding date of first activity on contact search
+		if($("#"+currentid).val()=="Date Of First Activity")
+		{
+			$("#i"+currentid).datepicker({
+				onSelect: function () {
+					$(".sc-select-box").trigger("keyup");
+				},
+				showButtonPanel: true
+			});
+		//Start:on focus out hide the datepicker
+		var dateid="#i"+currentid;
+		$("#i"+currentid).focusout(function(){
+			if($("#i"+currentid).hasClass("hasDatepicker"))
+			$(dateid+" ~ .ui-datepicker").hide();
+		});
+		//End:on focus out hide the datepicker
+		//Start:on scroll hiding the datepicker
+			$("html, body").on("DOMMouseScroll MouseScrollEvent MozMousePixelScroll wheel scroll", function ()
+			{
+				if($(dateid).hasClass("hasDatepicker"))
+			    $(dateid).datepicker("hide");
+			});
+		  //START SNARRA 28/05/2018 Added code for hiding DatePicker on tab
+		     $(dateid).on('keypress', function(ev){
+				if(ev.keyCode === 9){ //tab
+					if($(dateid).hasClass("hasDatepicker"))
+						 $("#"+dateid+" ~ .ui-datepicker").hide();
+			        
+				}
+			});
+		}
+		else{
+			currentValue = e.options[e.selectedIndex].value;
+			if($("#i"+currentid).hasClass("hasDatepicker")){
+			$("#i"+currentid).datepicker( "destroy" );
+			}
+		}
+	  });
+	  $(document).on('change','.sc-select-box',function(){
+		var currentid = this.id;
+		var e = document.getElementById(currentid);
+		var seletedvalue = e.options[e.selectedIndex].value;
+		
+		$(".sc-select-box").each(function(){
+         $(this).attr("id"); //this.id
+		 if($(this).attr("id")!=currentid){
+			 $( "#"+$(this).attr("id")+" option[value='"+seletedvalue+"']" ).wrap( "<span>" );
+			 if ( $( "#"+$(this).attr("id")+" option[value='"+currentValue+"']" ).parent().is( "span" ) ){
+				$( "#"+$(this).attr("id")+" option[value='"+currentValue+"']" ).unwrap();
+			}
+		 }
+		 $( "#"+currentid+" option[value='"+seletedvalue+"']" ).attr('selected', 'selected');
+        });
+		sFields.push(seletedvalue);
+		var sIndex = sFields.indexOf(currentValue);
+		sFields.splice(sIndex,1);
+	 });
+	   
+	   $(document).on('click', '#SC-table-ref-Con tr', function(){
+			sc_reffid = $(this).attr('id');
+			selected_RefConId = sc_reffid;
+			selected_RefConIndex = selected_RefConId.replace("ref_row","");
+			$('#' + sc_reffid).addClass('highlate-row').siblings().removeClass('highlate-row');
+			$("#SC-select-contact-referredby").removeClass('SC-disabled');
+		});
+		
+		$(document).on('click', '#SC-select-contact-referredby', function(){
+		  $("#SC-select-contact-referredby").addClass('SC-disabled');	
+		  $("#SC-search-referredby").modal('hide');
+		  var rowid= sc_reffid.slice(-1);
+		  SiebelJS.Log(rowid);
+		  var referedcontactInfo=$("#"+rowid+"refcondet").text();
+		  var refconrcd=referedcontactInfo.split('_');
+		  RefById=refconrcd[0];
+		  var RefbyName=refconrcd[1]+" "+refconrcd[2];
+		  $("#Referredby").val(RefbyName);
+		   $("#Referredby").parent().val(RefById);
+		  $("#Referredby").parent().addClass("is-active is-completed");
+		});
+		
+		
+				 //End:referredBy logic for new Contact
+				
+			//This is for the input box animations. this is required across the app
+					$(document).on('focus','.SC-input', function() {
+						$(this).parent().addClass("is-active is-completed");
+					});
+					
+
+					$(document).on('focusout','.SC-input',function() {
+						if ($(this).val() === "")
+							$(this).parent().removeClass("is-completed");
+						$(this).parent().removeClass("is-active");
+					});
+					
+					
+			//Start: on focus out, change the phone numbeer to US format				
+					
+				SCOUIMethods.PH_USFormat("MobilePhone");
+				SCOUIMethods.PH_USFormat("SecondaryPhone");
+				SCOUIMethods.PH_USFormat("TeritaryPhone");
+				
+			//End: on focus out, change the phone numbeer to US format
+			
+		//END -- CONTACT CREATION PROCESS
+		
+	}
+
+    SCCTIInfoPR.prototype.EndLife = function () {
+		SiebelAppFacade.SCCTIInfoPR.superclass.EndLife.apply(this, arguments);
+		SiebelJS.Log("SCCTIInfoPR: EndLife method reached.");
+		sFields=null;
+		$(".SC-data-container").css("position","absolute");
+		if(localStorage.getItem('whitescreen')==0){
+			$("#_swescrnbar").hide();
+			$("#_swethreadbar").hide();
+			$("#_sweappmenu").hide();
+			$("#s_vctrl_div").hide();
+			$(".siebui-button-toolbar").hide();
+			$("#_sweview").hide();
+			$('#_swecontent').prepend(SC_OUI_Markups.CustomWhiteScreenTimer());
+			$("#custommaskoverlay").show();
+		}else if(localStorage.getItem('whitescreen')==1){
+			$("#_swescrnbar").show();
+			$("#_swethreadbar").show();
+			$("#_sweappmenu").show();
+			$("#s_vctrl_div").show();
+			$(".siebui-button-toolbar").show();
+			$("#_sweview").show();
+		}
+		contactInfo="",assertInfo="",orderInfo="";
+		$(document).unbind("click");
+		$(document).unbind("keyup");
+		
+    }
+	
+	//code to search contacts based on the input
+	function searchContact(){
+
+		$("body").trigger('Custom.Start');
+		if(refByFlag=="Y"){
+			referredsearchfields();
+		}else{
+			storesearchfields();
+		}
+		
+		var searchObj = [];
+		var finalObj = {};
+		$("select[id*='field']").each(function() {
+			var fname = $(this).val();
+			var fvalue = $(this).next().val();
+			fvalue = $.trim(fvalue);
+
+			var phonespec="";
+			if (fname !== "" && fvalue !== "" && fvalue !== undefined && fname !== undefined) {
+				if(fname=="Phone Number"){
+					if(refByFlag=="Y")
+					var phone=["Primary Contact Cellular Phone #","Primary Contact Home Phone #","Primary Contact Work Phone #"];
+					else
+					var phone=["Cellular Phone #","Work Phone #","Home Phone #"];
+				 for (i=0;i<phone.length;i++){
+					if(i<phone.length-1){
+						phonespec = phonespec+"["+phone[i]+"] Like '"+fvalue+"' OR "
+					}
+					else{
+						phonespec = phonespec+"["+phone[i]+"] Like '"+fvalue+"'";
+					}
+				 }
+				 if(refByFlag=="Y"){
+					searchObj.push({"field_name": "Cellular Phone #","value": phonespec}); 
+				 }else{
+					searchObj.push({"field_name": "Mobile Phone #","value": phonespec}); 
+				 }
+				 
+				}
+				 else if((fname=="Email Address")&& (refByFlag=="Y")){
+				  fvalue = fvalue;
+					searchObj.push({
+					"field_name": fname,
+					"value": fvalue
+					});
+			    }else if(fname=="Address (Mail To)"){
+					fvalue = fvalue+"*";
+					searchObj.push({
+					"field_name": "Address",
+					"value": fvalue
+					});
+				}
+				else{
+					//SNARRA 20/07/2018 Added for appostrophe text field values
+				 fvalue='"'+fvalue.toUpperCase()+'*"';
+					searchObj.push({
+					"field_name": fname,
+					"value": fvalue
+					});
+					
+				}
+			}
+		});
+
+		if (searchObj.length > 0) {
+			for (var i = 0; i < searchObj.length; i++) {
+				finalObj[searchObj[i].field_name] = searchObj[i].value;
+			}
+		}
+		
+	   FieldQueryPair = finalObj;
+	   if(refByFlag=="Y"){
+		 SCOUIMethods.ExecuteListAppletFrame(SiebelConstant,FieldQueryPair,"SC LOY Member List Applet");  
+	   }else{
+		  SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant,FieldQueryPair,"SC ANI Contact List Applet");  
+	   }
+	    
+	   
+	}
+	$(document).on('click','#SC-close-referredby',function(){
+			$("#SC-search-referredby").modal('hide');
+		});
+	$(document).on('click', '#SC-table-referral-search-contact tr', function(){
+			sc_reffid = $(this).attr('id');
+			selected_RefConId = sc_reffid;
+			selected_RefConIndex = selected_RefConId.replace("ref_row","");
+			$('#' + sc_reffid).addClass('highlate-row').siblings().removeClass('highlate-row');
+			$("#SC-select-contact-referredby").removeClass('SC-disabled');
+		});
+
+	
+	// To show ANI detials on ui
+	function ANIInfoUI(){
+		
+		var scaniRecordSet = scANIPM.Get("GetRecordSet");
+		if(scaniRecordSet.length>0){
+			 var ANI = scaniRecordSet[0]['ANI'];
+			 //var DNIS = scaniRecordSet[0]['DNIS'];
+			 
+			  var INT_SOU = scaniRecordSet[0]['Q7'];
+			   var IVR = scaniRecordSet[0]['Q6'];
+			   var EnteredPhn = scaniRecordSet[0]['SN IVR Number'];
+				if(EnteredPhn!="" && EnteredPhn !=null && EnteredPhn != "NoProfile" &&  EnteredPhn!="TokenError" && EnteredPhn !="APIError" && EnteredPhn !="SeibelDown"){
+					if(EnteredPhn.includes("/")){
+						var EneterdArray=EnteredPhn.split('/');
+						if(ANI!=EneterdArray[0]){
+							EnteredPhn = '('+EneterdArray[0].substring(0,3)+') '+EneterdArray[0].substring(3,6)+'-'+EneterdArray[0].substring(6,EneterdArray[0].length);
+							$("#sn-ALt-ANI").text(EnteredPhn);
+						}
+					}
+				}
+			 if(ANI.length!=0){
+				ANI = '('+ANI.substring(0,3)+') '+ANI.substring(3,6)+'-'+ANI.substring(6,ANI.length);
+			 }
+			/* if(DNIS.length!=0){
+				DNIS = '('+DNIS.substring(0,3)+') '+DNIS.substring(3,6)+'-'+DNIS.substring(6,DNIS.length);
+			 }*/
+			 document.getElementById('ANI').innerHTML = ANI;
+			// document.getElementById('DNIS').innerHTML = DNIS;
+			 document.getElementById('Queue').innerHTML = scaniRecordSet[0]['Call Queue Name'];
+			// document.getElementById('Interaction_Source').innerHTML = scaniRecordSet[0]['Q7'];
+			 document.getElementById('IVR').innerHTML = scaniRecordSet[0]['Q6'];
+			 DivSubType = SCOUIMethods.SCGetOrderProfileAttrValue("SC Primary Division Sub Type");
+			 if(DivSubType=="CSC"){
+				$("#Media_Code").text(scaniRecordSet[0]['Media Code']);
+			   $("#Media_Code_Desc").text(scaniRecordSet[0]['Media Code Description']); 
+			 }else{
+				$("#Interaction_Source").text(scaniRecordSet[0]['Q7']); 
+			 }
+			 
+		}
+		
+	}
+	
+	// To show contact detials on ui
+	function contactsUI(){
+		var contactRecordSet = pm.Get("GetRecordSet");
+		 var contactControls = pm.Get("GetControls");
+		 var contactColumns = pm.Get("ListOfColumns");
+		 
+		 contactInfo = "";
+		 contactInfo += '<thead>';
+			contactInfo += '<tr>';
+				contactInfo += '<th class="submit-icon"> </th>';
+				for(var i=0;i<contactColumns.length;i++){
+					if(contactColumns[i]['name']!="Referred Id"){
+								contactInfo += '<th class="sort-by" id="Contacts_'+contactColumns[i]['name'].replace(/ /g,"_")+'">'+contactColumns[i]['name']+'</th>';
+				}
+				}	
+			contactInfo += '</tr>';
+		 contactInfo += '</thead>';
+		 contactInfo += '<tbody>';
+		 var record=[];
+			for(var i=0;i<contactRecordSet.length;i++){
+				record = contactRecordSet[i];
+				contactInfo += '<tr>';
+				contactInfo += '<td class="submit-icon">';
+                contactInfo += '<div class="submit-container" style="visibility: hidden;"><img src="images/custom/submit.png" /></div>';
+                contactInfo += '</td>';
+					for(var j=0;j<contactColumns.length;j++){
+						if(contactColumns[j]["name"]!="Referred Id"){
+							if(contactColumns[j]["name"]==="First Name" || contactColumns[j]["name"]==="Last Name" || contactColumns[j]["name"]==="Personal Street Address"){
+							contactInfo += '<td title="'+record[contactControls[contactColumns[j]["name"]].GetFieldName()]+'">'+record[contactControls[contactColumns[j]["name"]].GetFieldName()]+'</td>';
+							}
+							else{
+							contactInfo += '<td>'+record[contactControls[contactColumns[j]["name"]].GetFieldName()]+'</td>';
+							}
+						}
+					}
+				contactInfo += '</tr>';
+			}
+		 contactInfo += '</tbody>';
+		 $('#SC-ANI-Contacts').html(contactInfo);
+	}
+	
+	/* Code to display the assert of selected contact Record on UI*/
+	function assertsUI(){
+		var assertRecordSet = assertsPM.Get("GetRecordSet");
+		 var assertControls = assertsPM.Get("GetControls");
+		 var assertColumns = assertsPM.Get("ListOfColumns");
+		 assertInfo ="";
+		 assertInfo += '<thead>';
+			assertInfo += '<tr>';
+				for(var i=0;i<assertColumns.length;i++){
+						assertInfo += '<th id="Assets_'+assertColumns[i]['name'].replace(/ /g,"_")+'" class="sort-by">'+assertColumns[i]['name']+'</th>';
+				}	
+			assertInfo += '</tr>';
+		 assertInfo += '</thead>';
+		 assertInfo += '<tbody>';
+		 var record=[];
+		 for(var i=0;i<assertRecordSet.length;i++){
+			record = assertRecordSet[i];
+			assertInfo += '<tr>';
+				for(var j=0;j<assertColumns.length;j++){
+					if(assertColumns[i]['name']==="SC Prod Detail"||assertColumns[i]['name']==="Product Name"||assertColumns[i]['name']==="Warranty"){
+					assertInfo += '<td title="'+record[assertControls[assertColumns[j]["name"]].GetFieldName()]+'">'+record[assertControls[assertColumns[j]["name"]].GetFieldName()]+'</td>';
+				    }else{
+					assertInfo += '<td>'+record[assertControls[assertColumns[j]["name"]].GetFieldName()]+'</td>';	
+					}
+				}
+			assertInfo += '</tr>';
+		 }
+		 assertInfo += '</tbody>';
+		 $('#SC-ANI-Asserts').html(assertInfo);
+		 MiniPagination(assertsPM,"SC-ASSERT-Pagination","Asserts");
+	}
+	   function DigitalassertsUI(){
+		var digitalassertRecordSet = DigitalassertsPM.Get("GetRecordSet");
+		 var digitalassertControls = DigitalassertsPM.Get("GetControls");
+		 var digitalassertColumns = DigitalassertsPM.Get("ListOfColumns");
+		 DigitalassertInfo ="";
+		 DigitalassertInfo += '<thead>';
+			DigitalassertInfo += '<tr>';
+				for(var i=0;i<digitalassertColumns.length;i++){
+						DigitalassertInfo += '<th id="Assets_'+digitalassertColumns[i]['name'].replace(/ /g,"_")+'" class="sort-by">'+digitalassertColumns[i]['name']+'</th>';
+				}	
+			DigitalassertInfo += '</tr>';
+		 DigitalassertInfo += '</thead>';
+		 DigitalassertInfo += '<tbody>';
+		 var record=[];
+		 for(var i=0;i<digitalassertRecordSet.length;i++){
+			record = digitalassertRecordSet[i];
+			DigitalassertInfo += '<tr>';
+				for(var j=0;j<digitalassertColumns.length;j++){					
+					DigitalassertInfo += '<td>'+record[digitalassertControls[digitalassertColumns[j]["name"]].GetFieldName()]+'</td>';	
+				}
+			DigitalassertInfo += '</tr>';
+		 }
+		 DigitalassertInfo += '</tbody>';
+		 $('#SC-ANI-Digital-Assets').html(DigitalassertInfo);
+		 MiniPagination(DigitalassertsPM,"SC-DIGITAL-ASSERT-Pagination","DigitalAsserts");
+	}
+	
+	/* Code to display the orders of selected contact Record on UI*/
+	function ordersUI(){
+		 var ordersRecordSet = ordersPM.Get("GetRecordSet");
+		 var orderControls = ordersPM.Get("GetControls");
+		 var orderColumns = ordersPM.Get("ListOfColumns");
+		 orderInfo ="";
+		 orderInfo += '<thead>';
+			orderInfo += '<tr>';
+				for(var i=0;i<orderColumns.length;i++){
+					orderInfo += '<th id="Orders_'+orderColumns[i]['name'].replace(/ /g,"_")+'" class="sort-by">'+orderColumns[i]['name']+'</th>';
+				}	
+			orderInfo += '</tr>';
+		 orderInfo += '</thead>';
+		 orderInfo += '<tbody>';
+		 var record=[];
+			for(var i=0;i<ordersRecordSet.length;i++){
+				record = ordersRecordSet[i];
+				orderInfo += '<tr>';
+					for(var j=0;j<orderColumns.length;j++){
+						orderInfo += '<td>'+record[orderControls[orderColumns[j]["name"]].GetFieldName()]+'</td>';
+					}
+				orderInfo += '</tr>';
+			}
+		 orderInfo += '</tbody>';
+		 $('#SC-ANI-Orders').html(orderInfo);
+		 MiniPagination(ordersPM,"SC-ORDER-Pagination","Orders");
+	}
+	
+	//this method is responsible for showing buttons on the UI and perform the 5 records pagination
+	function MiniPagination(pm,concat,type){
+		var appletid=pm.Get("GetFullId");
+		var markup="";
+		if(pm.Get("GetRecordSet").length>=5){
+			markup+='                        <li id="First'+appletid+'"><img src="images/custom/previous-set.png" /></li>';
+			markup+='                        <li id="Prev'+appletid+'"><img src="images/custom/previous.png" /></li>';
+			markup+='                        <li id="Next'+appletid+'"><img src="images/custom/next.png" /></li>';
+			markup+='                        <li id="Last'+appletid+'"><img src="images/custom/next-set.png" /></li>';
+		}
+		$("#"+concat).html(markup);	//return markup and get it in applet
+
+		$("#Last"+appletid).click(function(){
+			 pm.ExecuteMethod("InvokeMethod","GotoLastSet",null,false);
+			 if(type == "Asserts"){
+				 assertsUI();
+			 }if(type == "Orders"){
+				 ordersUI();
+			 }
+		});
+		$("#Next"+appletid).click(function(){
+			 pm.ExecuteMethod("InvokeMethod","GotoNextSet",null,false);
+			 if(type == "Asserts"){
+				 assertsUI();
+			 }if(type == "Orders"){
+				 ordersUI();
+			 }
+		});		
+		$("#Prev"+appletid).click(function(){
+			 pm.ExecuteMethod("InvokeMethod","GotoPreviousSet",null,false);
+			 if(type == "Asserts"){
+				 assertsUI();
+			 }if(type == "Orders"){
+				 ordersUI();
+			 }
+		});
+		$("#First"+appletid).click(function(){
+			 pm.ExecuteMethod("InvokeMethod","GotoFirstSet",null,false);
+			 if(type == "Asserts"){
+				 assertsUI();
+			 }if(type == "Orders"){
+				 ordersUI();
+			 }
+		});
+		
+		//method to supress alerts on pagination
+		(function(proxied) {
+		  window.alert = function() {
+			if((arguments[0].includes("Method GotoLastSet is not allowed here"))||(arguments[0].includes("Method GotoFirstSet is not allowed here")))
+			{SiebelJS.Log("supressed");}
+			else
+			return proxied.apply(this, arguments);
+		  };
+		})(window.alert);
+	};
+	
+	//Start: Sort Records
+	function SortRecords(pm,sortField,sortOrder,sortPM){
+		var inp = theApplication().NewPropertySet();
+		  inp.SetProperty("SWEMethod", sortOrder);
+		  inp.SetProperty("SWEField", sortField);
+		  pm.ExecuteMethod("InvokeMethod",sortOrder,inp,{
+		   async: true,
+		   cb: function() {
+			  if(sortPM == "Assets"){
+				  assertsUI();
+			  }if(sortPM == "Orders"){
+				  ordersUI();
+			  }
+			  $("body").trigger('Custom.End');
+		   },
+		   scope: this
+		});
+		SiebelApp.S_App.uiStatus.Free();
+	}
+	
+	// to store the html in local storage
+	function storesearchfields(){
+		$("input[type=text]").each(function(){
+			$(this).attr("value",$(this).val());
+		});
+		
+		$("select option").each(function(){
+        if ($(this).attr("selected")=="selected")
+            $(this).attr("selected","true");
+        else
+            $(this).removeAttr("selected");
+		});
+	}
+	
+		  function referredsearchfields(){
+		$("#sc-referred-search-box").each(function(){
+			$(this).attr("value",$(this).val());
+		});
+		
+		$("#sc-select-box").each(function(){
+        if ($(this).attr("selected")=="selected")
+            $(this).attr("selected","true");
+        else
+            $(this).removeAttr("selected");
+		});
+	}
+	//Get the Contacts results for referref By 
+	function RefByContactSearch(conrecordset){
+		var refbymarkup = '';
+		var ContactDetails="";
+		refbymarkup+='                                <table class="SC-table" id="SC-table-ref-Con">';
+		refbymarkup+='                                    <thead>';
+		refbymarkup+='                                        <tr>';
+		refbymarkup+='                                            <th class="sort-by" id="sp-lastname">last name</th>';
+		refbymarkup+='                                            <th class="sort-by" id="sp-firstname">first name</th>';
+		refbymarkup+='                                            <th class="sort-by" id="sp-address">address</th>';
+		refbymarkup+='                                            <th class="sort-by" id="sp-city">city</th>';
+		refbymarkup+='                                            <th class="sort-by" id="sp-state">state</th>';
+		refbymarkup+='                                            <th class="sort-by" id="sp-zipcode">zipcode</th>';
+		refbymarkup+='                                        </tr>';
+		refbymarkup+='                                    </thead>';
+		refbymarkup+='                                    <tbody>';
+		for (i=0;i<conrecordset.length;i++)
+		{
+			ContactDetails="";
+			ContactDetails=conrecordset[i]["Id"]+'_'+conrecordset[i]["First Name"]+'_'+conrecordset[i]["Last Name"];
+			refbymarkup += '		<tr id="ref_row'+i+'">';
+			refbymarkup += '      <td><span style="display:none" id="'+i+'refcondet">'+ContactDetails+'</span>'+conrecordset[i]["Last Name"]+'</td>';
+			refbymarkup += '      <td>'+conrecordset[i]["First Name"]+'</td>';
+			refbymarkup += '      <td>'+conrecordset[i]["Personal Street Address"]+'</td>';
+			refbymarkup += '      <td>'+conrecordset[i]["Personal City"]+'</td>';
+			refbymarkup += '      <td>'+conrecordset[i]["Personal State"]+'</td>';
+			refbymarkup += '      <td>'+conrecordset[i]["Personal Postal Code"]+'</td>';
+			refbymarkup += '  </tr>';
+		}
+		refbymarkup+='                                    </tbody>';
+		refbymarkup+='                                </table>';
+		return refbymarkup;
+	}
+	//code to search contacts based on the input
+	function AniContactsMarkup(){
+		var searchExpr = '',sortSpec = '',lovArray = '',lovValue = '';
+		searchExpr = "[Type]= 'FIN_DISPOSITION' and [Active] = 'Y'";
+		sortSpec = "Order By";
+		lovArray = SCOUIMethods.SCGetOrderLoVs(searchExpr);
+		var aniContacts='';
+		aniContacts += '<div class="modal-dialog">';
+					aniContacts += '<!-- Modal content-->';
+					aniContacts += '<div class="modal-content">';
+						aniContacts += '<div class="modal-header">';
+							aniContacts += '<button type="button" class="close" id="sc-exit-ani-close">&times;</button>';
+						aniContacts += '</div>';
+						aniContacts += '<div class="modal-body">';
+							aniContacts += '<div class="sc-exit-ani-body">';
+								aniContacts += '<div class="sc-exit-ani-img">';
+									
+								aniContacts += '</div>';
+								aniContacts += '<p class="exit-text">Exit ANI search?</p>';
+								aniContacts += '<p>In order to exit ANI search, you need to enter a reason for this action</p>';
+								aniContacts += '<select id="SC-ExitANI-Reason">';
+									for (var r = 0; r < lovArray.length; r++) {
+					              aniContacts += '<option value="'+lovArray[r]+'">' + lovArray[r] + '</option>';
+				                 }
+								aniContacts += '</select>';
+								aniContacts += '<div class="sc-exit-ani-button-container">';
+									aniContacts += '<button class="cancel" id="sc-exit-ani-close-btn">Cancel</button>';
+									aniContacts += '<button class="exit" id="SC-ExitANI">Exit ANI</button>';
+								aniContacts += '</div>';
+							aniContacts += '</div>';
+						aniContacts += '</div>';
+					aniContacts += '</div>';
+				aniContacts += '</div>';
+				return aniContacts;
+	}
+	return SCCTIInfoPR;
+   }()
+  );
+  return "SiebelAppFacade.SCCTIInfoPR";
+ })
+}
