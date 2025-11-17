@@ -87,18 +87,10 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
 
 
             if (fitFlag == "Y" && poleDisplayFlg == "Y" && resumeOrderflag != "Y")
-			{
               SC_OUI_Methods.SCnGetDisplayTerminals();
-			}
 
-            if (fitFlag == "Y" && resumeOrderflag == "Y" && poleDisplayFlg == "Y")
+            if (fitFlag == "Y" && resumeOrderflag == "Y")
               SC_OUI_Methods.SCnGetDisplayTerminals();
-			
-			localStorage.setItem('BypassTerminalSave','N');
-			localStorage.setItem('PoleDisplayConfBypass','N');
-			 if (fitFlag == "Y" && poleDisplayFlg == "N") {
-				 localStorage.setItem('PoleDisplayConfBypass','Y');
-			 }
 
             var isTerminalPresent = $('.profile-block #SC-terminal-tile').css('display');
             var terminalValue = SiebelApp.S_App.GetProfileAttr('TerminalSelectedName');
@@ -106,8 +98,7 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
             {
               $('.profile-block #SC-terminal-tile span').text(terminalValue);
               $('.profile-block #SC-terminal-tile').css('display', '');
-			  //AKSHAY: Added function call to track inactivity.
-			  SCInactivityTime();
+
               if (window.terminalcheck == undefined || window.terminalcheck == "undefined")
               {
                 window.terminalcheck = setInterval(function ()
@@ -127,7 +118,6 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
                     if (termId == "")
                     {
                       clearInterval(terminalcheck);
-					  clearTimeout(window.time);
                       $('.profile-block #SC-terminal-tile').css('display', 'none');
                       $("#SC-terminal-offline-popup").modal(
                       {
@@ -763,11 +753,6 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
               //$("#addressto").trigger("click");
             }
           });
-		  //AKSHAY: added below handler for terminal POC.
-		  $('#SC-terminal-tile').click(function(){
-				$('.profile-block #SC-terminal-tile').css('display', 'none');
-				SC_OUI_Methods.SCnGetDisplayTerminals();
-			  });
 
           //Add store Location modal open
           $("#SC-add-store-location").click(function ()
@@ -936,7 +921,7 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
 
               if (Bservice)
               {
-                outPS = Bservice.InvokeMethod("UpdateTerminalId", inPS, outPS);
+                outPS = Bservice.InvokeMethod("UpdateTerminalId", inPS);
               }
 
               var inPS = SiebelApp.S_App.NewPropertySet();
@@ -955,12 +940,10 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
               if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
               {
                 clearInterval(window.terminalcheck);
-				clearTimeout(window.time);
                 //SC_OUI_Methods.ResetTerminalProfileAttrib();
                 SiebelJS.Log('Terminal Interval Cleared!!');
               }
-			  //AKSHAY: Added function call to track inactivity.
-			  SCInactivityTime();
+
               window.terminalcheck = setInterval(function ()
               {
                 var inPS = SiebelApp.S_App.NewPropertySet();
@@ -977,7 +960,6 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
                   if (termId == "")
                   {
                     clearInterval(terminalcheck);
-					clearTimeout(window.time);
                     $('.profile-block #SC-terminal-tile').css('display', 'none');
                     $("#SC-terminal-offline-popup").modal(
                     {
@@ -997,7 +979,6 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
                 }
               }, 5000);
             }
-			
           });
 
           $(document).on('click', '#SC-terminal-offline-ok', function ()
@@ -1582,7 +1563,6 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
             if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
             {
               clearInterval(window.terminalcheck);
-			  clearTimeout(window.time);
               SC_OUI_Methods.ResetTerminalProfileAttrib();
               SiebelJS.Log('Terminal Interval Cleared on Go To Contact!!');
             }
@@ -1623,7 +1603,6 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
             if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
             {
               clearInterval(window.terminalcheck);
-			  clearTimeout(window.time);
               SC_OUI_Methods.ResetTerminalProfileAttrib();
               SiebelJS.Log('Terminal Interval Cleared on Save & Exit!!');
             }
@@ -1702,7 +1681,6 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
             if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
             {
               clearInterval(window.terminalcheck);
-			  clearTimeout(window.time);
               SC_OUI_Methods.ResetTerminalProfileAttrib();
               SiebelJS.Log('Terminal Interval Cleared on Go To Contact!!');
             }
@@ -2732,60 +2710,7 @@ if (typeof (SiebelAppFacade.SCSalesOrderCreateFormAppletPR) === "undefined")
           $("#refundamount").html("$" + order_refundtotal.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
           return lineitems_markup;
         }
-		
-		//AKSHAY: added below function to track inactivity.
-		function SCInactivityTime() {
-			
-			window.onload = resetTimer;
-			// DOM Events
-			document.onmousemove = resetTimer;
-			document.onkeydown = resetTimer;
-			window.inacivityFlag = "N";
 
-			function logout() {
-				console.log('Inacivity Logout Fired!!');
-				var VName = SiebelApp.S_App.GetActiveView().GetName();
-				if(VName == "SC Create Sales Order View OUI")
-				{
-					var inPS = SiebelApp.S_App.NewPropertySet();
-					var outPS = SiebelApp.S_App.NewPropertySet();
-					var Bservice = SiebelApp.S_App.GetService("SC Adyen Payment Service");
-					var OrderNum = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Order Number');
-					inPS.SetProperty('Order Number', OrderNum);
-					inPS.SetProperty('Terminal Id', '');
-					inPS.SetProperty('Terminal Name', '');
-
-					if (Bservice)
-					{
-					outPS = Bservice.InvokeMethod("UpdateTerminalId", inPS, outPS);
-					}
-					
-				}
-				
-			}
-			
-			function setInactivity() {
-				window.inacivityFlag = "Y";
-				clearTimeout(window.scinactivetimer);
-				clearInterval(terminalcheck);
-			}
-
-			function resetTimer() {
-				if(window.inacivityFlag == "N")
-				{
-					clearTimeout(window.scinactivetimer);
-					window.scinactivetimer = setTimeout(setInactivity, 60000);
-				}
-				else
-				{
-					clearTimeout(window.time);
-					window.time = setTimeout(logout, 230000);
-				}
-				
-				
-				// 1000 milliseconds = 1 second
-			}
-		}
 
         //this fucntion fetches all the addresses for bill to address dropdown	
         function AttachAddresses()

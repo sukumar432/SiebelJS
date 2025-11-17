@@ -1,0 +1,11144 @@
+if (typeof (SiebelAppFacade.SCPaymentsPR) === "undefined")
+{
+
+  SiebelJS.Namespace("SiebelAppFacade.SCPaymentsPR");
+  define("siebel/custom/SelectComfort/SCPaymentsPR", ["siebel/jqgridrenderer", "siebel/custom/SelectComfort/SCPaymentsMarkup", "siebel/custom/SelectComfort/bootstrap.min.js", "siebel/custom/SelectComfort/jquery.validate.min", "siebel/custom/SelectComfort/SC_OUI_Methods", "siebel/custom/SelectComfort/SC_OUI_Definitions", "siebel/custom/SelectComfort/SC_OUI_Markups", "siebel/custom/SelectComfort/SCErrorCodes"],
+    function ()
+    {
+      SiebelAppFacade.SCPaymentsPR = (function ()
+      {
+        var SCPaymentMarkup = SiebelJS.Dependency("SiebelApp.SCPaymentsMarkup");
+        var SiebelConstant = SiebelJS.Dependency("SiebelApp.Constants");
+        var SCOUIMethods = SiebelJS.Dependency("SiebelApp.SC_OUI_Methods");
+        var SCOUIDefinitions = SiebelJS.Dependency("SiebelApp.SC_OUI_Definitions");
+        var SC_OUI_Markups = SiebelJS.Dependency("SiebelApp.SC_OUI_Markups");
+        var SCErrorCodes = SiebelJS.Dependency("SiebelApp.SCErrorCodes");
+
+        var machineInfo = "";
+        var pm, records, appletName, appletId, appletSeq, errorCodes;
+        var orderPM, paymentsControlSet, orderBC, paymentBC, orderRecord, contactId, orderId, orderNumberBS, notCommited = false,
+          isActivityCreated = false,
+          newRecord = false,
+          orderControlSet, cashOverDue = 0;
+        var totalDue, firstName, lastName, address, phone, paymentDue, postalCode, country, state, paymentDType, LoginId, StoreLocation, rewardAMT, paySCStoreUser = "",
+          sVoiceStoreUser = "";
+        var salesreprowid, GiftCardCount = 0,
+          GetLineOutps, failedpaymentselected = false,
+          FieldQueryPair, itemsCount = 0;
+        var isFinancing = "N",
+          P2PEFlag = "N",
+          cancelCliked = "N",
+          HDSRSrcSpec = "",
+          HDSRRecCount = 0,
+          bShowTermsFlag = "N";
+        var store_receipt = "",
+          financelen, SC_FINANCEACCNUMBERLEN;
+        var RevisionNumber = "",
+          RevisionReason = "";
+        var VQuoteValidUntillDate = "";
+        var VPersonalizedMsg = "";
+        var Vqemailchngflg = "N";
+        var SCICVoucherNum = "";
+        var selectedPaymentRowId = "";
+        var sChatUser = "";
+        var sVoiceUser = "";
+        //SHARATH: Added below line for Store Recipet bypass user story.
+        var sFeatureFlag = "N";
+        var getChatCCAccountNumInterval, getChatGCAccountNumInterval, getVoiceCCAccountNumInterval, getVoiceGCAccountNumInterval;
+
+        var MKESwitchFlag = theApplication().GetProfileAttr("MKESwitchFlag");
+
+        function SCPaymentsPR(pm)
+        {
+          SiebelAppFacade.SCPaymentsPR.superclass.constructor.apply(this, arguments);
+        }
+
+        SiebelJS.Extend(SCPaymentsPR, SiebelAppFacade.JQGridRenderer);
+
+        SCPaymentsPR.prototype.Init = function ()
+        {
+          isFinancing = "N";
+          // Init is called each time the object is initialised.
+          SiebelAppFacade.SCPaymentsPR.superclass.Init.apply(this, arguments);
+          SiebelJS.Log(this.GetPM().Get("GetName") + ": SCPaymentsPR:      Init method reached.");
+          //SCOUIMethods.SCGetProfileAttr("MachineInfo,Login Name,SC Store User,SC Primary Division Sub Type,IP,SC Store Number,DISALocFound"); 
+          orderPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM();
+          orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
+          orderControlSet = orderPM.Get("GetControls");
+
+          machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+          LoginId = SCOUIMethods.SCGetProfileAttrValue("Login Name");
+          errorCodes = SCErrorCodes.paymentErrorCodes();
+          P2PEFlag = theApplication().GetProfileAttr("P2PEFlag");
+
+          //SHARATH: Added below line for Store Recipet bypass user story.
+          sFeatureFlag = theApplication().GetProfileAttr("FeatureFlag");
+          //Venkat 10/26/2020 for Secure Payment added sChatUser and sVoiceUser variable
+          //sChatUser = theApplication().GetProfileAttr("SC Chat User");
+          //sVoiceUser = theApplication().GetProfileAttr("SC Voice User");
+          //this.GetPM().SetProperty("SCVoicerUser",sVoiceUser);
+          sChatUser = this.GetPM().Get("SCChatUser");
+          sVoiceUser = this.GetPM().Get("SCVoicerUser");
+          //sChatUser = 'Y';
+          //sVoiceUser = 'N';
+          newRecord = false;
+          localStorage.setItem('whitescreen', 0);
+          GiftCardCount = 0;
+          HDSRRecCount = 0;
+          paySCStoreUser = "";
+          cancelCliked = "N";
+          HDSRSrcSpec = "";
+          paySCStoreUser = SCOUIMethods.SCGetProfileAttrValue('SC Store User');
+
+          RevisionNumber = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision");
+          //RevisionReason = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Order Form Applet (Sales) OUI"].GetBusComp().GetFieldValue("Revision Reason");
+          RevisionReason = "";
+          //Hiding navigation tabs
+          $("#_swescrnbar").hide();
+          $("#_swethreadbar").hide();
+          $("#_sweappmenu").hide();
+          $("#s_vctrl_div").hide();
+          $(".siebui-button-toolbar").hide();
+          $("#_swecontent").css("height", "99%");
+          $('#_sweview').css("overflow", "auto");
+          $(".ui-datepicker-trigger").css(
+          {
+            "opacity": "0.5",
+            "height": "16px",
+            "width": "16px",
+            "position": "absolute",
+            "bottom": "40px",
+            "left": "0"
+          });
+          $('#CommunicationPanelContainer').css("padding-top", "77px");
+        }
+
+        SCPaymentsPR.prototype.ShowUI = function ()
+        {
+          SiebelAppFacade.SCPaymentsPR.superclass.ShowUI.apply(this, arguments);
+          SiebelJS.Log(this.GetPM().Get("GetName") + ": SCPaymentsPR:      ShowUI method reached.");
+
+          //SHARATH: Added below code for Terminal UI.
+
+          var terminalValue = SiebelApp.S_App.GetProfileAttr('TerminalSelected');
+          var fitFlag = SiebelApp.S_App.GetProfileAttr('FeatureFlag');
+          if (fitFlag == "Y" && terminalValue != "" && window.terminalcheck == undefined || window.terminalcheck == "undefined")
+          {
+            window.terminalcheck = setInterval(function ()
+            {
+              var inPS = SiebelApp.S_App.NewPropertySet();
+              var outPS = SiebelApp.S_App.NewPropertySet();
+              var Bservice = SiebelApp.S_App.GetService("SC Adyen Payment Service");
+              var OrderNum = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Order Number');
+
+              inPS.SetProperty('Order Number', OrderNum);
+
+              if (Bservice)
+              {
+                outPS = Bservice.InvokeMethod("GetTerminalId", inPS);
+                var termId = outPS.GetChild(0).GetProperty('TerminalId');
+                SiebelJS.Log("termId: " + termId);
+                if (termId == "")
+                {
+                  clearInterval(terminalcheck);
+                  $('.profile-block #SC-terminal-tile').css('display', 'none');
+                  $("#SC-terminal-offline-popup").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-terminal-offline-popup").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+
+                  SCOUIMethods.ResetTerminalProfileAttrib();
+
+                }
+              }
+            }, 5000);
+          }
+
+          //SHARATH:Code for Terminal UI.
+          setTimeout(function ()
+          {
+            var isTerminalPresent = $('.profile-block #SC-terminal-tile').css('display');
+            var terminalValue = SiebelApp.S_App.GetProfileAttr('TerminalSelectedName');
+            if (fitFlag == "Y" && isTerminalPresent == "none" && terminalValue != "")
+            {
+              $('.profile-block #SC-terminal-tile span').text(terminalValue);
+              $('.profile-block #SC-terminal-tile').css('display', '');
+            }
+          }, 20);
+
+          $(".whitescreentimer").remove();
+          $("#custommaskoverlay").hide();
+          $('#_sweview').show();
+          var giftCardFlag = SiebelApp.S_App.GetProfileAttr('GiftCardFlag'); //PJAYASHA:Added feature flag for gift card.
+          //giftCardFlag ="Y";
+          //hiding tool tip.
+          $('div[title="Payment Lines List Applet"]').attr("title", "");
+          // Add code here that should happen after default processing
+          // $('#_sweview').css("height","unset");
+          $("#" + SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().Get("GetFullId")).hide();
+          $("#" + SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetFullId")).hide();
+          $("#" + SiebelApp.S_App.GetActiveView().GetAppletMap()["Order Entry - Attachment Applet"].GetPModel().Get("GetFullId")).hide();
+          $("#" + SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetFullId")).hide();
+          $("#" + SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Validation Message - Payments List Applet"].GetPModel().Get("GetFullId")).hide();
+          $("#" + SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetPModel().Get("GetFullId")).hide();
+          $("#" + SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetPModel().Get("GetFullId")).hide();
+
+          pm = this.GetPM();
+          records = pm.Get("GetRecordSet");
+          orderRecord = orderPM.Get("GetRecordSet");
+          orderRecord = orderRecord[0];
+          appletName = pm.Get("GetName");
+          appletId = pm.Get("GetFullId");
+          paymentBC = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetBusComp();
+          appletSeq = appletId[appletId.length - 1];
+          $("#s_" + appletId + "_div").hide();
+          $("#_svf0").css("height", "0%");
+          $('#_sweview').css("overflow", "auto");
+          paymentsControlSet = pm.Get("GetControls");
+          //setTimeout(function() {
+          FieldQueryPair = {
+            "Payment Id": ''
+          };
+          SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+          //}, 1000);
+
+          paymentMarkup = SCPaymentMarkup.PaymentMarkup();
+          $("#" + appletId).append(paymentMarkup);
+          //Start:add code for attchments
+          var Attachmentrcdset = SiebelApp.S_App.GetActiveView().GetAppletMap()["Order Entry - Attachment Applet"].GetPModel().Get("GetRecordSet");
+          SCPaymentMarkup.GetAttchmentrecordset(Attachmentrcdset);
+          //Start:add code for attchments
+          customtimermarkup = SC_OUI_Markups.CustomTimer();
+          $('#applet1').append(customtimermarkup);
+          machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+
+          //getting strore change markup
+          var userposition = SCOUIMethods.SCGetProfileAttrValue("SC Primary Division Sub Type");
+          var storechangemarkup = SC_OUI_Markups.StoreChange();
+          $('#SC-add-storelocation').html(storechangemarkup);
+
+
+          // var customerType = SiebelApp.S_App.GetProfileAttr('SC Store User');
+          if (paySCStoreUser == 'Y')
+          {
+            $("#cash-payment").show();
+          }
+          else
+          {
+            $("#cash-payment").hide();
+          }
+          if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SCFSGetArrivalDates"))
+          {
+            $("#SN-Ava-Dates").removeClass("displaynone");
+            $("#SN-Ava-Dates").show();
+          }
+          else
+          {
+            $("#SN-Ava-Dates").addClass("displaynone");
+            $("#SN-Ava-Dates").hide();
+          }
+          //SPATIBAN:15-04-2019:MayRelease2019 Added code for hiding the delete order button
+          var deleteOrder = orderPM.ExecuteMethod("CanInvokeMethod", "DeleteRecord");
+          if (!deleteOrder)
+            $("#deleteorder").hide();
+          //SPATIBAN:15-04-2019:MayRelease2019 Added code for disabling the add store button
+          if ((orderBC.GetFieldValue("Status") === "Booked") || (orderBC.GetFieldValue("Status") === "Cancelled") || (orderBC.GetFieldValue("Status") === "Closed"))
+            $("#SC-add-store-location").addClass("SC-disabled");
+          //hiding the Accounts tab  
+          SiebelJS.Log("admin resp" + orderBC.GetFieldValue("SC Payment Admin Responsbility"));
+          if (orderBC.GetFieldValue("SC Payment Admin Responsbility") == "N" && (userposition != "WHOLESALE"))
+          {
+            $("#accounting-payment").hide();
+          }
+          var OrderSubType = orderBC.GetFieldValue("SC Sub-Type");
+          if (OrderSubType == "Wholesale" || OrderSubType == "Commercial" || OrderSubType == "QVC" || OrderSubType == "Internal" || OrderSubType == "HSN")
+          {
+            $("#scnaviagtetext").text("View Account");
+            if (paySCStoreUser == 'Y')
+              $("#order360").hide();
+          }
+          orderId = orderBC.GetFieldValue("Id");
+          orderNumberBS = orderBC.GetFieldValue("Order Number");
+          SiebelJS.Log("Order Id..:" + orderId);
+          totalDue = orderBC.GetFieldValue("SC Total Balance Due");
+          address = orderBC.GetFieldValue("SC Con Bill To Address");
+          state = orderBC.GetFieldValue("Primary Bill To State");
+          postalCode = orderBC.GetFieldValue("Primary Bill To Postal Code");
+          country = orderBC.GetFieldValue("Primary Bill To Country");
+          phone = orderBC.GetFieldValue("SC Preferred Contact");
+          contactId = orderBC.GetFieldValue("Bill To Contact Id");
+          SiebelJS.Log("ContactId..:" + contactId);
+          //NGOLLA defect #807 added AccountName for Commercial/Wholesale orders
+          if (orderBC.GetFieldValue("Primary Bill To First Name") != "" && orderBC.GetFieldValue("Primary Bill To Last Name") != "")
+          {
+            firstName = orderBC.GetFieldValue("Primary Bill To First Name");
+            lastName = orderBC.GetFieldValue("Primary Bill To Last Name");
+            $("#SC-name").text(firstName + " " + lastName);
+          }
+          else
+          {
+            AccountName = orderBC.GetFieldValue("Bill To Account");
+            $("#SC-name").text(AccountName);
+          }
+          if (phone.length != 0)
+          {
+            phone = "(" + phone.substring(0, 3) + ")" + phone.substring(3, 6) + " -" + phone.substring(6, 10);
+            $("#SC-phone").text(phone);
+          }
+          else
+          {
+            $("#SC-phone").text('');
+          }
+          if (state.length != 0)
+          {
+            address = address + ', ' + state;
+          }
+          if (postalCode.length != 0)
+          {
+            address = address + ', ' + postalCode;
+          }
+          if (country.length != 0)
+          {
+            address = address + ', ' + country;
+          }
+          $("#SC-address").text(address);
+
+          var inPS = SiebelApp.S_App.NewPropertySet();
+          var outPS = SiebelApp.S_App.NewPropertySet();
+          var bService = "";
+          inPS.SetProperty("OrderId", orderId);
+
+          SiebelJS.Log("Invoking Business Service");
+          bService = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
+          outPS = bService.InvokeMethod("Query", inPS); //invoke the method
+          //saddala for giftcard activation
+          //GetLineOutps = bService.InvokeMethod("Query", inPS); //invoke method
+          GetLineOutps = outPS;
+          var shippingcost = outPS.GetChild(0).GetProperty("Shipping cost");
+          var shippinglinediscounts = outPS.GetChild(0).GetProperty("Shipping Line Discounts");
+          var summaryMarkup = SCOUIMethods.OrderSummary(orderPM, shippingcost, shippinglinediscounts);
+
+          $("#SC-Order-Summary").html(summaryMarkup);
+          //START -- Custom Logic to get State Values							
+          var stateArray = SCOUIMethods.SCGetOrderLoVs("[Order By] >= 1 and [Order By] <= 52 and [Type]= 'SC_DRIVER_LICENCE_STATE' and [Active] = 'Y'")
+          var stateValue = '';
+          stateValue += ' <option></option>';
+          for (var st = 0; st < stateArray.length; st++)
+          {
+            stateValue += ' <option>' + stateArray[st] + '</option>';
+          }
+          $("#driverlicencedate").html(stateValue);
+          //END -- Custom Logic to get State Values	
+          //hiding the rewards 
+          for (var pr = 0; pr < outPS.GetChild(0).GetChildCount(); pr++)
+          {
+            if (outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description") == "GIFT CARD")
+            {
+              $("#reward-payment").hide();
+              //saddala for giftcard activation
+              GiftCardCount++;
+            }
+          }
+          var paymentdetails = PaymentDetials(records);
+          $("#SC-payment-details").append(paymentdetails);
+          //START: SPATIBAN: SEPT:Added Secure Payments for CC and GC
+          sVoiceStoreUser = "N";
+          var secureVoice = SCOUIMethods.SCGetOrderLoVs("[Type]= 'X_SC_SECURE_PAYMENT' and [Active] = 'Y' and [Name]='TURN_ON'");
+          var sccreateorderSrchSpec = [],
+            sccreateorderSortSpec = [];
+          let sStoreNumber = SCOUIMethods.SCGetProfileAttrValue('SC Store Number');
+          sccreateorderSrchSpec[0] = "[Type]= 'X_SC_SECURE_PAYMENT' and [Active] = 'Y' and [Name]='" + sStoreNumber + "'";
+          sccreateorderSortSpec[0] = "Order By";
+          if (secureVoice == 'N')
+          {
+
+            var Custom_Service = "",
+              Input_BS = "",
+              Out_BS = "";
+            var scOrderLovValues = [],
+              lovvalues = "",
+              storeLov = "";
+            Custom_Service = SiebelApp.S_App.GetService("SC Get Profile Attribute BS");
+            Input_BS = SiebelApp.S_App.NewPropertySet();
+            Out_BS = SiebelApp.S_App.NewPropertySet();
+            Input_BS.SetProperty("LoVSearchSpecArray", sccreateorderSrchSpec);
+            Input_BS.SetProperty("LoVSortSpecArray", sccreateorderSortSpec);
+            Out_BS = Custom_Service.InvokeMethod("GetLovs", Input_BS);
+            var Child_BS = Out_BS.GetChild(0);
+            var BS_Data = Child_BS.GetProperty("OutPutArray");
+            if (BS_Data != "No Records")
+            {
+
+              scOrderLovValues = JSON.parse(BS_Data);
+              storeLov = scOrderLovValues[sccreateorderSrchSpec[0]];
+              if (storeLov == sStoreNumber)
+              {
+                secureVoice = 'Y';
+              }
+
+            }
+
+          }
+          if (secureVoice == 'Y')
+          {
+            $("#SN-store-SceureCheck-sec").show();
+
+          }
+          else
+          {
+            $("#SN-store-SceureCheck-sec").hide();
+          }
+
+          $("#SN-store-SceureCheck").change(function (event)
+          {
+            if ($("#SN-store-SceureCheck").prop('checked'))
+            {
+              sVoiceUser = "Y";
+              sVoiceStoreUser = "Y";
+              pm.SetProperty("StoreVoiceUser", sVoiceStoreUser);
+              if (giftCardFlag == "Y")
+              {
+                $("#giftcardNumber").prop('readonly', false);
+                $("#giftcardNumber").css("pointer-events", "");
+                $("#giftcardPIN").prop('readonly', false);
+                $("#giftcardPIN").css("pointer-events", "");
+                $("#SC-gift-payment").prop('readonly', false);
+              }
+              else
+              {
+                $("#SC-GiftCard-Details").find(".input-group").find("label").hide();
+                $("#SC-GiftCard-Details").find(".input-group").find("input").hide();
+                $("#SC-GiftCard-Details").find(".input-group").find("button").hide();
+                $("#giftPaymentDue").parent().find('label').show();
+                $("#giftPaymentDue").show();
+                $("#sc-Payment-AccNum-GC").parent().find('label').show();
+                $("#sc-Payment-AccNum-GC").show();
+                $(".securevoice").attr("style", "display:block !important");
+                $("#giftcard-payment-data").find("#GCManualInput").hide();
+                $("#giftcardNumber").hide();
+                $("#giftcardPIN").hide();
+
+                $("#creditCardDetails").find(".input-group").find("label").hide();
+                $("#creditCardDetails").find(".input-group").find("input").hide();
+                $("#creditCardDetails").find(".input-group").find("Select").hide();
+                $("#creditPaymentDue").parent().find('label').show();
+                $("#creditPaymentDue").show();
+                $("#sc-Payment-AccNum-CC").parent().find('label').show();
+                $("#sc-Payment-AccNum-CC").show();
+                $(".securevoice").attr("style", "display:block !important");
+                $("#credit-card-paymnet-data").find("#CCManualInput").hide();
+              }
+            }
+            else
+            {
+              sVoiceUser = "N";
+              sVoiceStoreUser = "N";
+              pm.SetProperty("StoreVoiceUser", sVoiceStoreUser);
+              $("#SC-GiftCard-Details").find(".input-group").find("label").show();
+              $("#SC-GiftCard-Details").find(".input-group").find("input").show();
+              $("#SC-GiftCard-Details").find(".input-group").find("button").show();
+              $("#sc-Payment-AccNum-GC").parent().find('label').hide();
+              $("#sc-Payment-AccNum-GC").hide();
+              $(".securevoice").attr("style", "display:none !important");
+              $("#giftcard-payment-data").find("#GCManualInput").show();
+              $("#giftcardNumber").show();
+              $("#giftcardPIN").show();
+
+              $("#creditCardDetails").find(".input-group").find("label").show();
+              $("#creditCardDetails").find(".input-group").find("input").show();
+              $("#creditCardDetails").find(".input-group").find("Select").show();
+              $("#sc-Payment-AccNum-CC").parent().find('label').hide();
+              $("#sc-Payment-AccNum-CC").hide();
+              $("#credit-card-paymnet-data").find("#CCManualInput").show();
+            }
+          });
+          //SHARATH: Added for Terminal Popup.
+
+          //Start: SHARATH: added below code for terminal US
+          $(document).on('click', '#SC-save-terminal', function ()
+          {
+
+            var terminalSelected = $('#terminal-list').val();
+            if (terminalSelected == "Select Terminal")
+            {
+              $('p.sc-bg-red').text('Select a terminal to proceed.');
+              $('#terminal-list').css('border-color', 'red');
+
+            }
+            else
+            {
+              var termId = $('#terminal-list option:selected').attr('term-id');
+              var termName = $('#terminal-list option:selected').attr('term-name');
+              $('.profile-block #SC-terminal-tile span').text(termName);
+              $('.profile-block #SC-terminal-tile').css('display', '');
+              $("#SC-add-terminal-tile").modal('hide');
+              $("#SC-storelocation").html("");
+              var OrderResumeFlg = SiebelApp.S_App.GetProfileAttr('ResumeOrder');
+              if (OrderResumeFlg == "Y")
+              {
+                var vinPS = SiebelApp.S_App.NewPropertySet();
+                var voutPS = SiebelApp.S_App.NewPropertySet();
+                var vBservice = SiebelApp.S_App.GetService("SessionAccessService");
+
+                vinPS.SetProperty('Name', 'ResumeOrder');
+                vinPS.SetProperty('Value', 'N');
+
+                if (vBservice)
+                {
+                  voutPS = vBservice.InvokeMethod("SetProfileAttr", vinPS);
+
+                }
+              }
+              var sBservice = SiebelApp.S_App.GetService("SessionAccessService");
+              var sinPS = SiebelApp.S_App.NewPropertySet();
+              var soutPS = SiebelApp.S_App.NewPropertySet();
+              sinPS.SetProperty('Name', 'TerminalSelected');
+              sinPS.SetProperty('Value', termId);
+              if (sBservice)
+              {
+                soutPS = sBservice.InvokeMethod("SetProfileAttr", sinPS);
+              }
+
+              var vBservice = SiebelApp.S_App.GetService("SessionAccessService");
+              var vinPS = SiebelApp.S_App.NewPropertySet();
+              var voutPS = SiebelApp.S_App.NewPropertySet();
+              vinPS.SetProperty('Name', 'TerminalSelectedName');
+              vinPS.SetProperty('Value', termName);
+              if (vBservice)
+              {
+                voutPS = vBservice.InvokeMethod("SetProfileAttr", vinPS);
+              }
+
+              var inPS = SiebelApp.S_App.NewPropertySet();
+              var outPS = SiebelApp.S_App.NewPropertySet();
+              var Bservice = SiebelApp.S_App.GetService("SC Adyen Payment Service");
+              var OrderNum = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Order Number');
+              inPS.SetProperty('Order Number', OrderNum);
+              inPS.SetProperty('Terminal Id', termId);
+              inPS.SetProperty('Terminal Name', termName);
+
+              if (Bservice)
+              {
+                outPS = Bservice.InvokeMethod("UpdateTerminalId", inPS);
+              }
+
+              var inPS = SiebelApp.S_App.NewPropertySet();
+              var outPS = SiebelApp.S_App.NewPropertySet();
+              var Bservice = SiebelApp.S_App.GetService("FINS Teller UI Navigation");
+
+              inPS.SetProperty('RefreshAll', 'Y');
+
+              if (Bservice)
+              {
+                outPS = Bservice.InvokeMethod("RefreshCurrentApplet", inPS);
+
+              }
+
+              //Start SetInterval to check if terminal is active.
+              if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
+              {
+                clearInterval(window.terminalcheck);
+                //SCOUIMethods.ResetTerminalProfileAttrib();
+                SiebelJS.Log('Terminal Interval Cleared!!');
+              }
+
+              window.terminalcheck = setInterval(function ()
+              {
+                var inPS = SiebelApp.S_App.NewPropertySet();
+                var outPS = SiebelApp.S_App.NewPropertySet();
+                var Bservice = SiebelApp.S_App.GetService("SC Adyen Payment Service");
+
+                inPS.SetProperty('Order Number', OrderNum);
+
+                if (Bservice)
+                {
+                  outPS = Bservice.InvokeMethod("GetTerminalId", inPS);
+                  var termId = outPS.GetChild(0).GetProperty('TerminalId');
+                  SiebelJS.Log("termId: " + termId);
+                  if (termId == "")
+                  {
+                    clearInterval(terminalcheck);
+                    $('.profile-block #SC-terminal-tile').css('display', 'none');
+                    $("#SC-terminal-offline-popup").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-terminal-offline-popup").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                  }
+                }
+              }, 5000);
+            }
+          });
+
+          $(document).on('click', '#SC-terminal-offline-ok', function ()
+          {
+            $('#SC-terminal-offline-popup').css('display', '');
+            $("#SC-terminal-offline-popup").modal('hide');
+            SCOUIMethods.SCnGetDisplayTerminals();
+          });
+
+          $(document).on('change', '#terminal-list', function ()
+          {
+            var optionSelected = $('#terminal-list').val();
+            if (optionSelected == "Select Terminal")
+            {}
+            else
+            {
+              $('p.sc-bg-red').text('');
+              $('#terminal-list').css('border-color', '');
+            }
+          });
+
+          //END:SPATIBAN: SEPT:Added Secure Payments for CC and GC
+          $(".SC-Payment-nav-item").click(function (event)
+          {
+            var currentItemId = this.id;
+            if (((currentItemId == "financing-payment") && (isFinancing == "Y")) || ($("#financing-payment").hasClass("p-item-active") && $("#SC-finance-payment").text() != "Select" && $("#financeaccountnumber").val() == ""))
+            {
+              if (($("#financing-payment").hasClass("p-item-active") && $("#SC-finance-payment").text() != "Select") && $("#financeaccountnumber").val() == "")
+              {
+                $("#sc-finance-Details").submit();
+              }
+              else
+              {
+                $("#sc-financing-popup").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#sc-financing-popup").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+            }
+            else if (currentItemId == "financing-payment" && GiftCardCount > 0)
+            {
+              $("#sc-giftcard-financing-error-popup").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#sc-giftcard-financing-error-popup").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+            }
+            else
+            {
+              var canNewRecord = pm.ExecuteMethod("CanInvokeMethod", "NewRecord");
+              $(".SC-Payment-nav-item").removeClass("p-item-active");
+              if (canNewRecord)
+              {
+                //SBOORLA:Added condition for Defect 757
+                if (currentItemId != "check-payment")
+                {
+                  $(this).addClass("p-item-active");
+                  $(".payment-data").removeClass('active-tab');
+                  $("#" + currentItemId + "-data").addClass('active-tab');
+                }
+                // Vamsi : #707 Payment type, new records and cash issue
+                if (failedpaymentselected == true && currentItemId != "check-payment")
+                {
+                  $(".SC-Payment-nav-item").removeClass("p-item-active");
+                  $(this).addClass("p-item-active");
+
+                  $(".payment-data").removeClass('active-tab');
+                  $("#" + currentItemId + "-data").addClass('active-tab');
+                }
+                else if (currentItemId != "check-payment")
+                {
+                  $(".SC-Payment-nav-item").removeClass("p-item-active");
+                  $(this).addClass("p-item-active");
+
+                  $(".payment-data").removeClass('active-tab');
+                  $("#" + currentItemId + "-data").addClass('active-tab');
+
+                  if (newRecord == false)
+                  {
+                    SiebelJS.Log("New Record");
+                    newRecord = true;
+                    pm.ExecuteMethod("InvokeMethod", "NewRecord", null, false);
+                    SiebelJS.Log("After New Record");
+                  }
+                }
+
+                $("#Creditcard-Number").prop('readonly', true);
+                $("#creditCVV").prop('readonly', true);
+                $("#giftcardNumber").prop('readonly', true);
+                $("#giftcardPIN").prop('readonly', true);
+                if (this.id == "credit-card-paymnet")
+                {
+                  var accountNumber = paymentBC.GetFieldValue("Account Number");
+                  $("#Creditcard-Number").attr("name", "creditCardNum");
+                  $("#creditCVV").attr("name", "creditcvv");
+                  $("#creditExpM").attr("name", "creditExpMonth");
+                  $("#creditExpY").attr("name", "creditExpYear");
+
+                  //$("#Creditcard-Number").prop('readonly', false);
+                  //$("#creditCVV").prop('readonly', false);
+                  $("#creditExpM").prop('readonly', false);
+                  $("#creditExpY").prop('readonly', false);
+                  $("#creditPaymentDue").prop('readonly', false);
+                  if (paySCStoreUser != 'Y')
+                  {
+                    $("#SC-credit-payment").prop('readonly', false);
+                  }
+                  $("#CCManualInput").prop('readonly', false);
+                  $("#creditExpM").css("pointer-events", "all");
+                  $("#creditExpY").css("pointer-events", "all");
+                  $("#cc-manual-auth").prop('disabled', 'disabled');
+
+                  $("#Creditcard-Number").val("");
+                  $("#creditCVV").val("");
+                  $("#creditExpM").val("");
+                  $("#creditExpY").val("");
+                  $("#paymentDue").val("");
+                  $("#creditPayType").val("");
+
+                  var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                  //var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                  if ((paymentStatus != "Entered" && paymentStatus != "In Progress") || sVoiceUser == "Y")
+                  {
+                    $("#Creditcard-Number").prop('readonly', true);
+                    $("#creditCVV").prop('readonly', true);
+                    $("#creditExpM").prop('readonly', true);
+                    $("#creditExpY").prop('readonly', true);
+                    if (sVoiceUser != "Y")
+                    {
+                      $("#creditPaymentDue").prop('readonly', true);
+                    }
+                    if (sVoiceUser == "Y")
+                    {
+                      $("#SC-CreditCard").addClass("SC-disabled");
+                    }
+                    if (paySCStoreUser != 'Y')
+                    {
+                      $("#SC-credit-payment").prop('readonly', true);
+                    }
+                    $("#CCManualInput").prop('readonly', true);
+                  }
+                  if (paySCStoreUser == "Y" || sVoiceUser == "Y")
+                  {
+                    $("#Creditcard-Number").prop('readonly', true);
+                    $("#Creditcard-Number").css("pointer-events", "none");
+                    $("#creditCVV").prop('readonly', true);
+                    $("#creditCVV").css("pointer-events", "none");
+                    $("#creditExpM").prop('readonly', true);
+                    $("#creditExpM").css("pointer-events", "none");
+                    $("#creditExpY").prop('readonly', true);
+                    $("#creditExpY").css("pointer-events", "none");
+                  }
+                  var detailsMarkup = CreditCardDetails();
+                  $('#SC-CreditDetails').html(detailsMarkup);
+
+                  var payMethod = paymentBC.GetFieldValue("Payment Method");
+                  //VALLA: 23-DEC-2020: STRY0032584: Added code for Restrict Payment Method and Type Changes to only when the Payment Status is "Entered" or "In Progress".
+                  if (payMethod != "Credit Card" && (paymentStatus == "Entered" || paymentStatus == "In Progress"))
+                  {
+                    var Bservice = '',
+                      inPS = '',
+                      outPS = '';
+                    inPS = SiebelApp.S_App.NewPropertySet();
+                    outPS = SiebelApp.S_App.NewPropertySet();
+                    inPS.SetProperty("Name", "SCPayMethod");
+                    inPS.SetProperty("Value", "Credit Card");
+                    Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+                    outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
+
+                    if (failedpaymentselected != true)
+                    {
+                      paymentBC.SetFieldValue("SC Payment Type Code", "");
+                      paymentBC.SetFieldValue("Account Number", "");
+                    }
+                    pm.ExecuteMethod("InvokeMethod", "PickPaymentMethod", null, false);
+                    //if((sVoiceUser=="Y" || sChatUser=="Y") && pm.Get("GetRecordSet").length==1)
+                    if (pm.Get("GetRecordSet").length == 1)
+                      SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("RefreshBusComp");
+                    // var customerType = "";
+                  }
+
+                  records = pm.Get("GetRecordSet");
+                  var pendingTxns = failedPendingTxnDetials(records);
+                  $("#SC-failed-payment-details").html(pendingTxns);
+
+                  if (paySCStoreUser == 'Y' && paymentBC.GetFieldValue('SC Payment Status') == "Need Verbal Authorization" && paymentBC.GetFieldValue('Authorization Code') == "")
+                  {
+                    $("#CCAuthCode").focus();
+                  }
+                  else if (paySCStoreUser == 'Y' && sChatUser != "Y" && sVoiceUser != "Y" && P2PEFlag != "Y" && paymentStatus == "Entered")
+                  {
+                    $("#credit-hidden").focus();
+                  }
+                  else if (sChatUser == "Y" || sVoiceUser == "Y")
+                  {
+                    $("#creditPaymentDue").focus();
+                  }
+                  else
+                  {
+                    $("#Creditcard-Number").focus();
+                  }
+                  paymentDue = paymentBC.GetFieldValue("Transaction Amount");
+                  $("#creditPaymentDue").val(paymentDue);
+
+                  paymentDType = paymentBC.GetFieldValue("SC Payment Type Code");
+                  if ((paySCStoreUser != "Y") && (sChatUser != "Y") && (sVoiceUser != "Y"))
+                  { //Venkat 11/23/2020 added for Secure Payment 
+                    if (paymentDType != "")
+                    {
+                      document.getElementById('SC-credit-payment').innerText = paymentDType;
+                    }
+                    else
+                    {
+                      document.getElementById('SC-credit-payment').innerText = 'Select';
+                    }
+                  }
+
+                  SiebelJS.Log("paymentDType..:" + paymentDType);
+                  if (failedpaymentselected != true)
+                  {
+                    paymentBC.SetFieldValue("SC Credit Card Number", "");
+                    paymentBC.SetFieldValue("SC CVV Number", "");
+                    paymentBC.SetFieldValue("SC Expiration Month", "");
+                    paymentBC.SetFieldValue("Expiration Year", "");
+                    paymentBC.SetFieldValue("SC Voucher Number", "");
+                    paymentBC.SetFieldValue("SC Bank Account Number", "");
+                    paymentBC.SetFieldValue("SC Check Number", "");
+                    paymentBC.SetFieldValue("SC Bank Routing Num", "");
+                    paymentBC.SetFieldValue("SC Drivers License Number", "");
+                    paymentBC.SetFieldValue("SC Drivers License State", "");
+                    paymentBC.SetFieldValue("SC Date Of Birth", "");
+                    //paymentBC.SetFieldValue("Manual Authorization Flag", "N");
+                    //paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                  }
+                  /*if (storeUser == "Y" && paymentStatus == "Need Verbal Authorization") {
+                  	paymentBC.SetFieldValue("Manual Authorization Flag", "Y");
+                  	$("#cc-manual-auth").prop("checked","checked");
+                  }else{
+                  	paymentBC.SetFieldValue("Manual Authorization Flag", "N");
+                  	$("#cc-manual-auth").removeAttr("checked");
+                  }*/
+                  if ((P2PEFlag != "Y") && (sChatUser != "Y") && (sVoiceUser != "Y")) //Venkat 11/4/2020 added for Secure Payment
+                  {
+                    if (paySCStoreUser != "Y")
+                    {
+                      if ($("#Creditcard-Number").val() != "" && $("#creditCVV").val() != "" && ($("#creditExpM").val() != "" || $("#creditExpM").val() != null) && ($("#creditExpY").val() != null || $("#creditExpY").val() != "") && $("#creditPaymentDue").val() != "" && document.getElementById("SC-credit-payment").innerText != "Select")
+                        $("#SC-CreditCard").removeClass("SC-disabled");
+                      else
+                        $("#SC-CreditCard").addClass("SC-disabled");
+                    }
+                    else
+                    {
+                      if ($("#Creditcard-Number").val() != "" && $("#creditCVV").val() != "" && ($("#creditExpM").val() != "" || $("#creditExpM").val() != null) && ($("#creditExpY").val() != null || $("#creditExpY").val() != "") && $("#creditPaymentDue").val() != "")
+                        $("#SC-CreditCard").removeClass("SC-disabled");
+                      else
+                        $("#SC-CreditCard").addClass("SC-disabled");
+                    }
+
+                    if (paymentBC.GetFieldValue("SC Payment Status") == "Need Verbal Authorization")
+                      $("#SC-CreditCard").removeClass("SC-disabled");
+                  }
+                  //Venkat 11/4/2020 for Chat User for credit card process for Secure Payment
+
+                  if (sChatUser == "Y")
+                  {
+                    var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+                    console.log("Account Number: " + sAccountNumber);
+                    if (sAccountNumber.length > 0)
+                    {
+                      $("#SC-CreditCard").removeClass("SC-disabled");
+                    }
+                    else
+                    {
+                      $("#SC-CreditCard").addClass("SC-disabled");
+                    }
+
+                    var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                    var write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                    if (write)
+                    {
+                      //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("RefreshRecord");
+                      var sPaymentLink = paymentBC.GetFieldValue("SC Payment Link");
+                      var sCaptureStatus = paymentBC.GetFieldValue("SC Semaphone Capture Status");
+                      if (sPaymentLink == "")
+                      {
+                        $("#creditPaymentDue").prop('readonly', true);
+                        var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+                        var orderId = orderBC.GetFieldValue("Id");
+                        var Bservice = '',
+                          inPS = '',
+                          outPS = '';
+                        inPS = SiebelApp.S_App.NewPropertySet();
+                        outPS = SiebelApp.S_App.NewPropertySet();
+                        inPS.SetProperty("Object Id", orderId);
+                        inPS.SetProperty("Payment Id", sPaymentRecordId);
+                        inPS.SetProperty("ProcessName", "SC Get Payment Link WF");
+                        Bservice = SiebelApp.S_App.GetService("Workflow Process Manager");
+                        outPS = Bservice.InvokeMethod("RunProcess", inPS);
+                        var sPaymentLink = outPS.GetChild(0).GetProperty('Payment Link');
+                        var sError = outPS.GetChild(0).GetProperty('Error');
+                        $("#Payment-Link-CC").val(sPaymentLink);
+                        $("#CreditCapt-Status").val(sError);
+                        var Refreshservice = '',
+                          RefreshinPS = '',
+                          RefreshoutPS = '';
+                        RefreshinPS = SiebelApp.S_App.NewPropertySet();
+                        RefreshoutPS = SiebelApp.S_App.NewPropertySet();
+                        RefreshinPS.SetProperty("Refresh All", "Y");
+                        Refreshservice = SiebelApp.S_App.GetService("FINS Teller UI Navigation");
+                        RefreshoutPS = Refreshservice.InvokeMethod("RefreshCurrentApplet", RefreshinPS);
+                        $("td[title='" + sPaymentRecordId + "']").click();
+                      }
+                      else
+                      {
+                        $("#Payment-Link-CC").val(sPaymentLink);
+                        $("#CreditCapt-Status").val(sCaptureStatus);
+                      }
+                    }
+
+                    getChatCCAccountNumInterval = setInterval(getChatCCAccountNum, 10000);
+                  }
+                  //End..Venkat 11/4/2020 for Chat User for credit card process for Secure Payment
+                  //Venkat 12/28/2020 added for Voice User for credit card process for Secure Payment
+                  if (sVoiceUser == "Y")
+                  {
+                    var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+                    var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+                    console.log("Account Number: " + sAccountNumber);
+                    if (sAccountNumber.length > 0)
+                    {
+                      $("#SC-CreditCard").removeClass("SC-disabled");
+                    }
+                    else
+                    {
+                      $("#SC-CreditCard").addClass("SC-disabled");
+                    }
+                    $("#SC-credit-payment").text(paymentBC.GetFieldValue("SC Payment Type Code"));
+                    $("#SC-credit-payment").addClass("SC-disabled");
+                    if (sAccountNumber.length == 0 && paymentBC.GetFieldValue("SC Payment Status") == "Entered")
+                    {
+                      var canWrite = PM.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                      var write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                      if (write)
+                      {
+                        //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("RefreshRecord");
+                        var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+                        var Input = SiebelApp.S_App.NewPropertySet();
+                        var Output = SiebelApp.S_App.NewPropertySet();
+                        Input.SetProperty("BO", "Order Entry (Sales)");
+                        Input.SetProperty("BC", "Payments");
+                        Input.SetProperty("SortSpecification", "");
+                        Input.SetProperty("ReqNoOfRecords", "");
+                        Input.SetProperty("SearchSpecification", "Id ='" + sPaymentRecordId + "'");
+                        var fieldsArray_new = "Id,SC Voice IFrame URL";
+                        Input.SetProperty("FieldsArray", fieldsArray_new);
+                        var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+                        Output = Custom_Service.InvokeMethod("Query", Input);
+                        var Child = Output.GetChild(0);
+                        var BS_Data = Child.GetProperty("OutputRecordSet");
+                        if (BS_Data != "}")
+                        {
+                          BS_Data = JSON.parse(BS_Data);
+                          sPage = BS_Data["SC Voice IFrame URL"];
+                        }
+                        console.log("Semaphone url: " + sPage);
+                        if (sPage.length > 0)
+                        {
+                          var wmainMarkup = "";
+                          wmainMarkup += '<iframe id="SC-manual-payment-Modal-frame"  src="' + sPage + '"></iframe>';
+                          $("#SC-Sales-manual-voice-payment").html(wmainMarkup);
+                          $("#SC-Sales-manual-voice-payment").modal(
+                          {
+                            backdrop: 'static'
+                          });
+                          $.ajax(
+                          {
+                            type: 'GET',
+                            url: sPage,
+                            dataType: 'application/json',
+                            mode: 'cors',
+                            statusCode:
+                            {
+                              404: function (responseObject, textStatus, jqXHR)
+                              {
+                                pm.ExecuteMethod("CCINVOKEDELETERCD", null, false);
+                                alert("We have encountered an issue processing the payment. Please contact a Supervisor/Supervisor on Duty.");
+                                $("#SC-Sales-manual-voice-payment").modal('hide');
+                                window.removeEventListener("message", cclistner, false);
+                                setTimeout(function ()
+                                {
+                                  $("#sc-Payment-AccNum-GC").val("");
+                                  var FieldQueryPair = {
+                                    "Payment Id": "[Id] IS NOT NULL"
+                                  };
+                                  SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+                                  newRecord = false;
+                                  $(".active-tab").each(function ()
+                                  {
+                                    $('#' + this.id).removeClass("active-tab");
+                                  });
+                                  $(".SC-Payment-nav-item").each(function ()
+                                  {
+                                    $('#' + this.id).removeClass("p-item-active");
+                                  });
+                                }, 200);
+                              },
+                            }
+                          });
+                          pm.SetProperty("SemaPayId", sPaymentRecordId);
+                          var cclistner = function (event)
+                          {
+                            event.stopImmediatePropagation();
+                            console.log(event);
+                            var data = {}
+                            try
+                            {
+                              data = JSON.parse(event.data);
+                              console.log(data);
+                              if (data.isSubmitted)
+                              {
+                                if (data["token"] != "" && data["semafoneErrorCode"] == 0)
+                                {
+                                  $("#SC-Sales-manual-voice-payment").modal('hide');
+                                  pm.SetProperty("SemaPhoneAccNum", data["token"]);
+                                  pm.SetProperty("SemaPhonepayType", data["cardType"]);
+                                  pm.SetProperty("SemaPhonepayCard", data["lastFour"]);
+                                  pm.SetProperty("SemaPhonepayCR", data["semafoneCR"]);
+                                  $("#sc-Payment-AccNum-CC").val(data["token"]);
+                                  pm.ExecuteMethod("UPDAESEMAPHONETOKEN", null, false);
+                                  $("#SC-CreditCard").removeClass("SC-disabled");
+                                  window.removeEventListener("message", cclistner, false);
+                                  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("RefreshRecord");
+                                  $("#SC-credit-payment").text(paymentBC.GetFieldValue("SC Payment Type Code"));
+                                  $("#SC-credit-payment").addClass("SC-disabled");
+                                }
+                                else
+                                {
+                                  $("#SC-Sales-manual-voice-payment").modal('hide');
+                                  window.removeEventListener("message", cclistner, false);
+                                  alert("We have encountered an issue processing the payment. Please contact a Supervisor/Supervisor on Duty.");
+                                }
+                              }
+                              // Check if the form was cancelled
+                              if (data.cancel)
+                              {
+                                //if(confirm("Are you Sure you want to delete the Selected Record")){
+                                pm.ExecuteMethod("CCINVOKEDELETERCD", null, false)
+                                $("#SC-Sales-manual-voice-payment").modal('hide');
+                                window.removeEventListener("message", cclistner, false);
+                                setTimeout(function ()
+                                {
+                                  //pm.ExecuteMethod ("InvokeMethod", "ExecuteQuery", null,false);
+                                  $("#sc-Payment-AccNum-CC").val("");
+                                  var FieldQueryPair = {
+                                    "Payment Id": "[Id] IS NOT NULL"
+                                  };
+                                  SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+                                  newRecord = false;
+                                  $(".active-tab").each(function ()
+                                  {
+                                    $('#' + this.id).removeClass("active-tab");
+                                  });
+                                  $(".SC-Payment-nav-item").each(function ()
+                                  {
+                                    $('#' + this.id).removeClass("p-item-active");
+                                  });
+                                }, 200);
+
+                                //}
+
+                              }
+                            }
+                            catch (e)
+                            {
+                              console.log(e);
+                            }
+                            // Check if the form was submitted
+                            //});
+                          }
+                          window.addEventListener("message", cclistner);
+
+                        }
+                      }
+                    }
+                    else
+                    {
+                      $("#sc-Payment-AccNum-CC").val(sAccountNumber);
+
+                    }
+                    //getVoiceCCAccountNumInterval = setInterval(getVoiceCCAccountNum, 10000);
+                  }
+                  //End..Venkat 12/28/2020 added for Voice User for credit card process for Secure Payment
+                }
+
+                if (this.id == "giftcard-payment")
+                {
+                  $("#SC-giftcard-details").hide();
+                  if (P2PEFlag != "Y" && giftCardFlag != "Y")
+                  {
+                    $("#SC-giftcard").addClass("SC-disabled");
+                  }
+                  $("#giftPaymentDue").val("");
+                  $("#giftcardNumber").val("");
+                  $("#giftcardPIN").val("");
+
+                  //$("#giftcardNumber").prop('readonly', false);
+                  //$("#giftcardPIN").prop('readonly', false);
+                  $("#SC-gift-payment").prop('readonly', false);
+                  $("#GCManualInput").prop('readonly', false);
+                  $("#gc-manual-auth").prop('disabled', 'disabled');
+
+                  $("#giftcardNumber").attr("name", "giftcardNumber");
+                  $("#giftcardPIN").attr("name", "giftcardPIN");
+                  var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                  //var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                  if (paymentStatus != "Entered" || sVoiceUser == "Y")
+                  {
+                    $("#giftcardNumber").prop('readonly', true);
+                    $("#giftcardPIN").prop('readonly', true);
+                    $("#SC-gift-payment").prop('readonly', true);
+                    $("#GCManualInput").prop('readonly', true);
+                    $("#SC-giftcard").removeClass("SC-disabled");
+                    if (sVoiceUser == "Y")
+                    {
+                      $("#SC-giftcard").addClass("SC-disabled");
+                      $("#SC-check-card-balance").addClass("SC-disabled");
+                    }
+                    if (giftCardFlag == "Y")
+                    { //PJAYASHA: Added
+                      $("#SC-giftcard").addClass("SC-disabled");
+                      $("#SC-check-card-balance").removeClass("SC-disabled");
+                    }
+                  }
+                  if (giftCardFlag == "Y")
+                  { //PJAYASHA: Added
+                    $("#SC-giftcard").addClass("SC-disabled");
+                    //$("#SC-check-card-balance").removeClass("SC-disabled");
+                  }
+                  if (paySCStoreUser == "Y" || sVoiceUser == "Y")
+                  {
+                    if (giftCardFlag == "Y")
+                    {
+                      $("#giftcardNumber").prop('readonly', false);
+                      $("#giftcardNumber").css("pointer-events", "");
+                      $("#giftcardPIN").prop('readonly', false);
+                      $("#giftcardPIN").css("pointer-events", "");
+                      $("#SC-gift-payment").prop('readonly', false);
+                      $("#SC-giftcard").addClass("SC-disabled");
+                      $("#SC-check-card-balance").removeClass("SC-disabled");
+                    }
+                    else
+                    {
+                      $("#giftcardNumber").prop('readonly', true);
+                      $("#giftcardNumber").css("pointer-events", "none");
+                      $("#giftcardPIN").prop('readonly', true);
+                      $("#giftcardPIN").css("pointer-events", "none");
+                      $("#SC-gift-payment").prop('readonly', true);
+                    }
+                  }
+
+                  var detailsMarkup = GiftCardDetails();
+                  $('#sc-giftcardTxnDetails').html(detailsMarkup);
+                  SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                  var payMethod = paymentBC.GetFieldValue("Payment Method");
+                  //VALLA: 23-DEC-2020: STRY0032584: Added code for Restrict Payment Method and Type Changes to only when the Payment Status is "Entered" or "In Progress".
+                  if (payMethod != "Gift Card" && (paymentStatus == "Entered" || paymentStatus == "In Progress"))
+                  {
+                    var Bservice = '',
+                      inPS = '',
+                      outPS = '';
+                    inPS = SiebelApp.S_App.NewPropertySet();
+                    outPS = SiebelApp.S_App.NewPropertySet();
+                    inPS.SetProperty("Name", "SCPayMethod");
+                    inPS.SetProperty("Value", "Gift Card");
+                    Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+                    outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
+
+                    if (failedpaymentselected != true)
+                    {
+                      paymentBC.SetFieldValue("SC Payment Type Code", "");
+                      paymentBC.SetFieldValue("Account Number", "");
+                    }
+                    pm.ExecuteMethod("InvokeMethod", "PickPaymentMethod", null, false);
+                    //if((sVoiceUser=="Y" || sChatUser=="Y") && pm.Get("GetRecordSet").length==1)
+                    if (pm.Get("GetRecordSet").length == 1)
+                      SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("RefreshBusComp");
+                  }
+
+                  //var customerType = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                  records = pm.Get("GetRecordSet");
+                  var pendingTxns = failedPendingTxnDetials(records);
+                  $("#SC-failed-payment-details").html(pendingTxns);
+                  if (paySCStoreUser == 'Y' && paymentBC.GetFieldValue('SC Payment Status') == "Need Verbal Authorization" && paymentBC.GetFieldValue('Authorization Code') == "")
+                  {
+                    $("#GCAuthCode").focus();
+                  }
+                  else if (paySCStoreUser == 'Y' && sChatUser != "Y" && sVoiceUser != "Y" && P2PEFlag != "Y" && (paymentStatus == "Entered" || paymentStatus == "In Progress"))
+                  {
+                    $("#Gift-hidden").focus();
+                  }
+                  else if (sChatUser == "Y" || sVoiceUser == "Y")
+                  {
+                    $("#giftPaymentDue").focus();
+                  }
+                  else
+                  {
+                    $("#giftcardNumber").focus();
+                  }
+
+                  paymentDue = paymentBC.GetFieldValue("Transaction Amount");
+                  $("#giftPaymentDue").val(paymentDue);
+
+                  paymentDType = paymentBC.GetFieldValue("SC Payment Type Code");
+                  if (sVoiceUser != "Y")
+                    if (paymentDType != "")
+                    {
+                      document.getElementById('SC-gift-payment').innerText = paymentDType;
+                    }
+                  else
+                  {
+                    document.getElementById('SC-gift-payment').innerText = 'Select';
+                  }
+                  SiebelJS.Log("paymentDType..:" + paymentDType);
+
+                  if (failedpaymentselected != true)
+                  {
+                    paymentBC.SetFieldValue("SC Credit Card Number", "");
+                    paymentBC.SetFieldValue("SC CVV Number", "");
+                    paymentBC.SetFieldValue("SC Expiration Month", "");
+                    paymentBC.SetFieldValue("Expiration Year", "");
+                    paymentBC.SetFieldValue("SC Voucher Number", "");
+                    paymentBC.SetFieldValue("SC Bank Account Number", "");
+                    paymentBC.SetFieldValue("SC Check Number", "");
+                    paymentBC.SetFieldValue("SC Bank Routing Num", "");
+                    paymentBC.SetFieldValue("SC Drivers License Number", "");
+                    paymentBC.SetFieldValue("SC Drivers License State", "");
+                    paymentBC.SetFieldValue("SC Date Of Birth", "");
+                    //paymentBC.SetFieldValue("Manual Authorization Flag", "N");
+                    //paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                  }
+                  /*if (storeUser == "Y" && paymentStatus == "Need Verbal Authorization") {
+                  	paymentBC.SetFieldValue("Manual Authorization Flag", "Y");
+                  	$("#gc-manual-auth").prop("checked","checked");
+                  }else{
+                  	paymentBC.SetFieldValue("Manual Authorization Flag", "N");
+                  	$("#gc-manual-auth").removeAttr("checked");
+                  }*/
+
+                  //Venkat R 11/4/2020 added for Chat User for Gift card process for Secure Payment
+                  if (sChatUser == "Y" && giftCardFlag != "Y")
+                  {
+                    var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+                    var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                    console.log("Account Number: " + sAccountNumber);
+                    /*if (sAccountNumber.length > 0)
+                    {
+                    	$("#SC-giftcard").removeClass("SC-disabled");
+                    }
+                    else
+                    {
+                    	$("#SC-giftcard").addClass("SC-disabled");
+                    }*/
+
+                    if (paymentStatus == "Entered" || paymentStatus == "In Progress")
+                    {
+                      $("#SC-giftcard").addClass("SC-disabled");
+                    }
+
+                    var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                    var write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                    //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("RefreshRecord");
+                    if (write)
+                    {
+                      var sPaymentLink = paymentBC.GetFieldValue("SC Payment Link");
+                      var sCaptureStatus = paymentBC.GetFieldValue("SC Semaphone Capture Status");
+                      if (sPaymentLink == "")
+                      {
+                        $("#giftPaymentDue").prop('readonly', true);
+                        var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+                        var orderId = orderBC.GetFieldValue("Id");
+                        var Bservice = '',
+                          inPS = '',
+                          outPS = '';
+                        inPS = SiebelApp.S_App.NewPropertySet();
+                        outPS = SiebelApp.S_App.NewPropertySet();
+                        inPS.SetProperty("Object Id", orderId);
+                        inPS.SetProperty("Payment Id", sPaymentRecordId);
+                        inPS.SetProperty("ProcessName", "SC Get Payment Link WF");
+                        Bservice = SiebelApp.S_App.GetService("Workflow Process Manager");
+                        outPS = Bservice.InvokeMethod("RunProcess", inPS);
+                        var sPaymentLink = outPS.GetChild(0).GetProperty('Payment Link');
+                        var sError = outPS.GetChild(0).GetProperty('Error');
+                        $("#Payment-Link-GC").val(sPaymentLink);
+                        $("#Gift-Capt-Status").val(sError);
+                        var Refreshservice = '',
+                          RefreshinPS = '',
+                          RefreshoutPS = '';
+                        RefreshinPS = SiebelApp.S_App.NewPropertySet();
+                        RefreshoutPS = SiebelApp.S_App.NewPropertySet();
+                        RefreshinPS.SetProperty("Refresh All", "Y");
+                        Refreshservice = SiebelApp.S_App.GetService("FINS Teller UI Navigation");
+                        RefreshoutPS = Refreshservice.InvokeMethod("RefreshCurrentApplet", RefreshinPS);
+                        $("td[title='" + sPaymentRecordId + "']").click();
+
+                      }
+                      else
+                      {
+                        $("#Payment-Link-GC").val(sPaymentLink);
+                        $("#Gift-Capt-Status").val(sCaptureStatus);
+                      }
+                    }
+
+                    getChatGCAccountNumInterval = setInterval(getChatGCAccountNum, 10000);
+                  }
+                  //End..Venkat R 11/4/2020 added for Chat User for Gift card process for Secure Payment
+                  //Venkat 12/28/2020 added for Voice USer for Gift card process for Secure Payment
+                  if (sVoiceUser == "Y" && giftCardFlag != "Y")
+                  {
+                    var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+                    var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                    console.log("Account Number: " + sAccountNumber);
+                    $("#SC-gift-payment").text(paymentBC.GetFieldValue("SC Payment Type Code"));
+                    $("#SC-gift-payment").addClass("SC-disabled");
+                    if (paymentStatus == "Entered" || paymentStatus == "In Progress")
+                    {
+                      $("#SC-giftcard").addClass("SC-disabled");
+                    }
+                    if (sAccountNumber.length == 0 && paymentStatus == "Entered")
+                    {
+                      var canWrite = PM.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                      var write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                      //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("RefreshRecord");
+                      if (write)
+                      {
+                        var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+                        var Input = SiebelApp.S_App.NewPropertySet();
+                        var Output = SiebelApp.S_App.NewPropertySet();
+                        Input.SetProperty("BO", "Order Entry (Sales)");
+                        Input.SetProperty("BC", "Payments");
+                        Input.SetProperty("SortSpecification", "");
+                        Input.SetProperty("ReqNoOfRecords", "");
+                        Input.SetProperty("SearchSpecification", "Id ='" + sPaymentRecordId + "'");
+                        var fieldsArray_new = "Id,SC Voice IFrame URL";
+                        Input.SetProperty("FieldsArray", fieldsArray_new);
+                        var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+                        Output = Custom_Service.InvokeMethod("Query", Input);
+                        var Child = Output.GetChild(0);
+                        var BS_Data = Child.GetProperty("OutputRecordSet");
+                        if (BS_Data != "}")
+                        {
+                          BS_Data = JSON.parse(BS_Data);
+                          sPage = BS_Data["SC Voice IFrame URL"];
+                        }
+                        console.log("Semaphone url: " + sPage);
+                        if (sPage.length > 0)
+                        {
+                          var wmainMarkup = "";
+                          wmainMarkup += '<iframe id="SC-manual-payment-Modal-frame"  src="' + sPage + '"></iframe>';
+                          $("#SC-Sales-manual-voice-payment").html(wmainMarkup);
+                          $("#SC-Sales-manual-voice-payment").modal(
+                          {
+                            backdrop: 'static'
+                          });
+                          $.ajax(
+                          {
+                            type: 'GET',
+                            url: sPage,
+                            dataType: 'application/json',
+                            mode: 'cors',
+                            statusCode:
+                            {
+                              404: function (responseObject, textStatus, jqXHR)
+                              {
+                                pm.ExecuteMethod("GCINVOKEDELETERCD", null, false)
+                                $("#SC-Sales-manual-voice-payment").modal('hide');
+                                alert("We have encountered an issue processing the payment. Please contact a Supervisor/Supervisor on Duty.");
+                                window.removeEventListener("message", gclistner, false);
+                                setTimeout(function ()
+                                {
+                                  $("#sc-Payment-AccNum-GC").val("");
+                                  var FieldQueryPair = {
+                                    "Payment Id": "[Id] IS NOT NULL"
+                                  };
+                                  SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+                                  newRecord = false;
+                                  $(".active-tab").each(function ()
+                                  {
+                                    $('#' + this.id).removeClass("active-tab");
+                                  });
+                                  $(".SC-Payment-nav-item").each(function ()
+                                  {
+                                    $('#' + this.id).removeClass("p-item-active");
+                                  });
+                                }, 200);
+                              },
+                            }
+                          });
+                          var gclistner = function (event)
+                          {
+                            //window.addEventListener('message', (event) => {
+                            event.stopImmediatePropagation();
+                            console.log(event);
+                            var data = {}
+                            try
+                            {
+                              data = JSON.parse(event.data);
+                              console.log(data);
+                              if (data.isSubmitted)
+                              {
+                                if (data["token"] != "" && data["semafoneErrorCode"] == 0)
+                                {
+                                  $("#SC-Sales-manual-voice-payment").modal('hide');
+                                  pm.SetProperty("SemaPhoneGCAccNum", data["token"]);
+                                  pm.SetProperty("SemaPhoneGCpayType", data["cardType"]);
+                                  pm.SetProperty("SemaPhonepayCR", data["semafoneCR"]);
+                                  //cardPM.SetProperty("SemaPhonepayCard",data["lastFour"]);
+                                  pm.SetProperty("SemaPayGCId", sPaymentRecordId);
+                                  pm.ExecuteMethod("UPDAESEMAPHONEGCTOKEN", null, false);
+                                  $("#sc-Payment-AccNum-GC").val(data["token"]);
+                                  window.removeEventListener("message", gclistner, false);
+                                  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("RefreshRecord");
+                                  $("#SC-check-card-balance").removeClass("SC-disabled");
+                                  $("#SC-gift-payment").text(paymentBC.GetFieldValue("SC Payment Type Code"));
+                                  $("#SC-gift-payment").addClass("SC-disabled");
+                                }
+                                else
+                                {
+                                  $("#SC-Sales-manual-voice-payment").modal('hide');
+                                  window.removeEventListener("message", gclistner, false);
+                                  alert("We have encountered an issue processing the payment. Please contact a Supervisor/Supervisor on Duty.");
+                                }
+                              }
+                              // Check if the form was cancelled
+                              if (data.cancel)
+                              {
+
+                                //if(confirm("Are you Sure you want to delete the Selected Record")){
+                                pm.ExecuteMethod("GCINVOKEDELETERCD", null, false)
+                                $("#SC-Sales-manual-voice-payment").modal('hide');
+                                window.removeEventListener("message", gclistner, false);
+                                setTimeout(function ()
+                                {
+                                  $("#sc-Payment-AccNum-GC").val("");
+                                  var FieldQueryPair = {
+                                    "Payment Id": "[Id] IS NOT NULL"
+                                  };
+                                  SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+                                  newRecord = false;
+                                  $(".active-tab").each(function ()
+                                  {
+                                    $('#' + this.id).removeClass("active-tab");
+                                  });
+                                  $(".SC-Payment-nav-item").each(function ()
+                                  {
+                                    $('#' + this.id).removeClass("p-item-active");
+                                  });
+                                }, 200);
+                                //}
+
+                              }
+                            }
+                            catch (e)
+                            {
+                              console.log(e);
+                            }
+                            // Check if the form was submitted
+                            //});
+                          }
+                          window.addEventListener("message", gclistner);
+
+                        }
+                      }
+                    }
+                    else
+                    {
+                      $("#sc-Payment-AccNum-GC").val(sAccountNumber);
+                      $("#SC-check-card-balance").removeClass("SC-disabled");
+                    }
+                    //getVoiceGCAccountNumInterval = setInterval(getVoiceGCAccountNum, 10000);
+                  } //End..Venkat 12/28/2020 added for Voice USer for Gift card process for Secure Payment
+                }
+
+                if (this.id == "check-payment")
+                {
+
+                  $("#checknumber").val("");
+                  $("#bankrouting").val("");
+                  $("#DOBVALUE").val("");
+                  $("#driverlicence").val("");
+                  $("#driverlicencedate").val("");
+                  $("#checkPaymentDue").val("");
+                  $("#Payment-method").val("");
+                  $("#ck-dep-str").val("off");
+
+                  $("#bankaccountnumber").prop('readonly', false);
+                  $("#DOB-img").prop('readonly', false);
+                  $("#checknumber").prop('readonly', false);
+                  $("#bankrouting").prop('readonly', false);
+                  $("#DOBVALUE").prop('readonly', false);
+                  $("#driverlicence").prop('readonly', false);
+                  $("#driverlicencedate").prop('readonly', false);
+                  $("#checkPaymentDue").prop('readonly', false);
+                  $("#Payment-method").prop('readonly', false);
+                  $("#SC-check-payment").prop('readonly', false);
+                  $("#ck-dep-str").prop('disabled', 'disabled');
+
+                  //var isStoreUser = SiebelApp.S_App.GetProfileAttr("SC Store User");
+                  if (paySCStoreUser != "Y" && orderBC.GetFieldValue("SC Payment Admin Responsbility") == "N")
+                  {
+                    $("#SC-SO-Cash-open-popup").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-Cash-open-popup").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                  }
+                  else
+                  {
+                    if (failedpaymentselected == false)
+                    {
+                      $(".SC-Payment-nav-item").removeClass("p-item-active");
+                      $(this).addClass("p-item-active");
+                      $(".payment-data").removeClass('active-tab');
+                      $("#" + currentItemId + "-data").addClass('active-tab');
+                      if (newRecord == false)
+                      {
+                        SiebelJS.Log("New Record");
+                        newRecord = true;
+                        pm.ExecuteMethod("InvokeMethod", "NewRecord", null, false);
+                        SiebelJS.Log("After New Record");
+                      }
+                    }
+                    else if (failedpaymentselected == true)
+                    {
+                      $(".SC-Payment-nav-item").removeClass("p-item-active");
+                      $(this).addClass("p-item-active");
+                      $(".payment-data").removeClass('active-tab');
+                      $("#" + currentItemId + "-data").addClass('active-tab');
+                    }
+                    else
+                    {
+                      // Do nothing..
+                    }
+
+                    var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                    // var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                    if (paymentStatus != "Entered")
+                    {
+                      $("#bankaccountnumber").prop('readonly', true);
+                      $("#DOB-img").prop('readonly', true);
+                      $("#checknumber").prop('readonly', true);
+                      $("#bankrouting").prop('readonly', true);
+                      $("#DOBVALUE").prop('readonly', true);
+                      $("#driverlicence").prop('readonly', true);
+                      $("#driverlicencedate").prop('readonly', true);
+                      $("#checkPaymentDue").prop('readonly', true);
+                      $("#Payment-method").prop('readonly', true);
+                      $("#SC-check-payment").prop('readonly', true);
+                    }
+
+                    $("#bankaccountnumber").val("");
+                    if (failedpaymentselected == false)
+                      $("#checknumber").val("");
+                    else
+                      $("#checknumber").val(paymentBC.GetFieldValue("SC Check Number"));
+                    $("#bankrouting").val("");
+                    $("#DOBVALUE").text("");
+                    $("#driverlicence").val("");
+                    $("#driverlicencedate").val("");
+                    $("#checkPaymentDue").val("");
+                    $("#Payment-method").val("");
+
+                    SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                    var payMethod = paymentBC.GetFieldValue("Payment Method");
+                    if (payMethod != "Check" && (paymentStatus == "Entered" || paymentStatus == "In Progress"))
+                    {
+                      var Bservice = '',
+                        inPS = '',
+                        outPS = '';
+                      inPS = SiebelApp.S_App.NewPropertySet();
+                      outPS = SiebelApp.S_App.NewPropertySet();
+                      inPS.SetProperty("Name", "SCPayMethod");
+                      inPS.SetProperty("Value", "Check");
+                      Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+                      outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
+                      if (failedpaymentselected != true)
+                      {
+                        paymentBC.SetFieldValue("SC Payment Type Code", "");
+                        paymentBC.SetFieldValue("Account Number", "");
+                      }
+                      pm.ExecuteMethod("InvokeMethod", "PickPaymentMethod", null, false);
+                      pm.ExecuteMethod("InvokeMethod", "PickCheckPayType", null, false);
+                    }
+
+                    records = pm.Get("GetRecordSet");
+                    var pendingTxns = failedPendingTxnDetials(records);
+                    $("#SC-failed-payment-details").html(pendingTxns);
+                    $("#bankrouting").focus();
+                    paymentDue = paymentBC.GetFieldValue("Transaction Amount");
+                    $("#checkPaymentDue").val(paymentDue);
+                    paymentDType = paymentBC.GetFieldValue("SC Payment Type Code");
+                    if (paymentDType != "")
+                    {
+                      document.getElementById('SC-check-payment').innerText = paymentDType;
+                    }
+                    else
+                    {
+                      document.getElementById('SC-check-payment').innerText = 'Select';
+                    }
+                    SiebelJS.Log("paymentDType..:" + paymentDType);
+
+                    if (failedpaymentselected != true)
+                    {
+                      paymentBC.SetFieldValue("SC Credit Card Number", "");
+                      paymentBC.SetFieldValue("SC CVV Number", "");
+                      paymentBC.SetFieldValue("SC Expiration Month", "");
+                      paymentBC.SetFieldValue("Expiration Year", "");
+                      paymentBC.SetFieldValue("SC Voucher Number", "");
+                      paymentBC.SetFieldValue("SC Bank Account Number", "");
+                      paymentBC.SetFieldValue("SC Check Number", "");
+                      paymentBC.SetFieldValue("SC Bank Routing Num", "");
+                      paymentBC.SetFieldValue("SC Drivers License Number", "");
+                      paymentBC.SetFieldValue("SC Drivers License State", "");
+                      paymentBC.SetFieldValue("SC Date Of Birth", "");
+                      //paymentBC.SetFieldValue("Manual Authorization Flag", "N");
+                      //paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                    }
+                    /*if (storeUser == "Y" && paymentStatus == "Entered") {
+                    	paymentBC.SetFieldValue("SC Deposited at Store", "Y");
+                    	$("#ck-dep-str").prop("checked","checked");
+                    }else{
+                    	paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                    	$("#ck-dep-str").removeAttr("checked");
+                    }*/
+                    var detailsMarkup = CheckDetails();
+                    $('#sc-check-payment-details').html(detailsMarkup);
+                    if ($("#bankaccountnumber").val() == "" || $("#checknumber").val() == "" || $("#bankrouting").val() == "" || $("#DOB-img").val() == "" || $("#driverlicence").val() == "" || $("#driverlicencedate").val() == "" || $("#checkPaymentDue").val() == "" || document.getElementById("SC-check-payment").innerText == "Select")
+                      $("#SC-Check").addClass("SC-disabled");
+                  }
+                }
+
+                if (this.id == "financing-payment")
+                {
+                  if (GiftCardCount > 0)
+                  {
+                    $("#sc-giftcard-financing-error-popup").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#sc-giftcard-financing-error-popup").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                  }
+                  else
+                  {
+                    $("#financeaccountnumber, #financePaymentDue").val("");
+                    $("#SC-finance-payment, #financeaccountnumber, #financePaymentDue").prop('readonly', false);
+                    $("#fc-manual-auth").prop('disabled', 'disabled');
+
+                    var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                    if (paymentStatus != "Entered")
+                    {
+                      $("#financeaccountnumber, #financePaymentDue, #SC-finance-payment").prop('readonly', true);
+                    }
+
+                    SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                    var payMethod = paymentBC.GetFieldValue("Payment Method");
+                    //VALLA: 23-DEC-2020: STRY0032584: Added code for Restrict Payment Method and Type Changes to only when the Payment Status is "Entered" or "In Progress".
+                    if (payMethod != "Financing" && (paymentStatus == "Entered" || paymentStatus == "In Progress"))
+                    {
+                      var inPS = SiebelApp.S_App.NewPropertySet();
+                      inPS.SetProperty("Name", "SCPayMethod");
+                      inPS.SetProperty("Value", "Financing");
+
+                      var Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+                      var outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
+
+                      if (!failedpaymentselected)
+                      {
+                        paymentBC.SetFieldValue("SC Payment Type Code", "");
+                      }
+
+                      SiebelJS.Log("paymentDType..:" + paymentDType);
+
+                      pm.ExecuteMethod("InvokeMethod", "PickPaymentMethod", null, false);
+                      if (pm.Get("GetRecordSet").length == 1)
+                      {
+                        SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("RefreshBusComp");
+                      }
+                    }
+
+                    var records = pm.Get("GetRecordSet");
+                    $("#SC-failed-payment-details").html(failedPendingTxnDetials(records));
+
+                    var paymentDue = paymentBC.GetFieldValue("Transaction Amount");
+                    var MonthlyPayment = paymentBC.GetFieldValue("Calc Monthly Payment");
+                    var PaymentDesc = paymentBC.GetFieldValue("Description");
+                    paymentDType = paymentBC.GetFieldValue("SC Payment Type Code");
+
+                    $("#financePaymentDue").val(paymentDue);
+                    $("#financeaccountnumber").val(paymentBC.GetFieldValue("Account Number"));
+                    document.getElementById('financeMonthlyPayment').innerText = "$" + MonthlyPayment;
+                    document.getElementById('financePaymentDesc').innerText = PaymentDesc;
+
+                    if (paymentDType)
+                    {
+                      document.getElementById('SC-finance-payment').innerText = paymentDType;
+                    }
+                    else
+                    {
+                      document.getElementById('SC-finance-payment').innerText = 'Select';
+                    }
+
+                    SiebelJS.Log("paymentDType..:" + paymentDType);
+
+                    if (failedpaymentselected != true)
+                    {
+                      paymentBC.SetFieldValue("SC Credit Card Number", "");
+                      paymentBC.SetFieldValue("SC CVV Number", "");
+                      paymentBC.SetFieldValue("SC Expiration Month", "");
+                      paymentBC.SetFieldValue("Expiration Year", "");
+                      paymentBC.SetFieldValue("SC Voucher Number", "");
+                      paymentBC.SetFieldValue("SC Bank Account Number", "");
+                      paymentBC.SetFieldValue("SC Check Number", "");
+                      paymentBC.SetFieldValue("SC Bank Routing Num", "");
+                      paymentBC.SetFieldValue("SC Drivers License Number", "");
+                      paymentBC.SetFieldValue("SC Drivers License State", "");
+                      paymentBC.SetFieldValue("SC Date Of Birth", "");
+                    }
+
+                    var detailsMarkup = FinanceDetails();
+                    $('#financing-payment-details').html(detailsMarkup);
+
+                    if ($("#financeaccountnumber").val() == "" || $("#financePaymentDue").val() == "" || document.getElementById("SC-finance-payment").innerHTML == "Select")
+                    {
+                      $("#SC-financing").addClass("SC-disabled");
+                    }
+                    else
+                    {
+                      $("#SC-financing").removeClass("SC-disabled");
+                    }
+
+                    if (paymentBC.GetFieldValue("SC Payment Status") == "Need Verbal Authorization")
+                    {
+                      $("#SC-financing").removeClass("SC-disabled");
+                    }
+
+                    var paymentGroup = paymentBC.GetFieldValue("SC Payment Group");
+                    //Finance Validation
+                    if (paymentGroup == "SYNCHRONY")
+                    {
+                      financelen = 16;
+                      SC_FINANCEACCNUMBERLEN = "Account Number Should be 16 digits";
+                      $("#financeaccountnumber").rules("add",
+                      {
+                        minlength: 16,
+                        maxlength: 16,
+                        messages:
+                        {
+                          minlength: "Account Number Should be 16 digits",
+                          maxlength: "Account Number Should be 16 digits"
+                        }
+                      });
+                    }
+                    else if (paymentGroup == "HELPCARD")
+                    {
+                      financelen = 8;
+                      SC_FINANCEACCNUMBERLEN = "Account Number Should be Maximum 8 digits";
+                      $("#financeaccountnumber").rules("add",
+                      {
+                        minlength: 7,
+                        maxlength: 8,
+                        messages:
+                        {
+                          minlength: "Account Number Should be Minimum 7 digits",
+                          maxlength: "Account Number Should be Maximum 8 digits"
+                        }
+                      });
+                    }
+                    else
+                    {
+                      financelen = 10;
+                      SC_FINANCEACCNUMBERLEN = "";
+                      $('#financeaccountnumber').rules('remove', 'minlength');
+                      $('#financeaccountnumber').rules('remove', 'maxlength');
+                      $("#financeaccountnumber").trigger("keyup");
+                    }
+                  }
+                }
+
+                if (this.id == "reward-payment")
+                {
+                  $("#sc-reward-type-input").val("");
+                  $("#rewardaccountnumber").val("");
+                  $("#rewardPaymentDue").val("");
+                  $("#financeaccountnumber").val("");
+                  $("#financePaymentDue").val("");
+
+                  $("#sc-reward-type-input").prop('readonly', false);
+                  $("#rewardaccountnumber").prop('readonly', false);
+                  $("#rewardPaymentDue").prop('readonly', false);
+                  $("#financeaccountnumber").prop('readonly', false);
+                  $("#financePaymentDue").prop('readonly', false);
+                  $("#SC-reward-payment").prop('readonly', false);
+
+                  var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                  // var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                  if (paymentStatus != "Entered")
+                  {
+                    $("#sc-reward-type-input").prop('readonly', true);
+                    $("#rewardaccountnumber").prop('readonly', true);
+                    $("#rewardPaymentDue").prop('readonly', true);
+                    $("#financeaccountnumber").prop('readonly', true);
+                    $("#financePaymentDue").prop('readonly', true);
+                    $("#SC-reward-payment").prop('readonly', true);
+                  }
+
+                  SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                  var payMethod = paymentBC.GetFieldValue("Payment Method");
+                  //VALLA: 23-DEC-2020: STRY0032584: Added code for Restrict Payment Method and Type Changes to only when the Payment Status is "Entered" or "In Progress".
+                  if (payMethod != "Reward" && (paymentStatus == "Entered" || paymentStatus == "In Progress"))
+                  {
+                    var Bservice = '',
+                      inPS = '',
+                      outPS = '';
+                    inPS = SiebelApp.S_App.NewPropertySet();
+                    outPS = SiebelApp.S_App.NewPropertySet();
+                    inPS.SetProperty("Name", "SCPayMethod");
+                    inPS.SetProperty("Value", "Reward");
+                    Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+                    outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
+                    if (failedpaymentselected != true)
+                    {
+                      paymentBC.SetFieldValue("SC Payment Type Code", "");
+                      paymentBC.SetFieldValue("Account Number", "");
+                    }
+                    pm.ExecuteMethod("InvokeMethod", "PickPaymentMethod", null, false);
+                  }
+                  records = pm.Get("GetRecordSet");
+                  var pendingTxns = failedPendingTxnDetials(records);
+                  $("#SC-failed-payment-details").html(pendingTxns);
+                  paymentDue = paymentBC.GetFieldValue("Transaction Amount");
+                  $("#rewardPaymentDue").val(paymentDue);
+                  paymentDType = paymentBC.GetFieldValue("SC Payment Type Code");
+                  if (paymentDType != "")
+                  {
+                    document.getElementById('SC-reward-payment').innerText = paymentDType;
+                  }
+                  else
+                  {
+                    document.getElementById('SC-reward-payment').innerText = 'Select';
+                  }
+                  SiebelJS.Log("paymentDType..:" + paymentDType);
+
+                  if (failedpaymentselected != true)
+                  {
+                    paymentBC.SetFieldValue("SC Credit Card Number", "");
+                    paymentBC.SetFieldValue("SC CVV Number", "");
+                    paymentBC.SetFieldValue("SC Expiration Month", "");
+                    paymentBC.SetFieldValue("Expiration Year", "");
+                    paymentBC.SetFieldValue("SC Voucher Number", "");
+                    paymentBC.SetFieldValue("SC Bank Account Number", "");
+                    paymentBC.SetFieldValue("SC Check Number", "");
+                    paymentBC.SetFieldValue("SC Bank Routing Num", "");
+                    paymentBC.SetFieldValue("SC Drivers License Number", "");
+                    paymentBC.SetFieldValue("SC Drivers License State", "");
+                    paymentBC.SetFieldValue("SC Date Of Birth", "");
+                    //paymentBC.SetFieldValue("Manual Authorization Flag", "N");
+                    //paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                  }
+                  var detailsMarkup = ACRDetails();
+                  $('#reward-payment-details').html(detailsMarkup);
+                  $("#sc-reward-type-input").focus();
+                  if (failedpaymentselected)
+                    $("#sc-reward-type-input").val(paymentBC.GetFieldValue("Account Number"));
+
+                  if ($("#sc-reward-type-input").val() == "" || $("#rewardaccountnumber").val() == "" || $("#rewardPaymentDue").val() == "" || document.getElementById("SC-reward-payment").innerText == "Select")
+                  {
+                    $("#SC-reward").addClass("SC-disabled");
+                  }
+
+                }
+
+                if (this.id == "accounting-payment")
+                {
+                  $("#accountPaymentDue").val("");
+                  $("#accountPaymentDue").prop('readonly', false);
+                  $("#SC-account-payment").prop('readonly', false);
+
+                  var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                  //var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                  if (paymentStatus != "Entered")
+                  {
+                    $("#accountPaymentDue").prop('readonly', true);
+                    $("#SC-account-payment").prop('readonly', true);
+                  }
+                  SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                  var payMethod = paymentBC.GetFieldValue("Payment Method");
+                  //VALLA: 23-DEC-2020: STRY0032584: Added code for Restrict Payment Method and Type Changes to only when the Payment Status is "Entered" or "In Progress".
+                  if (payMethod != "Accounting" && (paymentStatus == "Entered" || paymentStatus == "In Progress"))
+                  {
+                    var Bservice = '',
+                      inPS = '',
+                      outPS = '';
+                    inPS = SiebelApp.S_App.NewPropertySet();
+                    outPS = SiebelApp.S_App.NewPropertySet();
+                    inPS.SetProperty("Name", "SCPayMethod");
+                    inPS.SetProperty("Value", "Accounting");
+                    Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+                    outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
+                    if (failedpaymentselected != true)
+                    {
+                      paymentBC.SetFieldValue("SC Payment Type Code", "");
+                      paymentBC.SetFieldValue("Account Number", "");
+                    }
+                    pm.ExecuteMethod("InvokeMethod", "PickPaymentMethod", null, false);
+                  }
+                  records = pm.Get("GetRecordSet");
+                  var pendingTxns = failedPendingTxnDetials(records);
+                  $("#SC-failed-payment-details").html(pendingTxns);
+                  $("#accountPaymentDue").focus();
+                  paymentDue = paymentBC.GetFieldValue("Transaction Amount");
+                  $("#accountPaymentDue").val(paymentDue);
+                  paymentDType = paymentBC.GetFieldValue("SC Payment Type Code");
+                  if (paymentDType != "")
+                  {
+                    document.getElementById('SC-account-payment').innerText = paymentDType;
+                  }
+                  else
+                  {
+                    document.getElementById('SC-account-payment').innerText = 'Select';
+                  }
+                  SiebelJS.Log("paymentDType..:" + paymentDType);
+
+                  if (failedpaymentselected != true)
+                  {
+                    paymentBC.SetFieldValue("SC Credit Card Number", "");
+                    paymentBC.SetFieldValue("SC CVV Number", "");
+                    paymentBC.SetFieldValue("SC Expiration Month", "");
+                    paymentBC.SetFieldValue("Expiration Year", "");
+                    paymentBC.SetFieldValue("SC Voucher Number", "");
+                    paymentBC.SetFieldValue("SC Bank Account Number", "");
+                    paymentBC.SetFieldValue("SC Check Number", "");
+                    paymentBC.SetFieldValue("SC Bank Routing Num", "");
+                    paymentBC.SetFieldValue("SC Drivers License Number", "");
+                    paymentBC.SetFieldValue("SC Drivers License State", "");
+                    paymentBC.SetFieldValue("SC Date Of Birth", "");
+                    //paymentBC.SetFieldValue("Manual Authorization Flag", "N");
+                    //paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                  }
+                  var detailsMarkup = ACRDetails();
+                  $('#accounting-payment-details').html(detailsMarkup);
+                  if ($("#accountPaymentDue").val() == "" || document.getElementById("SC-account-payment").innerText == "Select")
+                  {
+                    $("#SC-accounting").addClass("SC-disabled");
+                  }
+                  /* else
+                  	$("#SC-accounting").removeClass("SC-disabled"); */
+                }
+
+                if (this.id == "cash-payment")
+                {
+                  $("#cashPaymentDue").val("");
+                  $("#cashPaymentDue").prop('readonly', false);
+                  $("#SC-cash-payment").prop('readonly', false);
+                  $("#ch-dep-str").prop("disabled", "disabled");
+
+                  var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                  //var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                  if (paymentStatus != "Entered")
+                  {
+                    $("#cashPaymentDue").prop('readonly', true);
+                    $("#SC-cash-payment").prop('readonly', true);
+                  }
+                  SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                  var payMethod = paymentBC.GetFieldValue("Payment Method");
+                  //VALLA: 23-DEC-2020: STRY0032584: Added code for Restrict Payment Method and Type Changes to only when the Payment Status is "Entered" or "In Progress".
+                  if (payMethod != "Cash" && (paymentStatus == "Entered" || paymentStatus == "In Progress"))
+                  {
+                    var Bservice = '',
+                      inPS = '',
+                      outPS = '';
+                    inPS = SiebelApp.S_App.NewPropertySet();
+                    outPS = SiebelApp.S_App.NewPropertySet();
+                    inPS.SetProperty("Name", "SCPayMethod");
+                    inPS.SetProperty("Value", "Cash");
+                    Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+                    outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
+                    if (failedpaymentselected != true)
+                    {
+                      paymentBC.SetFieldValue("SC Payment Type Code", "");
+                      paymentBC.SetFieldValue("Account Number", "");
+                    }
+                    pm.ExecuteMethod("InvokeMethod", "PickPaymentMethod", null, false);
+                  }
+                  records = pm.Get("GetRecordSet");
+                  var pendingTxns = failedPendingTxnDetials(records);
+                  $("#SC-failed-payment-details").html(pendingTxns);
+                  $("#cashPaymentDue").focus();
+                  paymentDue = paymentBC.GetFieldValue("Transaction Amount");
+                  $("#cashPaymentDue").val(paymentDue);
+                  paymentDType = paymentBC.GetFieldValue("SC Payment Type Code");
+                  if (paymentDType != "")
+                  {
+                    document.getElementById('SC-cash-payment').innerText = paymentDType;
+                  }
+                  else
+                  {
+                    document.getElementById('SC-cash-payment').innerText = 'Select';
+                  }
+                  SiebelJS.Log("paymentDType..:" + paymentDType);
+
+                  if (failedpaymentselected != true)
+                  {
+                    paymentBC.SetFieldValue("SC Credit Card Number", "");
+                    paymentBC.SetFieldValue("SC CVV Number", "");
+                    paymentBC.SetFieldValue("SC Expiration Month", "");
+                    paymentBC.SetFieldValue("Expiration Year", "");
+                    paymentBC.SetFieldValue("SC Voucher Number", "");
+                    paymentBC.SetFieldValue("SC Bank Account Number", "");
+                    paymentBC.SetFieldValue("SC Check Number", "");
+                    paymentBC.SetFieldValue("SC Bank Routing Num", "");
+                    paymentBC.SetFieldValue("SC Drivers License Number", "");
+                    paymentBC.SetFieldValue("SC Drivers License State", "");
+                    paymentBC.SetFieldValue("SC Date Of Birth", "");
+                    //paymentBC.SetFieldValue("Manual Authorization Flag", "N");
+                    //paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                  }
+                  /*if (storeUser == "Y" && paymentStatus == "Entered") {
+                                    paymentBC.SetFieldValue("SC Deposited at Store", "Y");
+									$("#ch-dep-str").prop("checked","checked");
+								}else{
+									paymentBC.SetFieldValue("SC Deposited at Store", "N");
+									$("#ch-dep-str").removeAttr("checked");
+								}*/
+                  var detailsMarkup = ACRDetails();
+                  $('#cash-payment-details').html(detailsMarkup);
+                  if ($("#cashPaymentDue").val() == "" || document.getElementById("SC-cash-payment").innerText == "Select")
+                  {
+                    $("#SC-cash").addClass("SC-disabled");
+                  }
+                  else
+                  {
+                    $("#SC-cash").removeClass("SC-disabled");
+                  }
+                }
+              }
+              failedpaymentselected = false;
+            }
+          });
+
+          $(".paymenttype").click(function (event)
+          {
+            //event.stopimmediatepropagation();
+            //$(document).on("click",".paymenttype",function(){
+            //Start loader 
+            $("body").trigger('Custom.Start');
+            var id = this.id;
+            setTimeout(function ()
+            {
+              (function (proxied)
+              {
+                window.alert = function ()
+                {
+                  if (arguments[0].includes("If you have selected Non Stackable Finance option"))
+                  {
+                    //SiebelJS.log("entered..");
+                    $("#sc-financing-error-popup").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#sc-financing-error-popup").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                  }
+                  else
+                    return proxied.apply(this, arguments);
+                };
+              })(window.alert);
+
+              //VALLA: 28-NOV-2020 : Add to supress the non stack finance pricing error
+              (function (proxied)
+              {
+                window.alert = function ()
+                {
+                  if (arguments[0].includes("<?>(SBL-EXL-00151)"))
+                  {
+                    // Suppressing error message
+                    SiebelJS.Log("Error Message..:" + arguments[0]);
+                  }
+                  else
+                    return proxied.apply(this, arguments);
+                };
+              })(window.alert);
+
+              var rowId = paymentBC.GetFieldValue('Id');
+              var totalBalanceDue = orderBC.GetFieldValue("SC Total Balance Due");
+              SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"), SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetControls()["Payment Type"]);
+              SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().AttachNotificationHandler("g", function (o)
+              {
+                var paymentType = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetControls()["Payment Type"]);
+                //method to supress alerts on pagination
+
+                if (paymentType != "" && id != "")
+                {
+                  $(id).html(paymentType);
+                  document.getElementById(id).innerText = paymentType;
+                  SiebelJS.Log("paymentType...:" + paymentType);
+                  //SBOORLA: Added code for refreshing the header form Applet
+                  if (id == "SC-finance-payment")
+                  {
+                    newRecord = false;
+                    id = "";
+                    if ($("#financeaccountnumber").val() != "" && $("#financePaymentDue").val() != "" && document.getElementById("SC-finance-payment").innerHTML != "Select")
+                      $("#SC-financing").removeClass("SC-disabled");
+                    else
+                      $("#SC-financing").addClass("SC-disabled");
+
+                    totalDue = orderBC.GetFieldValue("SC Total Balance Due");
+                    $("#financePaymentDue").val(totalDue);
+
+                    $("#custommaskoverlay").show();
+                    setTimeout(function ()
+                    {
+                      $("td[title='" + rowId + "']").click();
+                      var paymentGroup = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetBusComp().GetFieldValue("SC Payment Group");
+                      var MonthlyPayment = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetBusComp().GetFieldValue("Calc Monthly Payment");
+                      document.getElementById('financeMonthlyPayment').innerText = "$" + MonthlyPayment;
+                      var PaymentDesc = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetBusComp().GetFieldValue("Description");
+                      document.getElementById('financePaymentDesc').innerText = PaymentDesc;
+                      paymentDType = paymentBC.GetFieldValue("SC Payment Type Code");
+
+                      if (paymentDType != "")
+                      {
+                        document.getElementById('SC-finance-payment').innerText = paymentDType;
+                      }
+                      else
+                      {
+                        document.getElementById('SC-finance-payment').innerText = 'Select';
+                      }
+                      if (paymentGroup == "SYNCHRONY")
+                      {
+                        financelen = 16;
+                        SC_FINANCEACCNUMBERLEN = "Account Number Should be 16 digits";
+                        $("#financeaccountnumber").rules("add",
+                        {
+                          minlength: 16,
+                          maxlength: 16,
+                          messages:
+                          {
+                            minlength: "Account Number Should be 16 digits",
+                            maxlength: "Account Number Should be 16 digits"
+                          }
+                        });
+                        if ($("#financeaccountnumber").val().length != 16)
+                        {
+                          $("#financeaccountnumber").trigger("keyup");
+                        }
+                      }
+
+                      if (paymentGroup == "HELPCARD")
+                      {
+                        financelen = 8;
+                        SC_FINANCEACCNUMBERLEN = "Account Number Should be 7 digits";
+                        $("#financeaccountnumber").rules("add",
+                        {
+                          minlength: 7,
+                          maxlength: 8,
+                          messages:
+                          {
+                            minlength: "Account Number Should be Minimum 7 digits",
+                            maxlength: "Account Number Should be Maximum 8 digits"
+                          }
+                        });
+                        if ($("#financeaccountnumber").val().length != 7 || $("#financeaccountnumber").val().length != 8)
+                        {
+                          $("#financeaccountnumber").focus();
+                          $("#financeaccountnumber").trigger("keyup");
+                        }
+                      }
+
+                      $("td[title='" + rowId + "']").click();
+                      var inPS = SiebelApp.S_App.NewPropertySet();
+                      var outPS = SiebelApp.S_App.NewPropertySet();
+                      var bService = "";
+                      inPS.SetProperty("OrderId", orderId);
+                      SiebelJS.Log("Invoking Business Service");
+                      bService = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
+                      outPS = bService.InvokeMethod("Query", inPS); //invoke the method
+                      var shippingcost = outPS.GetChild(0).GetProperty("Shipping cost");
+                      var shippinglinediscounts = outPS.GetChild(0).GetProperty("Shipping Line Discounts");
+                      var summaryMarkup = SCOUIMethods.OrderSummary(orderPM, shippingcost, shippinglinediscounts);
+
+                      $("#SC-Order-Summary").html(summaryMarkup);
+
+                      var newBalanceDue = orderBC.GetFieldValue("SC Total Balance Due");
+                      $("#financePaymentDue").val(newBalanceDue);
+
+                      setTimeout(function ()
+                      {
+                        $("td[title='" + rowId + "']").click();
+                        if (totalBalanceDue != newBalanceDue)
+                        {
+                          $("#sc-financing-promo-popup").modal(
+                          {
+                            backdrop: 'static'
+                          });
+                          $("#sc-financing-promo-popup").css(
+                          {
+                            "display": "flex",
+                            "justify-content": "center",
+                            "align-items": "center"
+                          });
+                          $(".modal-backdrop").css('background', '#ffffff');
+                        }
+                      }, 0);
+                      /*selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                      var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                      if (canWrite) {
+                      	
+                      	//var selectedRow = $(".selected-row").get(0).id;
+                      	var selectedRow = $(".ui-state-highlight").get(0).id
+                      	
+                      	//var selectedRow = paymentBC.GetFieldValue('Line Number');
+                      	var rowId = paymentBC.GetFieldValue('Id');
+                      	
+                      	var accountNumber = $("#financeaccountnumber").val();
+                      	paymentBC.SetFieldValue("Account Number", accountNumber);
+                      	
+                      	var financePaymentDue = $("#financePaymentDue").val();
+                      	paymentBC.SetFieldValue("Transaction Amount", financePaymentDue);
+                      	
+                      	var write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                      	if (write) {
+                      		
+                      		var paymentType = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetControls()["Payment Type"]);
+                      		$("#SC-finance-payment").html(paymentType);
+                      		
+                      		/*SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Freight Calculated Flag", "Y");
+                      		SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+                      		SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().InvokeMethod("RefreshRecord");
+
+                      		SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetBusComp().InvokeMethod("RefreshBusComp");
+                      		var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
+                      		if (canInvokeCalculate) {
+                      			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].InvokeMethod("SC Calculate Shipping");
+                      		}
+
+                      		var canInvokeVerify = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "QuotesAndOrdersValidate");
+                      		if (canInvokeVerify) {
+                      			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("QuotesAndOrdersValidate");
+                      		}
+
+                      		var inPS = SiebelApp.S_App.NewPropertySet();
+                      		var outPS = SiebelApp.S_App.NewPropertySet();
+                      		var bService = "";
+                      		inPS.SetProperty("OrderId", orderId);
+                      		SiebelJS.Log("Invoking Business Service");
+                      		bService = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
+                      		outPS = bService.InvokeMethod("Query", inPS); //invoke the method
+                      		var shippingcost = outPS.GetChild(0).GetProperty("Shipping cost");
+                      		var shippinglinediscounts = outPS.GetChild(0).GetProperty("Shipping Line Discounts");
+                      		var summaryMarkup = SCOUIMethods.OrderSummary(orderPM, shippingcost, shippinglinediscounts);
+
+                      		$("#SC-Order-Summary").html(summaryMarkup);
+                      		
+                      		var balanceDue = orderBC.GetFieldValue("SC Total Balance Due");
+                      		$("#financePaymentDue").val(balanceDue);
+                      		
+                      		setTimeout(function() {
+                      			//$("#s_" + appletSeq + "_l tr#" + selectedRow + "").trigger("click");
+                      			// $("#" +selectedRow).trigger("click");
+                      			$("td[title='"+rowId+"']").click();
+                      		}, 0);
+                      	}
+                      }else{
+                      	$("#sc-financing-error-popup").modal("hide");
+                      	$("#sc-financing-error-popup").css({
+                      		"display": "",
+                      		"justify-content": "",
+                      		"align-items": ""
+                      	});
+                      }*/
+                      $("#custommaskoverlay").hide();
+                    }, 0);
+                  }
+
+                  if (id == "SC-reward-payment")
+                  {
+                    if ($("#sc-reward-type-input").val() != "" && $("#rewardaccountnumber").val() != "" && $("#rewardPaymentDue").val() != "" && document.getElementById("SC-reward-payment").innerText != "Select")
+                    {
+                      $("#SC-reward").removeClass("SC-disabled");
+                    }
+                    else
+                      $("#SC-reward").addClass("SC-disabled");
+                    id = "";
+                  }
+                  //SPATIBAN:24-MAY-2019:Added below code for enabling the authorize button
+                  /* if(id == "SC-account-payment"){
+                  	if($("#accountPaymentDue").val()!="" && document.getElementById("SC-account-payment").innerText!="Select"){
+                  		$("#SC-accounting").removeClass("SC-disabled");
+                  	}
+                  	else
+                  	$("#SC-accounting").addClass("SC-disabled");
+                  	id="";
+                  } */
+                  if (id == "SC-credit-payment" && paySCStoreUser != "Y" && P2PEFlag != "Y" && sChatUser != "Y" && sVoiceUser != "Y")
+                  {
+                    //if($("#Creditcard-Number").val()!="" && $("#creditCVV").val() !="" && $("#creditPaymentDue").val() && $("#creditExpM").val() !="" && $("#creditExpM").val() != null && $("#creditExpY").val()!= null && $("#creditExpY").val()!="" && document.getElementById("SC-credit-payment").innerText!="Select")
+                    if ($("#Creditcard-Number").val() != "" && $("#creditCVV").val() != "" && $("#creditPaymentDue").val() && $("#creditExpM").val() != "" && $("#creditExpM").val() != null && $("#creditExpY").val() != null && $("#creditExpY").val() != "")
+                      $("#SC-CreditCard").removeClass("SC-disabled");
+                    else
+                      $("#SC-CreditCard").addClass("SC-disabled");
+                    id = "";
+                  }
+                }
+              });
+              //hiding the Loader
+
+              $("body").trigger('Custom.End');
+            }, 1000);
+          });
+          $(document).on("click", "#Creditcard-Number,#creditCVV", function ()
+          {
+            if (paySCStoreUser == "Y")
+            {
+              $("#Creditcard-Number").prop('readonly', true);
+              $("#creditCVV").prop('readonly', true);
+            }
+            else
+            {
+              $("#Creditcard-Number").prop('readonly', false);
+              $("#creditCVV").prop('readonly', false);
+            }
+          });
+          $(document).on("click", "#giftcardNumber,#giftcardPIN", function ()
+          {
+            if (paySCStoreUser == "Y")
+            {
+              if (giftCardFlag == "Y")
+              {
+                $("#giftcardNumber").prop('readonly', false);
+                $("#giftcardPIN").prop('readonly', false);
+              }
+              else
+              {
+                $("#giftcardNumber").prop('readonly', true);
+                $("#giftcardPIN").prop('readonly', true);
+              }
+            }
+            else
+            {
+              $("#giftcardNumber").prop('readonly', false);
+              $("#giftcardPIN").prop('readonly', false);
+            }
+          });
+          $(document).on("change", "#sc-reward-type-input,#rewardaccountnumber,#rewardPaymentDue", function ()
+          {
+            if ($("#sc-reward-type-input").val() != "" && $("#rewardaccountnumber").val() != "" && $("#rewardPaymentDue").val() != "" && document.getElementById("SC-reward-payment").innerText != "Select")
+            {
+              $("#SC-reward").removeClass("SC-disabled");
+            }
+            else
+              $("#SC-reward").addClass("SC-disabled");
+
+          });
+          $(document).on("change", "#accountPaymentDue", function ()
+          {
+            if ($("#accountPaymentDue").val() != "" && document.getElementById("SC-account-payment").innerText != "Select")
+            {
+              $("#SC-accounting").removeClass("SC-disabled");
+            }
+            else
+              $("#SC-accounting").addClass("SC-disabled");
+
+          });
+          $(document).on("change", "#cashPaymentDue", function ()
+          {
+            if ($("#cashPaymentDue").val() != "" && document.getElementById("SC-cash-payment").innerText != "Select")
+            {
+              $("#SC-cash").removeClass("SC-disabled");
+            }
+            else
+              $("#SC-cash").addClass("SC-disabled");
+
+          });
+          $(document).on("change", "#giftPaymentDue", function ()
+          {
+            if ($("#giftPaymentDue").val() == "")
+              $("#SC-giftcard").addClass("SC-disabled");
+            // else
+            //$("#SC-giftcard").removeClass("SC-disabled");
+          });
+
+          $(document).on("change", "#financeaccountnumber,#financePaymentDue", function ()
+          {
+            if ($("#financeaccountnumber").val() != "" && $("#financePaymentDue").val() != "" && document.getElementById("SC-finance-payment").innerText != "Select")
+            {
+              $("#SC-financing").removeClass("SC-disabled");
+            }
+            else
+            {
+              $("#SC-financing").addClass("SC-disabled");
+            }
+
+            if (paymentBC.GetFieldValue("SC Payment Status") == "Need Verbal Authorization")
+            {
+              $("#SC-financing").removeClass("SC-disabled");
+            }
+
+            // Added code for when financeaccountnumber changes
+            if (this.id === "financeaccountnumber")
+            {
+              document.getElementById('SC-finance-payment').innerText = 'Select';
+              document.getElementById('financeMonthlyPayment').innerText = '';
+              document.getElementById('financePaymentDesc').innerText = '';
+              $("#SC-financing").addClass("SC-disabled");
+
+              var Bservice = '',
+                inPS = '',
+                outPS = '';
+              inPS = SiebelApp.S_App.NewPropertySet();
+              outPS = SiebelApp.S_App.NewPropertySet();
+              inPS.SetProperty("Name", "FinancePartner");
+              inPS.SetProperty("Value", "");
+              Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+              Bservice.InvokeMethod("SetProfileAttr", inPS, outPS);
+            }
+          });
+
+          $(document).on("change", "#bankaccountnumber,#checknumber,#bankrouting,#DOB-img,#driverlicence,#driverlicencedate,#checkPaymentDue", function ()
+          {
+            if ($("#bankaccountnumber").val() != "" && $("#checknumber").val() != "" && $("#bankrouting").val() != "" && $("#DOB-img").val() != "" && $("#driverlicence").val() != "" && $("#driverlicencedate").val() != "" && $("#checkPaymentDue").val() != "" && document.getElementById("SC-check-payment").innerText != "Select")
+              $("#SC-Check").removeClass("SC-disabled");
+            else
+              $("#SC-Check").addClass("SC-disabled");
+          });
+          $(document).on("change", "#Creditcard-Number,#creditCVV,#creditExpM,#creditExpY,#creditPaymentDue", function ()
+          {
+            if (!$('#Creditcard-Number').is('[readonly]'))
+            {
+              if (P2PEFlag != "Y" && sVoiceUser != "Y" && sChatUser != "Y")
+              {
+                if (paySCStoreUser != "Y")
+                {
+                  if ($("#Creditcard-Number").val() != "" && $("#creditCVV").val() != "" && ($("#creditExpM").val() != "" || $("#creditExpM").val() != null) && ($("#creditExpY").val() != null || $("#creditExpY").val() != "") && $("#creditPaymentDue").val() != "" && document.getElementById("SC-credit-payment").innerText != "Select")
+                    $("#SC-CreditCard").removeClass("SC-disabled");
+                  else
+                    $("#SC-CreditCard").addClass("SC-disabled");
+                }
+                else
+                {
+                  if ($("#Creditcard-Number").val() != "" && $("#creditCVV").val() != "" && ($("#creditExpM").val() != "" || $("#creditExpM").val() != null) && ($("#creditExpY").val() != null || $("#creditExpY").val() != "") && $("#creditPaymentDue").val() != "")
+                    $("#SC-CreditCard").removeClass("SC-disabled");
+                  else
+                    $("#SC-CreditCard").addClass("SC-disabled");
+                }
+              }
+              else
+              {
+
+                $("#SC-CreditCard").removeClass("SC-disabled");
+                if ((sVoiceUser == "Y" || sChatUser == "Y") && $("#creditPaymentDue").val() == "")
+                  $("#SC-CreditCard").addClass("SC-disabled");
+              }
+              if (paymentBC.GetFieldValue("SC Payment Status") == "Need Verbal Authorization")
+                $("#SC-CreditCard").removeClass("SC-disabled");
+            }
+          });
+          $(document).on("click", "#sc-reward-type", function (e)
+          {
+            SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"), SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetControls()["SC Voucher Number"]);
+            SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().AttachNotificationHandler("g", function (o)
+            {
+              var rewardType = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetControls()["SC Voucher Number"]);
+              var accountNumber = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetControls()["Account Number"]);
+              if (rewardType != "" && accountNumber != "")
+              {
+                SCICVoucherNum = rewardType;
+                var IsStoreUser = SCOUIMethods.SCGetProfileAttrValue('SC Store User');
+                $('#sc-reward-type-input').val(rewardType);
+                $('#rewardaccountnumber').val(accountNumber);
+                SiebelJS.Log("paymentType...:" + rewardType);
+                var scRwdAmt = "";
+                //VALLA: Added code for reward payment issue.
+                orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
+                var totalDue = orderBC.GetFieldValue("SC Total Balance Due");
+                var RewadAmt = paymentBC.GetFieldValue("Transaction Amount");
+                if (parseInt(totalDue) <= parseInt(RewadAmt))
+                {
+                  paymentBC.SetFieldValue("Transaction Amount", totalDue);
+                }
+                else
+                {
+                  paymentBC.SetFieldValue("Transaction Amount", RewadAmt);
+                }
+
+                paymentBC = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetBusComp();
+                scRwdAmt = paymentBC.GetFieldValue("Transaction Amount") == "" ? 0.00 : parseFloat(paymentBC.GetFieldValue("Transaction Amount"));
+                $('#rewardPaymentDue').val(scRwdAmt.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,"));
+                setTimeout(function ()
+                {
+                  $('#rewardaccountnumber').val(paymentBC.GetFieldValue("Account Number"));
+                  var scRwdAmt = "";
+                  scRwdAmt = paymentBC.GetFieldValue("Transaction Amount") == "" ? 0.00 : parseFloat(paymentBC.GetFieldValue("Transaction Amount"));
+                  $('#rewardPaymentDue').val(scRwdAmt.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,"));
+                  if ($("#sc-reward-type-input").val() != "" && $("#rewardaccountnumber").val() != "" && $("#rewardPaymentDue").val() != "" && document.getElementById("SC-reward-payment").innerText != "Select")
+                  {
+                    $("#SC-reward").removeClass("SC-disabled");
+                  }
+                  else
+                    $("#SC-reward").addClass("SC-disabled");
+                }, 1000);
+              }
+            });
+          });
+
+          //on click of date of birth in check details
+          /* $("#DOB-img").datepicker({
+                        maxDate: 0,
+                        changeYear: true,
+                        yearRange: "-100:+0",
+                        changeMonth: true,
+						showButtonPanel: true
+                    });*/
+
+          $("#DOB-img").datepicker(
+          {
+            maxDate: 0,
+            changeYear: true,
+            yearRange: "-100:+0",
+            changeMonth: true,
+            showOn: 'button',
+            buttonText: 'Show Date',
+            buttonImageOnly: true,
+            buttonImage: 'images/custom/calendar.png',
+            showButtonPanel: true
+          });
+          $(".ui-datepicker-trigger").css(
+          {
+            "opacity": "0.5",
+            "height": "16px",
+            "width": "16px",
+            "position": "absolute",
+            "bottom": "40px",
+            "left": "0"
+          });
+          $(document).on('keypress', '#DOB-img', function ()
+          {
+            var dateofbirth = $('#DOB-img').val();
+            if (dateofbirth.length === 2)
+            {
+              dateofbirth = dateofbirth + "/";
+            }
+            else if (dateofbirth.length === 5)
+            {
+              dateofbirth = dateofbirth + "/";
+            }
+            $(this).val(dateofbirth);
+          });
+          $(document).on("click", "#DOBVALUE", function ()
+          {
+            $("#DOB-img").focus();
+          });
+          //Start:on focus out hiding the datepicker
+          /*$("#DOB-img").focusout(function(){
+          	$('#DOB-img').datepicker("hide");
+          });*/
+          //End:on focus out hiding the datepicker
+          //Start:on scroll hiding the datepicker
+          $("html, body").on("DOMMouseScroll MouseScrollEvent MozMousePixelScroll wheel scroll", function ()
+          {
+            $('#DOB-img').datepicker("hide");
+          });
+          //End:on scroll hiding the datepicker
+          //Start:On click Of Edit Order Button
+          $(document).on("click", "#Sc-Editorder-payments", function ()
+          {
+            if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet")[0]["Revision"] > 1)
+              localStorage.setItem("ComingFromPayments", "Y");
+            SiebelApp.S_App.GotoView("SC Create Sales Order View OUI", "", "", "");
+          });
+          //End:On click Of Edit Order Button
+
+          $("#SC-check-card-balance").click(function ()
+          {
+            //Start loader 
+            $("body").trigger('Custom.Start');
+            setTimeout(function ()
+            {
+              var cardNumber = "",
+                pin = "";
+              if (P2PEFlag != "Y" || giftCardFlag == "Y")
+              {
+                cardNumber = $("#giftcardNumber").val();
+                pin = $("#giftcardPIN").val();
+              }
+              var amountPay = $("#giftPaymentDue").val();
+
+              selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+              var write = false;
+              var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+              if (canWrite)
+              {
+                write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+              }
+              $("td[title='" + selectedPaymentRowId + "']").click();
+
+              pm.SetProperty("PaymentMethod", "Gift Card");
+              pm.SetProperty("GiftCardType", paymentBC.GetFieldValue("SC Payment Type Code"));
+              pm.SetProperty("CalcGiftCardNumber", cardNumber);
+              pm.SetProperty("CalcPIN", pin);
+              pm.SetProperty("PaymentAmount", amountPay);
+              pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+              pm.SetProperty("AccountNumber", paymentBC.GetFieldValue("Account Number"));
+              pm.SetProperty("GetGCBalanceFlag", "Y");
+
+              //var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+              if (paySCStoreUser == 'Y')
+              {
+                pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+                var AccessToken = SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+                pm.SetProperty("AccessToken", AccessToken);
+                paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+                if (sVoiceStoreUser == "Y")
+                {
+
+                  var machineInfo = "";
+                  machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                  if (machineInfo == "" || machineInfo == undefined)
+                  {
+                    paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                  }
+                  else
+                  {
+                    paymentBC.SetFieldValue("Machine Name", machineInfo);
+                  }
+                  paymentBC.SetFieldValue("SN Phone Payment", "Y");
+                  var write = false;
+                  selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                  var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                  if (canWrite)
+                  {
+                    write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                  }
+                  $("td[title='" + selectedPaymentRowId + "']").click();
+                  if (giftCardFlag == "Y")
+                  {
+                    //paySCStoreUser ="N";
+
+                    if ($("#SC-GiftCard-Details").valid())
+                    {
+                      pm.OnControlEvent("GETGCBALANCE_BUTTON_CLICK");
+                    }
+                  }
+                }
+                else
+                {
+                  if (P2PEFlag == "Y" && paymentStatus != "Need Verbal Authorization" && giftCardFlag != "Y")
+                  {
+                    $("#custommaskoverlay").show();
+                    $("#SC-P2PE-GCCheckBal").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-P2PE-GCCheckBal").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                  }
+                  if (P2PEFlag == "Y" && giftCardFlag == "Y" && cardNumber == "" && pin == "")
+                  {
+                    $("#custommaskoverlay").show();
+                    $("#SC-P2PE-GCCheckBal").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-P2PE-GCCheckBal").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                  }
+                  setTimeout(function ()
+                  {
+                    pm.OnControlEvent("SU_GET_GC_BALANCE");
+                  }, 1000);
+                }
+              }
+              else
+              {
+                if (giftCardFlag == "Y")
+                {
+                  if ($("#SC-GiftCard-Details").valid())
+                  {
+                    pm.OnControlEvent("GETGCBALANCE_BUTTON_CLICK"); /// 13 user get balance this gets caled
+                  }
+                }
+                else
+                {
+                  pm.OnControlEvent("GETGCBALANCE_BUTTON_CLICK"); /// 13 user get balance this gets caled
+                }
+
+
+              }
+              //hiding the Loader
+              $("body").trigger('Custom.End');
+            }, 1000);
+          });
+
+          //Start: On Click of Authorize button
+          $(".authorise-button, .auth-button").click(function (event)
+          {
+
+            selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+
+            //$(this).addClass("SC-disabled");
+            var auth_button_id = $(this).attr("id");
+            $("#" + auth_button_id).addClass("SC-disabled");
+            event.preventDefault();
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshRecord");
+            var Bservice = '',
+              inPS = '',
+              outPS = '';
+            inPS = SiebelApp.S_App.NewPropertySet();
+            outPS = SiebelApp.S_App.NewPropertySet();
+            inPS.SetProperty("Name", "SC_PAYMENT_COMMIT");
+            inPS.SetProperty("Value", "Y");
+            Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+            Bservice.InvokeMethod("SetProfileAttr", inPS, outPS);
+
+            if ($(this).attr("id") == "SC-CreditCard")
+            {
+              //Start loader 
+              var paymentStatus = paymentBC.GetFieldValue('SC Payment Status');
+              if (paymentStatus == "Need Verbal Authorization")
+              {
+                $("#Creditcard-Number").removeAttr("name");
+                $("#creditCVV").removeAttr("name");
+                $("#creditExpM").removeAttr("name");
+                $("#creditExpY").removeAttr("name");
+                $("#creditCardDetails").submit();
+              }
+              else
+              {
+                $("#creditCardDetails").submit();
+              }
+            }
+
+            if ($(this).attr("id") == "SC-Check")
+            {
+              //Start loader 
+              $("#sc-check-Details").submit();
+            }
+
+            if ($(this).attr("id") == "SC-giftcard")
+            {
+              var paymentStatus = paymentBC.GetFieldValue('SC Payment Status');
+              if (paymentStatus == "Need Verbal Authorization")
+              {
+                $("#giftcardNumber").removeAttr("name");
+                $("#giftcardPIN").removeAttr("name");
+                $('#SC-GiftCard-Details').submit();
+              }
+              else
+              {
+                $('#SC-GiftCard-Details').submit();
+              }
+            }
+
+            if ($(this).attr("id") == "SC-financing")
+            {
+              //Start loader 
+              var paymentStatus = paymentBC.GetFieldValue('SC Payment Status');
+              if (paymentStatus == "Need Verbal Authorization")
+              {
+                $("#giftcardNumber").removeAttr("name");
+                $("#giftcardPIN").removeAttr("name");
+                $("#sc-finance-Details").submit();
+              }
+              else
+              {
+                $("#sc-finance-Details").submit();
+              }
+            }
+
+            if ($(this).attr("id") == "SC-accounting")
+            {
+              //Start loader 
+              $("#sc-Accounting-Details").submit();
+            }
+
+            if ($(this).attr("id") == "SC-reward")
+            {
+              //Start loader 
+              //code for get the reward Amount
+              if ($("#sc-reward-type-input").val() != "")
+              {
+                var Input = SiebelApp.S_App.NewPropertySet();
+                var Output = SiebelApp.S_App.NewPropertySet();
+                Input.SetProperty("BO", "Contact");
+                Input.SetProperty("BC", "LOY Voucher");
+                Input.SetProperty("SearchSpecification", "Voucher Number ='" + $("#sc-reward-type-input").val() + "'");
+                var fieldsArray_new = "Product Name,Voucher Number";
+                Input.SetProperty("FieldsArray", fieldsArray_new);
+                var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+                Output = Custom_Service.InvokeMethod("Query", Input);
+
+                var Child = Output.GetChild(0);
+                var BS_Data = Child.GetProperty("OutputRecordSet");
+                BS_Data = JSON.parse(BS_Data);
+                var prod_id = BS_Data["Product Name"];
+                //Added code for defect 684 and 685
+                rewardAMT = parseFloat(prod_id);
+              }
+              $("#sc-Innercricle-Details").submit();
+            }
+
+            if ($(this).attr("id") == "SC-cash")
+            {
+              //Start loader 
+              $("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                var cashPayment = $("#cashPaymentDue").val();
+                var defaultTxnAmount = paymentBC.GetFieldValue("Transaction Amount");
+                //var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                /*var depositAtStore = $('input[name="ch-dep-str"]:checked').val();
+								  if (depositAtStore == "on") {
+                                    paymentBC.SetFieldValue("SC Deposited at Store", "Y");
+                                } else {
+                                    paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                                }*/
+                cashOverDue = cashPayment - defaultTxnAmount;
+                //var machineInfo = SiebelApp.S_App.GetProfileAttr('MachineInfo');
+                SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                //10042018:Vamsi: for cash over due-amountPay
+                if (cashOverDue >= 0)
+                {
+                  paymentBC.SetFieldValue("Transaction Amount", defaultTxnAmount);
+                }
+                else
+                {
+                  paymentBC.SetFieldValue("Transaction Amount", cashPayment);
+                }
+                //paymentBC.SetFieldValue("Machine Name", machineInfo);
+                if (paySCStoreUser == 'Y')
+                {
+                  machineInfo = "";
+                  machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                  if (machineInfo == "" || machineInfo == undefined)
+                  {
+                    paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                  }
+                  else
+                  {
+                    paymentBC.SetFieldValue("Machine Name", machineInfo);
+                  }
+
+                }
+                //07042018:VAMSI:for #674
+                selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                if (canWrite)
+                {
+                  var write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                }
+                $("td[title='" + selectedPaymentRowId + "']").click();
+                var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                SiebelJS.Log("CanInvoke of Auth..:" + caninvoke);
+                if (caninvoke)
+                {
+                  pm.ExecuteMethod("InvokeMethod", "Authorize", null, false);
+                  if (paymentBC.GetFieldValue("SC Payment Status") === "Authorized")
+                  {
+                    if (cashOverDue > 0)
+                    {
+                      cashOverDue = Number(cashOverDue).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+                      SiebelJS.Log("Cash Over Due..:" + cashOverDue);
+                      $("#changeBackOk").click(function ()
+                      {
+                        $("#SC-SO-Cash-Overdue").modal('hide');
+                      });
+                      $("#SC-SO-Cash-Overdue").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#cashTaken").text("$" + cashPayment);
+                      $("#changeBackText").text("$" + cashOverDue);
+                    }
+                    SCOUIMethods.OpenCashDrawer();
+                    if (paymentBC.GetFieldValue("SC Payment Status") == "Authorized" && paySCStoreUser == "Y")
+                    {
+                      paymentBC.SetFieldValue("SC Deposited at Store", "Y");
+                      selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                      var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                      if (canWrite)
+                      {
+                        SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                      }
+                      $("td[title='" + selectedPaymentRowId + "']").click();
+                    }
+                  }
+
+                }
+                else
+                {
+                  $("#unatuhOk").click(function ()
+                  {
+                    $("#SC-CalFreigthMsg").modal('hide');
+                  });
+                  $("#SC-CalFreigthMsg").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                }
+                newRecord = false;
+                $(".active-tab").each(function ()
+                {
+                  $('#' + this.id).removeClass("active-tab");
+                });
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+
+          });
+          //Start:submit handler for Financing
+          $("#sc-finance-Details").validate(
+          {
+            rules:
+            {
+              FINAmt:
+              {
+                min: 0.001,
+              },
+              FINAcc:
+              {
+                required: true,
+                minlength: function ()
+                {
+                  return (financelen);
+                },
+                maxlength: function ()
+                {
+                  return (financelen);
+                },
+              },
+            },
+            messages:
+            {
+              FINAmt:
+              {
+                min: errorCodes.SC_INVALID_PaymentAmount,
+                minlength: SC_FINANCEACCNUMBERLEN,
+                maxlength: SC_FINANCEACCNUMBERLEN,
+              },
+              FINAcc:
+              {
+                required: errorCodes.SC_REQUIRED_ACCOUNTNUMBER
+              }
+            },
+            tooltip_options:
+            {
+              FINAmt:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              FINAcc:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+            },
+            submitHandler: function (form)
+            {
+              $("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                // Vamsi : #664 Verbal Auth
+                var paymentStatus = paymentBC.GetFieldValue('SC Payment Status');
+                if (paymentStatus != "Authorized" && paymentStatus != "Entered")
+                {
+                  var finAuthCode = $("#FinanceAuthCode").val();
+                  if (finAuthCode != null && finAuthCode != undefined && finAuthCode != "")
+                  {
+                    var accountNumber = $("#financeaccountnumber").val();
+                    var financePaymentDue = $("#financePaymentDue").val();
+                    SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                    var adminMode = paymentBC.InvokeMethod("SetAdminMode", true);
+                    paymentBC.SetFieldValue("Transaction Amount", financePaymentDue);
+                    paymentBC.SetFieldValue("Account Number", accountNumber);
+                    paymentBC.SetFieldValue("Authorization Code", finAuthCode);
+                    //paymentBC.SetFieldValue("Machine Name", machineInfo);
+                    if (paySCStoreUser == 'Y')
+                    {
+                      machineInfo = "";
+                      machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                      if (machineInfo == "" || machineInfo == undefined)
+                      {
+                        paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                      }
+                      else
+                      {
+                        paymentBC.SetFieldValue("Machine Name", machineInfo);
+                      }
+
+                    }
+                    //paymentBC.SetFieldValue("Manual Authorization Flag", "Y");
+                    paymentBC.SetFieldValue("SC Payment Status", "Authorized");
+                    selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                    var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                    if (canWrite)
+                    {
+                      var write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                      $("td[title='" + selectedPaymentRowId + "']").click();
+                    }
+                    if (paymentBC.GetFieldValue("SC Payment Status") == "Authorized")
+                    {
+                      paymentBC.SetFieldValue("Manual Authorization Flag", "Y");
+                      var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                      if (canWrite)
+                      {
+                        SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                      }
+                      $("td[title='" + selectedPaymentRowId + "']").click();
+                    }
+                  }
+                }
+                else
+                {
+                  var accountNumber = $("#financeaccountnumber").val();
+                  var financePaymentDue = $("#financePaymentDue").val();
+                  SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                  var adminMode = paymentBC.InvokeMethod("SetAdminMode", true);
+                  paymentBC.SetFieldValue("Account Number", accountNumber);
+                  SiebelJS.Log("Account Number..:" + paymentBC.GetFieldValue("Account Number"));
+                  paymentBC.SetFieldValue("Transaction Amount", financePaymentDue);
+                  //paymentBC.SetFieldValue("Machine Name", machineInfo);
+                  if (paySCStoreUser == 'Y')
+                  {
+                    machineInfo = "";
+                    machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                    if (machineInfo == "" || machineInfo == undefined)
+                    {
+                      paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                    }
+                    else
+                    {
+                      paymentBC.SetFieldValue("Machine Name", machineInfo);
+                    }
+
+                  }
+                  SiebelJS.Log("Transaction Amount..:" + paymentBC.GetFieldValue("Transaction Amount"));
+                  var write = false;
+                  selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                  var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                  if (canWrite)
+                  {
+                    write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                  }
+                  if (write)
+                  {
+                    newRecord = false;
+                    $("td[title='" + selectedPaymentRowId + "']").click();
+                    var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                    SiebelJS.Log("CanInvoke of Auth..:" + caninvoke);
+                    if (caninvoke)
+                    {
+
+                      pm.ExecuteMethod("InvokeMethod", "Authorize", null, false);
+                    }
+                    else
+                    {
+                      $("#unatuhOk").click(function ()
+                      {
+                        $("#SC-CalFreigthMsg").modal('hide');
+                      });
+                      $("#SC-CalFreigthMsg").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                    }
+                  }
+                }
+
+                var Input = SiebelApp.S_App.NewPropertySet();
+                var Output = SiebelApp.S_App.NewPropertySet();
+                Input.SetProperty("BO", "Order Entry (Sales)");
+                Input.SetProperty("BC", "Payments");
+                var sSearchExpr = "[Order Id] = '" + orderId + "' AND [SC Stack with Discount] = 'N' AND [Payment Method] = 'Financing' AND ([SC Payment Status] = 'Authorized' OR [SC Payment Status] = 'Entered' OR [SC Payment Status] = 'Partially Settled' OR [SC Payment Status] = 'Settled')"
+                Input.SetProperty("SearchSpecification", sSearchExpr);
+                var fieldsArray_new = "Id,SC Payment Status,Payment Method";
+                Input.SetProperty("FieldsArray", fieldsArray_new);
+                Input.SetProperty("SortSpecification", "");
+                Input.SetProperty("ReqNoOfRecords", "");
+                var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+                Output = Custom_Service.InvokeMethod("Query", Input);
+                var Child = Output.GetChild(0);
+                var BS_Data = Child.GetProperty("OutputRecordSet");
+                if (BS_Data == "}")
+                {
+
+                  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Stack Disc Flag", "Y");
+
+                  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+
+                  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetBusComp().InvokeMethod("RefreshBusComp");
+
+                  var canInvokeRePrice = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "CalculatePriceAll");
+                  if (canInvokeRePrice)
+                  {
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].InvokeMethod("CalculatePriceAll");
+                  }
+
+                  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetBusComp().InvokeMethod("RefreshBusComp");
+
+                  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Freight Calculated Flag", "Y");
+
+                  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().InvokeMethod("RefreshRecord");
+
+                  var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
+                  if (canInvokeCalculate)
+                  {
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].InvokeMethod("SC Calculate Shipping");
+                  }
+
+                  var canInvokeVerify = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "QuotesAndOrdersValidate");
+                  if (canInvokeVerify)
+                  {
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("QuotesAndOrdersValidate");
+                  }
+                }
+
+                var inPS = SiebelApp.S_App.NewPropertySet();
+                var outPS = SiebelApp.S_App.NewPropertySet();
+                var bService = "";
+                inPS.SetProperty("OrderId", orderId);
+                SiebelJS.Log("Invoking Business Service");
+                bService = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
+                outPS = bService.InvokeMethod("Query", inPS); //invoke the method
+                var shippingcost = outPS.GetChild(0).GetProperty("Shipping cost");
+                var shippinglinediscounts = outPS.GetChild(0).GetProperty("Shipping Line Discounts");
+                var summaryMarkup = SCOUIMethods.OrderSummary(orderPM, shippingcost, shippinglinediscounts);
+
+                $("#SC-Order-Summary").html(summaryMarkup);
+
+
+                $("#SC-finance-payment").text("Select");
+                $(".active-tab").each(function ()
+                {
+                  $('#' + this.id).removeClass("active-tab");
+                });
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+          });
+          //End:submit handler for Financing
+          //Start:submit handler for Accounting
+          $("#sc-Accounting-Details").validate(
+          {
+            rules:
+            {
+              ACCPayAmt:
+              {
+                min: 0.001,
+              }
+            },
+            messages:
+            {
+              ACCPayAmt:
+              {
+                min: errorCodes.SC_INVALID_PaymentAmount
+              }
+            },
+            tooltip_options:
+            {
+              ACCPayAmt:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              }
+
+            },
+            submitHandler: function (form)
+            {
+              $("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                var amountPay = $("#accountPaymentDue").val();
+                SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                paymentBC.SetFieldValue("Transaction Amount", amountPay);
+                //paymentBC.SetFieldValue("Machine Name", machineInfo);
+                if (paySCStoreUser == 'Y')
+                {
+                  machineInfo = "";
+                  machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                  if (machineInfo == "" || machineInfo == undefined)
+                  {
+                    paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                  }
+                  else
+                  {
+                    paymentBC.SetFieldValue("Machine Name", machineInfo);
+                  }
+
+                }
+                var write = false;
+                selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                if (canWrite)
+                {
+                  write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                }
+                $("td[title='" + selectedPaymentRowId + "']").click();
+                var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                SiebelJS.Log("CanInvoke of Auth..:" + caninvoke);
+                if (caninvoke)
+                {
+                  pm.ExecuteMethod("InvokeMethod", "Authorize", null, false);
+                }
+                else
+                {
+                  $("#unatuhOk").click(function ()
+                  {
+                    $("#SC-CalFreigthMsg").modal('hide');
+                  });
+                  $("#SC-CalFreigthMsg").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                }
+                newRecord = false;
+                $(".active-tab").each(function ()
+                {
+                  $('#' + this.id).removeClass("active-tab");
+                });
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+
+          });
+          //End:submit handler for Accounting
+          //Start:submit handler for inner circle reward
+          $("#sc-Innercricle-Details").validate(
+          {
+            rules:
+            {
+              SCInnRWD:
+              {
+                required: true,
+              },
+              INNAccNum:
+              {
+                required: true,
+              },
+              INNPayAmt:
+              {
+                min: 0.001,
+                max: function ()
+                {
+                  return (rewardAMT);
+                },
+              }
+            },
+            messages:
+            {
+              SCInnRWD:
+              {
+                required: errorCodes.SC_REQUIRED_INNERCRICLEREWARD
+              },
+              INNAccNum:
+              {
+                required: errorCodes.SC_INNERCRICLEREWARD
+              },
+              INNPayAmt:
+              {
+                min: errorCodes.SC_INVALID_PaymentAmount,
+                max: errorCodes.SC_REWARD_AMOUNT
+              }
+            },
+            tooltip_options:
+            {
+              SCInnRWD:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              INNAccNum:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              INNPayAmt:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              }
+
+            },
+            submitHandler: function (form)
+            {
+              $("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                var amountPay = $("#rewardPaymentDue").val();
+                //var rewardType = $('#sc-reward-type-input').val();
+                SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                paymentBC.SetFieldValue("Transaction Amount", amountPay);
+                //paymentBC.SetFieldValue("Machine Name", machineInfo);
+                if (paySCStoreUser == 'Y')
+                {
+                  machineInfo = "";
+                  machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                  if (machineInfo == "" || machineInfo == undefined)
+                  {
+                    paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                  }
+                  else
+                  {
+                    paymentBC.SetFieldValue("Machine Name", machineInfo);
+                  }
+
+                }
+                //paymentBC.SetFieldValue("Transaction Amount", rewardType);
+                var write = false;
+                selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                if (canWrite)
+                {
+                  write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                }
+                $("td[title='" + selectedPaymentRowId + "']").click();
+                var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                SiebelJS.Log("CanInvoke of Auth..:" + caninvoke);
+                if (caninvoke)
+                {
+                  pm.ExecuteMethod("InvokeMethod", "Authorize", null, false);
+                }
+                else
+                {
+                  $("#unatuhOk").click(function ()
+                  {
+                    $("#SC-CalFreigthMsg").modal('hide');
+                  });
+                  $("#SC-CalFreigthMsg").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                }
+                newRecord = false;
+                $(".active-tab").each(function ()
+                {
+                  $('#' + this.id).removeClass("active-tab");
+                });
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+
+          });
+          //End:submit handler for inner circle reward
+          //start:on click of Authorize button in check
+          $("#sc-check-Details").validate(
+          {
+            rules:
+            {
+              checkbankacc:
+              {
+                required: true,
+              },
+              checkbankrouting:
+              {
+                required: true,
+              },
+              scchecknumber:
+              {
+                required: true,
+              },
+              checkdrivinglic:
+              {
+                required: true,
+                regex: /^[A-Za-z0-9]+$/
+              },
+              checkdrivinglicstate:
+              {
+                required: true,
+              },
+              checkDOB:
+              {
+                required: true,
+              },
+              transamt:
+              {
+                //max: 6000.00,
+                min: 0.001,
+              }
+            },
+            messages:
+            {
+              checkbankacc:
+              {
+                required: errorCodes.SC_REQUIRED_ACCOUNTNUMBER
+              },
+              checkbankrouting:
+              {
+                required: errorCodes.SC_REQUIRED_BANKROUTING
+              },
+              scchecknumber:
+              {
+                required: errorCodes.SC_REQUIRED_CHECKNUMBER
+              },
+              checkdrivinglic:
+              {
+                required: errorCodes.SC_REQUIRED_DRIVINGLICENSE,
+                regex: errorCodes.SC_REGEX_DRIVINGLICENSE
+              },
+              checkdrivinglicstate:
+              {
+                required: errorCodes.SC_REQUIRED_DRIVINGLICENSESTATE
+              },
+              checkDOB:
+              {
+                required: errorCodes.SC_REQUIRED_DOB
+              },
+              transamt:
+              {
+                max: errorCodes.SC_TRANSCATION_AMOUNT,
+                min: errorCodes.SC_INVALID_PaymentAmount
+              }
+            },
+            tooltip_options:
+            {
+              checkbankacc:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              checkbankrouting:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              scchecknumber:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              checkdrivinglic:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              checkdrivinglicstate:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              transamt:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              checkDOB:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              }
+            },
+            submitHandler: function (form)
+            {
+              $("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                var bankaccountnumber = $("#bankaccountnumber").val();
+                var checknumber = $("#checknumber").val();
+                var bankrouting = $("#bankrouting").val();
+                var driverlicence = $("#driverlicence").val();
+                var driverlicencestate = $("#driverlicencedate").val();
+                var checkPaymentDue = $("#checkPaymentDue").val();
+                var Paymentmethod = $("#Payment-method").val();
+                var DOBVALUE = $("#DOB-img").val();
+                var checkPaymentDue = $("#checkPaymentDue").val();
+                var depositAtStore = $('input[name="ck-dep-str"]:checked').val();
+
+                SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                paymentBC.SetFieldValue("SC Bank Account Number", bankaccountnumber);
+                paymentBC.SetFieldValue("SC Check Number", checknumber);
+                paymentBC.SetFieldValue("SC Bank Routing Num", bankrouting);
+                paymentBC.SetFieldValue("SC Drivers License Number", driverlicence);
+                paymentBC.SetFieldValue("SC Drivers License State", driverlicencestate);
+                paymentBC.SetFieldValue("SC Date Of Birth", DOBVALUE);
+                paymentBC.SetFieldValue("Transaction Amount", checkPaymentDue);
+                // paymentBC.SetFieldValue("Machine Name", machineInfo);
+                if (paySCStoreUser == 'Y')
+                {
+                  machineInfo = "";
+                  machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                  if (machineInfo == "" || machineInfo == undefined)
+                  {
+                    paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                  }
+                  else
+                  {
+                    paymentBC.SetFieldValue("Machine Name", machineInfo);
+                  }
+
+                }
+                /*if (depositAtStore == "on") {
+                    paymentBC.SetFieldValue("SC Deposited at Store", "Y");
+                } else {
+                    paymentBC.SetFieldValue("SC Deposited at Store", "N");
+                }*/
+                // var storeuser = "";
+                //storeuser = SiebelApp.S_App.GetProfileAttr("SC Store User");
+                if (paySCStoreUser === 'Y')
+                {
+                  var write = false;
+                  selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                  var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                  if (canWrite)
+                  {
+                    write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                  }
+                  $("td[title='" + selectedPaymentRowId + "']").click();
+                }
+                var IDTypeCode = driverlicencestate;
+                var IDNumber = driverlicence;
+                SiebelJS.Log("Write..:" + write);
+                $("td[title='" + selectedPaymentRowId + "']").click();
+                var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                SiebelJS.Log("CanInvoke of Auth..:" + caninvoke);
+                if (caninvoke)
+                {
+                  if (paySCStoreUser == 'Y')
+                  {
+
+                    if ($("#SC-check-payment").text() == "CC")
+                    {
+                      $("#sc-cashier-check-popup").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#sc-cashier-check-popup").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                      $(".modal-backdrop").css('background', '#ffffff');
+                      paymentBC.SetFieldValue("SC Payment Status", "Authorized");
+                    }
+                    else
+                    {
+                      pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+                      var AccessToken = SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+                      //var TokenSerialNumber = "404077";
+                      var CustomerRef = paymentBC.GetFieldValue("SC Contact Id");
+                      var empNum = paymentBC.GetFieldValue("SC Emp Num");
+                      //SiebelJS.Log("CustomerRef" + CustomerRef);
+                      //SiebelJS.Log("empNum" + empNum);
+                      //var terminalID = SiebelApp.S_App.GetProfileAttr('IP');
+                      //var balance = $('#giftbeforeactivate').text();
+                      pm.SetProperty("CheckAccountNumber", bankaccountnumber);
+                      pm.SetProperty("CheckDOB", DOBVALUE);
+                      pm.SetProperty("AccessToken", AccessToken);
+                      //pm.SetProperty("TokenSerialNumber", TokenSerialNumber);
+                      //pm.SetProperty("TerminalID", terminalID);
+                      pm.SetProperty("ManualCheckNumber", checknumber);
+                      pm.SetProperty("TransitRoutingNumber", bankrouting);
+                      pm.SetProperty("IDTypeCode", IDTypeCode);
+                      pm.SetProperty("IDNumber", IDNumber);
+                      pm.SetProperty("Clerk", empNum);
+                      pm.SetProperty("CheckAmount", checkPaymentDue);
+                      pm.SetProperty("CustomerReference", CustomerRef);
+                      pm.SetProperty("ObjectId", paymentBC.GetFieldValue("Id"));
+                      pm.OnControlEvent("SC_CHECK_AUTHORIZE");
+                    }
+
+                    if (paymentBC.GetFieldValue("SC Payment Status") == "Authorized")
+                    {
+                      paymentBC.SetFieldValue("SC Deposited at Store", "Y");
+                      selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                      var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                      if (canWrite)
+                      {
+                        SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                      }
+                      $("td[title='" + selectedPaymentRowId + "']").click();
+                    }
+                  }
+                  else
+                  {
+                    pm.ExecuteMethod("InvokeMethod", "Authorize", null, false);
+                  }
+                }
+                else
+                {
+                  $("#unatuhOk").click(function ()
+                  {
+                    $("#SC-CalFreigthMsg").modal('hide');
+                  });
+                  $("#SC-CalFreigthMsg").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                }
+                newRecord = false;
+                notCommited = false;
+                $(".active-tab").each(function ()
+                {
+                  $('#' + this.id).removeClass("active-tab");
+                });
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+
+          });
+          //End:on click of Authorize button in Check
+          //start:on click of Authorize button in Credit-Card
+          $("#creditCardDetails").validate(
+          {
+            rules:
+            {
+              creditCardNum:
+              {
+                required: true,
+                maxlength: 20
+              },
+              creditcvv:
+              {
+                required: true,
+              },
+              creditExpMonth:
+              {
+                required: true,
+                maxlength: 2
+              },
+              creditExpYear:
+              {
+                required: true,
+                maxlength: 4
+              },
+              creditAmount:
+              {
+                required: true,
+                min: 0.001
+              }
+            },
+            messages:
+            {
+              creditCardNum:
+              {
+                required: errorCodes.SC_INVALID_CCNumber,
+              },
+              creditcvv:
+              {
+                required: errorCodes.SC_INVALID_CVV,
+              },
+              creditExpMonth:
+              {
+                required: errorCodes.SC_INVALID_ExpMonth,
+              },
+              creditExpYear:
+              {
+                required: errorCodes.SC_INVALID_ExpYear,
+              },
+              creditAmount:
+              {
+                required: errorCodes.SC_INVALID_PaymentAmount,
+                min: errorCodes.SC_INVALID_PaymentAmount
+              }
+            },
+            tooltip_options:
+            {
+              creditCardNum:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              creditcvv:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              creditExpMonth:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              creditExpYear:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              creditAmount:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              }
+            },
+            submitHandler: function (form)
+            {
+              $("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                // Vamsi : #664 Verbal Auth
+                var paymentStatus = paymentBC.GetFieldValue('SC Payment Status');
+                if (paymentStatus == "Need Verbal Authorization")
+                {
+                  var ccAuthCode = $("#CCAuthCode").val();
+                  if (ccAuthCode != null && ccAuthCode != undefined && ccAuthCode != "")
+                  {
+                    paymentBC.SetFieldValue("Authorization Code", ccAuthCode);
+                    //paymentBC.SetFieldValue("Machine Name", machineInfo);
+                    if (paySCStoreUser == 'Y')
+                    {
+                      machineInfo = "";
+                      machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                      if (machineInfo != "" || machineInfo != undefined)
+                      {
+                        paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                      }
+                      else
+                      {
+                        paymentBC.SetFieldValue("Machine Name", machineInfo);
+                      }
+
+                    }
+                    //paymentBC.SetFieldValue("Manual Authorization Flag", "Y");
+                    selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                    var write = false;
+                    var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                    if (canWrite)
+                    {
+                      write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                      var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                    }
+                    $("td[title='" + selectedPaymentRowId + "']").click();
+                  }
+                }
+                if (paymentStatus == "Need Verbal Authorization" && P2PEFlag != "Y")
+                {
+                  pm.SetProperty("PreStatus", "Need Verbal Authorization");
+                  var ccAuthCode = $("#CCAuthCode").val();
+                  if (ccAuthCode != null && ccAuthCode != undefined && ccAuthCode != "")
+                  {
+                    $("td[title='" + selectedPaymentRowId + "']").click();
+                    var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                    if (caninvoke)
+                    {
+                      //var isStoreUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                      if (paySCStoreUser == "Y")
+                      {
+                        pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+                        var AccessToken = SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+                        pm.SetProperty("AccessToken", AccessToken);
+                        pm.SetProperty("FunctionCode", "05");
+                        pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+                        pm.OnControlEvent("SU_AUTHORIZE_PAYMENT_LINE");
+                      }
+                      else
+                      {
+                        pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+                        pm.OnControlEvent("CC_NEED_VERBAL_AUTH");
+                      }
+                      if (pm.Get("PreStatus") == "Need Verbal Authorization")
+                      {
+                        if (paymentBC.GetFieldValue("SC Payment Status") == "Authorized")
+                        {
+                          paymentBC.SetFieldValue("Manual Authorization Flag", "Y");
+                          selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                          var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                          if (canWrite)
+                          {
+                            SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                          }
+                          $("td[title='" + selectedPaymentRowId + "']").click();
+                        }
+                        pm.SetProperty("PreStatus", "");
+                      }
+                      $("#SC-CreditCard").removeClass("SC-disabled");
+                    }
+                  }
+                }
+                else
+                {
+                  var amountPay = $("#creditPaymentDue").val();
+                  if ((P2PEFlag != "Y") && (sChatUser != "Y") && (sVoiceUser != "Y"))
+                  {
+                    var cardNumber = $("#Creditcard-Number").val();
+                    var cvv = $("#creditCVV").val();
+                    var expMonth = $("#creditExpM").val();
+                    var expYear = $("#creditExpY").val();
+                    if (paySCStoreUser != "Y")
+                    {
+                      var payType = $("#SC-credit-payment").text();
+                    }
+                    SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                    paymentBC.SetFieldValue("SC Credit Card Number", cardNumber);
+                    paymentBC.SetFieldValue("SC CVV Number", cvv);
+                    paymentBC.SetFieldValue("SC Expiration Month", expMonth);
+                    paymentBC.SetFieldValue("Expiration Year", expYear);
+                  }
+                  var total = orderBC.GetFieldValue("Order Total");
+                  SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                  paymentBC.SetFieldValue("Transaction Amount", amountPay);
+                  if (paySCStoreUser == 'Y' && sChatUser != 'Y' && sVoiceUser != 'Y')
+                  {
+                    machineInfo = "";
+                    machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                    if (machineInfo == "" || machineInfo == undefined)
+                    {
+                      paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                    }
+                    else
+                    {
+                      paymentBC.SetFieldValue("Machine Name", machineInfo);
+                    }
+                  }
+                  var write = false;
+                  selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                  var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                  if (canWrite)
+                  {
+                    write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                  }
+                  $("td[title='" + selectedPaymentRowId + "']").click();
+                  var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                  SiebelJS.Log("CanInvoke of Auth..:" + caninvoke);
+                  if (caninvoke)
+                  {
+                    pm.SetProperty("PaymentMethod", paymentBC.GetFieldValue("Payment Method"));
+                    pm.SetProperty("CreditCardType", paymentBC.GetFieldValue("SC Payment Type Code"));
+                    pm.SetProperty("PaymentAmount", amountPay);
+                    pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+                    pm.SetProperty("AccountNumber", paymentBC.GetFieldValue("Account Number"));
+                    pm.SetProperty("PaymentStatus", paymentBC.GetFieldValue("SC Payment Status"));
+                    pm.SetProperty("AuthorizationCode", paymentBC.GetFieldValue("Authorization Code"));
+                    pm.SetProperty("SCOrderTotal", total);
+                    if (paySCStoreUser == 'Y' && sChatUser != 'Y' && sVoiceUser != 'Y')
+                    {
+                      pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+                      var AccessToken = SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+                      pm.SetProperty("AccessToken", AccessToken);
+                      pm.SetProperty("FunctionCode", "");
+                      if (P2PEFlag == "Y" && paymentStatus != "Need Verbal Authorization")
+                      {
+                        //AKSHAY added if-else for MKE.
+                        if (MKESwitchFlag == "Y")
+                        {
+                          $("#custommaskoverlay").show();
+                          $("#SC-P2PE-Auth-MKE").modal(
+                          {
+                            backdrop: 'static'
+                          });
+                          $("#SC-P2PE-Auth-MKE").css(
+                          {
+                            "display": "flex",
+                            "justify-content": "center",
+                            "align-items": "center"
+                          });
+                          $(".modal-backdrop").css('background', '#ffffff');
+                        }
+                        else
+                        {
+                          $("#custommaskoverlay").show();
+                          $("#SC-P2PE-Auth").modal(
+                          {
+                            backdrop: 'static'
+                          });
+                          $("#SC-P2PE-Auth").css(
+                          {
+                            "display": "flex",
+                            "justify-content": "center",
+                            "align-items": "center"
+                          });
+                          $(".modal-backdrop").css('background', '#ffffff');
+                        }
+
+                      }
+
+
+                      setTimeout(function ()
+                      {
+                        pm.OnControlEvent("SU_AUTHORIZE_PAYMENT_LINE");
+                      }, 1000);
+                    }
+                    else
+                    {
+                      //START: SPATIBAN: SEPT:Added Secure Payments for CC and GC
+                      if (sVoiceStoreUser == "Y")
+                      {
+                        var machineInfo = "";
+                        machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                        if (machineInfo == "" || machineInfo == undefined)
+                        {
+                          paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                        }
+                        else
+                        {
+                          paymentBC.SetFieldValue("Machine Name", machineInfo);
+                        }
+                        paymentBC.SetFieldValue("SN Phone Payment", "Y");
+                        var write = false;
+                        selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                        var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                        if (canWrite)
+                        {
+                          write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                        }
+                        $("td[title='" + selectedPaymentRowId + "']").click();
+                        pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+                        var AccessToken = SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+                        pm.SetProperty("AccessToken", AccessToken);
+                        pm.SetProperty("FunctionCode", "");
+                        pm.OnControlEvent("CS_AUTHORIZE_BUTTON_CLICK");
+
+                      }
+                      else
+                      {
+                        pm.SetProperty("CalcCreditCardNumber", cardNumber);
+                        pm.SetProperty("CalcCVVNumber", cvv);
+                        pm.SetProperty("CalcExpMonth", expMonth);
+                        pm.SetProperty("CalcExpYear", expYear);
+                        pm.OnControlEvent("CS_AUTHORIZE_BUTTON_CLICK");
+                      }
+                    }
+                    $("#SC-CreditCard").removeClass("SC-disabled");
+                  }
+                  else
+                  {
+                    /*$("#unatuhOk").click(function() {
+                        $("#SC-CalFreigthMsg").modal('hide');
+                    });
+                    $("#SC-CalFreigthMsg").modal({
+                        backdrop: 'static'
+                    });*/
+                    console.log("Not able to do Authorize");
+                  }
+                }
+                notCommited = false;
+                newRecord = false;
+                $(".active-tab").each(function ()
+                {
+                  $('#' + this.id).removeClass("active-tab");
+                });
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+
+          });
+          //End:on click of Authorize button in Credit-Card
+
+          //start:on click of Authorize button in Credit-Card
+          $("#SC-GiftCard-Details").validate(
+          {
+            rules:
+            {
+              giftcardNumber:
+              {
+                required:
+                {
+                  depends: function ()
+                  {
+                    var bSecurePayment = $("#SN-store-SceureCheck").is(":checked");
+                    if (giftCardFlag == "Y" && (bSecurePayment || sVoiceUser == "Y" || sChatUser == "Y"))
+                      return true;
+                    else
+                      return false;
+
+
+                  }
+
+
+                },
+                minlength: (
+                  function ()
+                  {
+                    if (giftCardFlag == "Y")
+                      return 16
+                    else
+                      return 0
+                  }
+
+                )(),
+                maxlength: (
+                  function ()
+                  {
+                    if (giftCardFlag == "Y")
+                      return 16
+                    else
+                      return 20
+                  }
+
+                )()
+
+
+              },
+              giftcardPIN:
+              {
+                required:
+                {
+                  depends: function ()
+                  {
+                    var bSecurePayment = $("#SN-store-SceureCheck").is(":checked");
+                    if (giftCardFlag == "Y" && (bSecurePayment || sVoiceUser == "Y" || sChatUser == "Y"))
+                      return true;
+                    else
+                      return false;
+
+
+                  }
+
+                },
+                minlength: (
+                  function ()
+                  {
+                    if (giftCardFlag == "Y")
+                      return 4
+                    else
+                      return 0
+                  }
+
+                )(),
+                maxlength: 4
+              },
+              giftPaymentDue:
+              {
+                required: true,
+                min: 0.001
+              }
+            },
+            messages:
+            {
+              giftcardNumber:
+              {
+                required: errorCodes.SC_INVALID_GCNumber,
+                minlength: 'Please Enter The 16 digit Gift Card Number',
+                maxlength: 'Please Enter The 16 digit Gift Card Number'
+              },
+              giftcardPIN:
+              {
+                required: errorCodes.SC_INVALID_PIN,
+                minlength: 'Please Enter The 4 digit Gift Card Pin Number',
+                maxlength: 'Please Enter The 4 digit Gift Card Pin Number'
+              },
+              giftPaymentDue:
+              {
+                required: errorCodes.SC_INVALID_PaymentAmount,
+                min: errorCodes.SC_INVALID_PaymentAmount
+              }
+            },
+            tooltip_options:
+            {
+              giftcardNumber:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              giftcardPIN:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              giftPaymentDue:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              }
+            },
+            submitHandler: function (form)
+            {
+              $("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                // Vamsi : #664 Verbal Auth
+                var paymentStatus = paymentBC.GetFieldValue('SC Payment Status');
+                if (paymentStatus == "Need Verbal Authorization")
+                {
+                  pm.SetProperty("PreStatus", "Need Verbal Authorization");
+                  var gcAuthCode = $("#GCAuthCode").val();
+                  if (gcAuthCode != null && gcAuthCode != undefined && gcAuthCode != "")
+                  {
+                    //paymentBC.SetFieldValue("Manual Authorization Flag", "Y");
+                    paymentBC.SetFieldValue("Authorization Code", gcAuthCode);
+                    //paymentBC.SetFieldValue("Machine Name", machineInfo);
+                    if (paySCStoreUser == 'Y')
+                    {
+                      machineInfo = "";
+                      machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                      if (machineInfo == "" || machineInfo == undefined)
+                      {
+                        paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                      }
+                      else
+                      {
+                        paymentBC.SetFieldValue("Machine Name", machineInfo);
+                      }
+
+                    }
+                    var write = false;
+                    selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                    var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                    if (canWrite)
+                    {
+                      write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                    }
+                    $("td[title='" + selectedPaymentRowId + "']").click();
+                    var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                    if (caninvoke)
+                    {
+                      //var isStoreUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                      if (paySCStoreUser == "Y")
+                      {
+                        pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+                        var AccessToken = SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+                        pm.SetProperty("AccessToken", AccessToken);
+                        pm.SetProperty("FunctionCode", "05");
+                        pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+                        pm.OnControlEvent("SU_AUTHORIZE_PAYMENT_LINE");
+                      }
+                      else
+                      {
+                        pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+                        pm.OnControlEvent("CC_NEED_VERBAL_AUTH");
+                      }
+                      if (pm.Get("PreStatus") == "Need Verbal Authorization")
+                      {
+                        if (paymentBC.GetFieldValue("SC Payment Status") == "Authorized")
+                        {
+                          paymentBC.SetFieldValue("Manual Authorization Flag", "Y");
+                          selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                          var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                          if (canWrite)
+                          {
+                            SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                          }
+                          $("td[title='" + selectedPaymentRowId + "']").click();
+                        }
+                        pm.SetProperty("PreStatus", "");
+                      }
+                      $("#SC-giftcard").removeClass("SC-disabled");
+                    }
+                  }
+                }
+                else
+                {
+                  var cardNumber = $("#giftcardNumber").val();
+                  var pin = $("#giftcardPIN").val();
+                  var amountPay = $("#giftPaymentDue").val();
+                  SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                  paymentBC.SetFieldValue("SC Credit Card Number", cardNumber);
+                  paymentBC.SetFieldValue("SC CVV Number", pin);
+                  paymentBC.SetFieldValue("Transaction Amount", amountPay);
+                  //paymentBC.SetFieldValue("Machine Name", machineInfo);
+                  if (paySCStoreUser == 'Y')
+                  {
+                    machineInfo = "";
+                    machineInfo = SCOUIMethods.SCGetProfileAttrValue('MachineInfo');
+                    if (machineInfo == "" || machineInfo == undefined)
+                    {
+                      paymentBC.SetFieldValue("Machine Name", orderBC.GetFieldValue("SC Location Store Number") + '_Other');
+                    }
+                    else
+                    {
+                      paymentBC.SetFieldValue("Machine Name", machineInfo);
+                    }
+
+                  }
+                  var write = false;
+                  selectedPaymentRowId = paymentBC.GetFieldValue('Id');
+                  var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+                  if (canWrite)
+                  {
+                    write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+                  }
+                  $("td[title='" + selectedPaymentRowId + "']").click();
+                  var caninvoke = pm.ExecuteMethod("CanInvokeMethod", "Authorize");
+                  SiebelJS.Log("CanInvoke of Auth..:" + caninvoke);
+                  if (caninvoke)
+                  {
+                    pm.SetProperty("PaymentMethod", paymentBC.GetFieldValue("Payment Method"));
+                    pm.SetProperty("GiftCardType", paymentBC.GetFieldValue("SC Payment Type Code"));
+                    if (giftCardFlag == "Y")
+                    {
+                      pm.SetProperty("CalcGiftCardNumber", cardNumber);
+                    }
+                    else
+                    {
+                      pm.SetProperty("CalcGiftCardNumber", amountPay);
+                    }
+                    pm.SetProperty("CalcPIN", pin);
+                    pm.SetProperty("PaymentAmount", amountPay);
+                    pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+                    pm.SetProperty("AccountNumber", paymentBC.GetFieldValue("Account Number"));
+                    pm.SetProperty("SCOrderTotal", orderBC.GetFieldValue("Order Total"));
+                    pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+                    var AccessToken = SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+                    pm.SetProperty("AccessToken", AccessToken);
+                    pm.SetProperty("GetGCBalanceFlag", "N");
+                    //var storeUser = SiebelApp.S_App.GetProfileAttr('SC Store User');
+                    if (paySCStoreUser == 'Y' && sChatUser != 'Y' && sVoiceUser != 'Y')
+                    {
+                      pm.SetProperty("FunctionCode", "");
+                      if (P2PEFlag == "Y" && giftCardFlag != "Y")
+                      {
+                        $("#custommaskoverlay").show();
+                        $("#SC-P2PE-Auth").modal(
+                        {
+                          backdrop: 'static'
+                        });
+                        $("#SC-P2PE-Auth").css(
+                        {
+                          "display": "flex",
+                          "justify-content": "center",
+                          "align-items": "center"
+                        });
+                        $(".modal-backdrop").css('background', '#ffffff');
+                      }
+                      setTimeout(function ()
+                      {
+                        pm.OnControlEvent("SU_AUTHORIZE_PAYMENT_LINE");
+                      }, 1000);
+                    }
+                    else
+                    {
+                      //START: SPATIBAN: SEPT:Added Secure Payments for CC and GC
+                      if (sVoiceStoreUser == "Y" && giftCardFlag != "Y")
+                      {
+                        pm.OnControlEvent("CS_AUTHORIZE_BUTTON_CLICK");
+                      }
+                      else if (giftCardFlag == "Y")
+                      {
+                        pm.SetProperty("PaymentMethod", paymentBC.GetFieldValue("Payment Method"));
+                        pm.SetProperty("GiftCardType", paymentBC.GetFieldValue("SC Payment Type Code"));
+                        pm.SetProperty("CalcGiftCardNumber", cardNumber);
+                        pm.SetProperty("CalcPIN", pin);
+                        pm.SetProperty("PaymentAmount", amountPay);
+                        pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+                        pm.OnControlEvent("SU_AUTHORIZE_PAYMENT_LINE");
+                      }
+                      else
+                      {
+                        pm.OnControlEvent("CS_AUTHORIZE_BUTTON_CLICK");
+                      }
+                    }
+                    $("#SC-giftcard").removeClass("SC-disabled");
+                  }
+                  else
+                  {
+                    console.log("Unable to authorize payment line. Button has not enabled")
+                  }
+                }
+                newRecord = false;
+                $(".active-tab").each(function ()
+                {
+                  $('#' + this.id).removeClass("active-tab");
+                });
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+          });
+          //End:on click of Authorize button in Credit-Card
+
+
+          $("#credit-hidden").change(function ()
+          {
+            var x = document.getElementById("credit-hidden");
+            var cardInfo = document.getElementById("Creditcard-Number");
+            var cardcvv = document.getElementById("creditCVV");
+            var len = x.value.length;
+            if (len < 25)
+            {
+              x.value = "";
+              document.getElementById("credit-hidden").focus();
+            }
+            else
+            {
+              $("#SC-SO-GetAuth-Token").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-GetAuth-Token").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+              var token = x.value;
+              var cardNumber = token.substring(2, 6);
+              cardNumber = "**** **** **** " + cardNumber;
+              cardInfo.value = cardNumber;
+              cardcvv.value = "***";
+              // vamsi ICX: 5APR18 : #626 Card Swipe
+              var expInfo = token.split('^');
+              expInfo = expInfo[2];
+              var year = expInfo.substring(0, 2);
+              var yearobj = document.getElementById("creditExpY");
+              yearobj.value = "20" + year;
+              var month = expInfo.substring(2, 4);
+              var monthobj = document.getElementById("creditExpM");
+              monthobj.value = month;
+              $('#credit-hidden').blur();
+
+            }
+          });
+
+          $("#Gift-hidden").change(function ()
+          {
+            var x = document.getElementById("Gift-hidden");
+            var cardInfo = document.getElementById("giftcardNumber");
+            var pin = document.getElementById("giftcardPIN");
+            var len = x.value.length;
+            if (len < 16)
+            {
+              x.value = "";
+              if (P2PEFlag != "Y")
+              {
+                document.getElementById("Gift-hidden").focus();
+              }
+            }
+            else
+            {
+              $("#SC-SO-GetAuth-Token").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-GetAuth-Token").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+              var token = x.value;
+              var cardNumber = token.substring(2, 6);
+              cardNumber = "**** **** **** " + cardNumber;
+              cardInfo.value = cardNumber;
+              pin.value = "****";
+              $('#Gift-hidden').blur();
+            }
+          });
+
+          $("#credit-hidden").blur(function ()
+          {
+            var x = document.getElementById("credit-hidden");
+            var cardInfo = document.getElementById("Creditcard-Number");
+            var cardcvv = document.getElementById("creditCVV");
+            var len = x.value.length;
+            if (len < 25)
+            {
+              x.value = "";
+              document.getElementById("credit-hidden").focus();
+            }
+            else
+            {
+              var token = x.value;
+              var cardNumber = token.substring(2, 6);
+              cardNumber = "**** **** **** " + cardNumber;
+              cardInfo.value = cardNumber;
+              cardcvv.value = "***";
+              // Vamsi ICX: 5APR18 : #626 Card Swipe
+              var expInfo = token.split('^');
+              expInfo = expInfo[2];
+              var year = expInfo.substring(0, 2);
+              var yearobj = document.getElementById("creditExpY");
+              yearobj.value = "20" + year;
+              var month = expInfo.substring(2, 4);
+              var monthobj = document.getElementById("creditExpM");
+              monthobj.value = month;
+              SiebelJS.Log("Year...:" + year);
+              SiebelJS.Log("Month..:" + month);
+              var CustomerName = firstName + " " + lastName;
+              var TrackInfo = $("#credit-hidden").val();
+              var StreetAddress = orderBC.GetFieldValue("SC Con Bill To Address") + " " + state;
+              var ZipCode = postalCode;
+              var total = orderBC.GetFieldValue("Order Total");
+              var loctionId = paymentBC.GetFieldValue("SC Sale Location Id");
+              //pm.ExecuteMethod("InvokeMethod","GetAccessToken", null, false);
+              //var AccessToken = theApplication().GetProfileAttr("SCAccessToken");
+              //var TokenSerialNumber = paymentBC.GetFieldValue("SC Shift4 API Serial Number");
+              //var AccessToken = "4B2BC0EE-D777-4D3C-A01A-011EF3D854E4";
+              //var TokenSerialNumber = "404077";
+              var PaymentId = paymentBC.GetFieldValue("Id");
+              var TerminalID = SCOUIMethods.SCGetProfileAttrValue('IP');
+              pm.SetProperty("PaymentsRowID", PaymentId);
+              pm.SetProperty("TrackInformation", TrackInfo);
+              pm.SetProperty("CustomerName", CustomerName);
+              pm.SetProperty("StreetAddress", StreetAddress);
+              pm.SetProperty("ZipCode", ZipCode);
+              pm.SetProperty("AccessToken", "");
+              pm.SetProperty("TokenSerialNumber", "");
+              pm.SetProperty("TerminalID", TerminalID);
+              x.value = "";
+              pm.OnControlEvent("SU_AUTHORIZE_BUTTON_CLICK");
+            }
+            if (P2PEFlag != "Y" && sChatUser != "Y" && sVoiceUser != "Y")
+            {
+              if (paySCStoreUser != "Y")
+              {
+                if ($("#Creditcard-Number").val() != "" && $("#creditCVV").val() != "" && ($("#creditExpM").val() != "" || $("#creditExpM").val() != null) && ($("#creditExpY").val() != null || $("#creditExpY").val() != "") && $("#creditPaymentDue").val() != "" && document.getElementById("SC-credit-payment").innerText != "Select")
+                  $("#SC-CreditCard").removeClass("SC-disabled");
+                else
+                  $("#SC-CreditCard").addClass("SC-disabled");
+              }
+              else
+              {
+                if ($("#Creditcard-Number").val() != "" && $("#creditCVV").val() != "" && ($("#creditExpM").val() != "" || $("#creditExpM").val() != null) && ($("#creditExpY").val() != null || $("#creditExpY").val() != "") && $("#creditPaymentDue").val() != "")
+                  $("#SC-CreditCard").removeClass("SC-disabled");
+                else
+                  $("#SC-CreditCard").addClass("SC-disabled");
+              }
+            }
+
+          });
+
+          $("#Gift-hidden").blur(function ()
+          {
+
+            var x = document.getElementById("Gift-hidden");
+            var cardInfo = document.getElementById("giftcardNumber");
+            var pin = document.getElementById("giftcardPIN");
+            var len = x.value.length;
+            if (len < 16)
+            {
+              x.value = "";
+              if (P2PEFlag != "Y")
+              {
+                document.getElementById("Gift-hidden").focus();
+              }
+            }
+            else
+            {
+              var token = x.value;
+              var cardNumber = token.substring(2, 6);
+              cardNumber = "**** **** **** " + cardNumber;
+              cardInfo.value = cardNumber;
+              pin.value = "****";
+              var CustomerName = firstName + " " + lastName;
+              var TrackInfo = $("#Gift-hidden").val();
+              var StreetAddress = orderBC.GetFieldValue("SC Con Bill To Address") + " " + state;
+              var ZipCode = postalCode;
+              var loctionId = paymentBC.GetFieldValue("SC Sale Location Id");
+              //var AccessToken = "4B2BC0EE-D777-4D3C-A01A-011EF3D854E4";
+              //var TokenSerialNumber = "404077";
+              //pm.ExecuteMethod("InvokeMethod","GetAccessToken", null, false);
+              //var AccessToken = theApplication().GetProfileAttr("SCAccessToken");
+              var PaymentId = paymentBC.GetFieldValue("Id");
+              var TerminalID = SCOUIMethods.SCGetProfileAttrValue('IP');
+              pm.SetProperty("PaymentsRowID", PaymentId);
+              pm.SetProperty("TrackInformation", TrackInfo);
+              pm.SetProperty("CustomerName", CustomerName);
+              pm.SetProperty("StreetAddress", StreetAddress);
+              pm.SetProperty("ZipCode", ZipCode);
+              pm.SetProperty("AccessToken", "");
+              pm.SetProperty("TokenSerialNumber", "");
+              pm.SetProperty("TerminalID", TerminalID);
+              x.value = "";
+              pm.OnControlEvent("SU_GETGC_TOKEN");
+
+            }
+
+          });
+
+          $("#giftcard-token").blur(function ()
+          {
+            var x = document.getElementById("giftcard-token");
+            var cardInfo = document.getElementById("activate-GC-Number");
+            var len = x.value.length;
+            if (len < 25)
+            {
+              x.value = "";
+              document.getElementById("giftcard-token").focus();
+            }
+            else
+            {
+              var token = x.value;
+              var cardNumber = token.substring(2, 6);
+              cardNumber = "**** **** **** " + cardNumber;
+              cardInfo.value = cardNumber;
+              var CustomerName = firstName + " " + lastName;
+              var TrackInfo = $("#giftcard-token").val();
+              pm.SetProperty("TrackInformation", TrackInfo);
+              var StreetAddress = orderBC.GetFieldValue("SC Con Bill To Address") + " " + state;
+              var ZipCode = postalCode;
+              var loctionId = paymentBC.GetFieldValue("SC Sale Location Id");
+              var PaymentId = paymentBC.GetFieldValue("Id");
+              var TerminalID = SCOUIMethods.SCGetProfileAttrValue('IP');
+              pm.SetProperty("PaymentsRowID", PaymentId);
+              pm.SetProperty("TrackInformation", TrackInfo);
+              pm.SetProperty("CustomerName", CustomerName);
+              pm.SetProperty("StreetAddress", StreetAddress);
+              pm.SetProperty("ZipCode", ZipCode);
+              pm.SetProperty("AccessToken", "");
+              pm.SetProperty("TokenSerialNumber", "");
+              pm.SetProperty("TerminalID", TerminalID);
+              x.value = "";
+              //pm.OnControlEvent("SU_GETGC_TOKEN");
+            }
+          });
+
+          $("#giftcard-token").change(function ()
+          {
+            var x = document.getElementById("giftcard-token");
+            var cardInfo = document.getElementById("activate-GC-Number");
+            var len = x.value.length;
+            if (len < 25)
+            {
+              x.value = "";
+              document.getElementById("giftcard-token").focus();
+            }
+            else
+            {
+              var token = x.value;
+              var cardNumber = token.substring(2, 6);
+              cardNumber = "**** **** **** " + cardNumber;
+              cardInfo.value = cardNumber;
+            }
+          });
+
+          //Code for launching 4Go applicaion on clicking manual input button
+          $("#CCManualInput ,#GCManualInput ,#sc-gc-manual-input").click(function (e)
+          {
+            //pm.ExecuteMethod("InvokeMethod","Launch4Go", null, false);
+            SCOUIMethods.Invoke4Go();
+          });
+
+          $("#sc-clear-form").click(function ()
+          {
+            $("#giftcard-token").val("");
+            $("#activate-GC-Number").val("");
+            $("#giftcard-token").focus();
+          });
+
+          //Authorization popup
+          $("#SC-Authorise-button").click(function ()
+          {
+            $("#SC-auth-success").modal(
+            {
+              backdrop: 'static'
+            });
+
+            $("#SC-auth-success").css(
+            {
+              "display": "flex",
+              "justify-content": "center",
+              "align-items": "center"
+            });
+            $(".modal-backdrop").css('background', '#ffffff');
+
+            setTimeout(function ()
+            {
+              $("#SC-auth-success").modal('hide');
+              $("#SC-auth-success").css(
+              {
+                "display": "",
+                "justify-content": "",
+                "align-items": ""
+              });
+            }, 2000);
+          });
+
+          $("#SC-Add-payment-button").click(function ()
+          {
+            $("#SC-failed-payment-details").show();
+          });
+
+          $("#salesrepfirst").click(function ()
+          {
+            SC_OUI_Markups.SCSalesRepTable(Dataarray, "firstset");
+          });
+          $("#salesrepprev").click(function ()
+          {
+            SC_OUI_Markups.SCSalesRepTable(Dataarray, "prevset");
+          });
+          $("#salesrepnext").click(function ()
+          {
+            SC_OUI_Markups.SCSalesRepTable(Dataarray, "nextset");
+          });
+          $("#salesreplast").click(function ()
+          {
+            SC_OUI_Markups.SCSalesRepTable(Dataarray, "lastset");
+          });
+
+
+          //on click of submit of payments 
+          $("#SC-submit-select-payment").click(function ()
+          {
+            console.log(selectpaymentId);
+            $("#SC-payments-type").modal('hide');
+          });
+
+          //on click of refund button
+          $("#SC-refund").click(function ()
+          {
+            $(this).hide();
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("SCGenerateRefund");
+            $("#SC-complete").show();
+
+            $("#SC-complete").removeClass("displaynone");
+            if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SCFSGetArrivalDates"))
+            {
+              $("#SN-Ava-Dates").removeClass("displaynone");
+              $("#SN-Ava-Dates").show();
+            }
+            localStorage.setItem("comingfrom", "refundbtn");
+          });
+          //Start:Code for Focus out of Finance Account number
+          $(document).on("focusout", "#financeaccountnumber", function ()
+          {
+            if ($(this).val() != "")
+            {
+              $("#custommaskoverlay").show();
+              setTimeout(function ()
+              {
+                var accountNumber = $("#financeaccountnumber").val();
+                SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+                //paymentBC.SetFieldValue("Account Number", accountNumber);
+                var AccNumControl = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetControls()["Account Number"];
+                SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetPModel().ExecuteMethod("SetFormattedValue", AccNumControl, accountNumber);
+                $("#custommaskoverlay").hide();
+              }, 2000);
+            }
+          });
+          //End:Code for Focus out of Finance Account number
+          $(document).on("focusout", "#financePaymentDue", function ()
+          {
+            if ($(this).val() != "")
+            {
+              paymentBC.SetFieldValue("Transaction Amount", $(this).val());
+              SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("WriteRecord");
+              var MonthlyPayment = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetBusComp().GetFieldValue("Calc Monthly Payment");
+              document.getElementById('financeMonthlyPayment').innerText = "$" + MonthlyPayment;
+            }
+          });
+
+          //Start:on focus out of Reward Type input field
+          $(document).on("focusout", "#sc-reward-type-input", function ()
+          {
+            if ($(this).val() != "")
+            {
+              SiebelJS.Log($(this).val());
+              SiebelApp.S_App.GetActiveView().SetActiveApplet(SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName]);
+              paymentBC.SetFieldValue("SC Voucher Number", $(this).val());
+              /*(function(proxied) {
+                  window.alert = function() {
+                      if (arguments[0].includes("Wrong field values or value types detected")) {
+                          return true;
+                          SiebelJS.Log("supressed");
+                      } else
+                          return proxied.apply(this, arguments);
+                  };
+              })(window.alert);*/
+              //var write = false;
+              //var canWrite = pm.ExecuteMethod("CanInvokeMethod", "WriteRecord");
+              //if (canWrite) {
+              //    write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+              //}
+              SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("PicKICAccountNumber");
+              if (paymentBC.GetFieldValue("Account Number") == "")
+              {
+                $("#sc-reward-type").trigger("click");
+              }
+              $('#rewardaccountnumber').val(paymentBC.GetFieldValue("Account Number"));
+
+              //SPATIBAN:Added code for Setting Transaction Amount
+              var totalDue = orderBC.GetFieldValue("SC Total Balance Due");
+              var RewadAmt = paymentBC.GetFieldValue("Transaction Amount");
+              if (parseInt(totalDue) <= parseInt(RewadAmt))
+              {
+                paymentBC.SetFieldValue("Transaction Amount", totalDue);
+              }
+              else
+              {
+                paymentBC.SetFieldValue("Transaction Amount", RewadAmt);
+              }
+              scRwdAmt = paymentBC.GetFieldValue("Transaction Amount") == "" ? 0.00 : parseFloat(paymentBC.GetFieldValue("Transaction Amount"));
+
+              $('#rewardPaymentDue').val(scRwdAmt.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,"));
+              if ($("#sc-reward-type-input").val() != "" && $("#rewardaccountnumber").val() != "" && $("#rewardPaymentDue").val() != "" && document.getElementById("SC-reward-payment").innerText != "Select")
+              {
+                $("#SC-reward").removeClass("SC-disabled");
+              }
+              else
+              {
+                $("#SC-reward").addClass("SC-disabled");
+              }
+            }
+          });
+          //End:on focus out of Reward Type input field
+
+          var salesreprowid;
+          //highlating the row in commisionable sales rep popup
+          $(document).on('click', '#sc-sales-rep-table tr', function ()
+          {
+            salesreprowid = $(this).attr('id');
+            $('#' + salesreprowid).addClass('highlate-row').siblings().removeClass('highlate-row');
+            $("#SC-select-salesrep").removeClass('SC-disabled');
+          });
+
+
+          //$(".sc-sales-search-box").keyup(function(event) {
+          $(document).on("click", "#sc-search-salesrep", function ()
+          {
+            if ((document.getElementById('sc-sales-fst').value != "" || document.getElementById('sc-sales-login').value != '' || document.getElementById('sc-sales-lst').value != ''))
+            {
+              //Start loader 
+              $("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                var searchSpec = "";
+                var InPS = SiebelApp.S_App.NewPropertySet();
+                var OutPS = SiebelApp.S_App.NewPropertySet();
+                var Service = SiebelApp.S_App.GetService("SC Get Employee");
+                var empsearchSpec = "[Employee Type Code]='Employee'";
+                if (document.getElementById('sc-sales-fst').value != '')
+                {
+                  searchSpec = '([First Name] Like "*' + document.getElementById('sc-sales-fst').value + '*" OR [First Name] Like "*' + document.getElementById('sc-sales-fst').value.toUpperCase() + '*" AND ' + empsearchSpec + ')';
+                }
+                if (document.getElementById('sc-sales-login').value != '' && searchSpec == "")
+                {
+                  searchSpec += '([Login Name] Like "*' + document.getElementById('sc-sales-login').value + '*" OR [Login Name] Like "*' + document.getElementById('sc-sales-login').value.toUpperCase() + '*" AND ' + empsearchSpec + ')'
+                }
+                else if (document.getElementById('sc-sales-login').value != '' && searchSpec != "")
+                {
+                  searchSpec += ' AND ([Login Name] Like "*' + document.getElementById('sc-sales-login').value + '*" OR [Login Name] Like "*' + document.getElementById('sc-sales-login').value.toUpperCase() + '*" AND ' + empsearchSpec + ')'
+                }
+                if (document.getElementById('sc-sales-lst').value != '' && searchSpec == "")
+                {
+                  searchSpec += '[Last Name] Like "*' + document.getElementById('sc-sales-lst').value + '*" OR [Last Name] Like "*' + document.getElementById('sc-sales-lst').value.toUpperCase() + '*" AND ' + empsearchSpec + ''
+                }
+                else if (document.getElementById('sc-sales-lst').value != '' && searchSpec != "")
+                {
+                  searchSpec += ' AND ([Last Name] Like "*' + document.getElementById('sc-sales-lst').value + '*" OR [Last Name] Like "*' + document.getElementById('sc-sales-lst').value.toUpperCase() + '*" AND ' + empsearchSpec + ')'
+                }
+
+                InPS.SetProperty("SearchExpr", searchSpec);
+                OutPS = Service.InvokeMethod("GetEmployee", InPS);
+                var Child = OutPS.GetChild(0);
+                var BS_Data = Child.GetProperty("Count");
+                if (BS_Data > 0)
+                {
+                  BS_Data = Child.GetProperty("FieldValues");
+                  Dataarray = BS_Data.split(',');
+                  var seen = {};
+                  var out = [];
+                  var len = Dataarray.length;
+                  var j = 0;
+                  for (var i = 0; i < len; i++)
+                  {
+                    var item = Dataarray[i];
+                    if (seen[item] !== 1)
+                    {
+                      seen[item] = 1;
+                      out[j++] = item;
+                    }
+                  }
+                  Dataarray = out;
+                  SC_OUI_Markups.SCSalesRepTable(Dataarray, "neww");
+                }
+                else
+                {
+                  $("#sc-sales-rep-table").html("");
+                }
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+          });
+          $(document).on('click', '#SC-receipt-ok', function ()
+          {
+            $("#SC-Receipt-Error").modal('hide');
+            $("#SC-Receipt-Error").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+            var Recordo = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+
+            if (Recordo[0]["SC Tax Verification Pending"] === 'Y' && Recordo[0]["Tax Exempt"] === 'Y')
+            {
+              $("#SC-SO-order-hold").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-hold").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+            }
+            else if (Recordo[0]["Status"] == "Hold")
+            {
+              $("#SC-SO-order-just-hold").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-just-hold").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (Recordo[0]["Status"] == "Siebel Error")
+            {
+              $("#SC-SO-order-sibel-error").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-sibel-error").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (Recordo[0]["Status"] == "Oracle Error")
+            {
+              $("#SC-SO-order-oracle-error").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-oracle-error").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().Get('GetRecordSet').length > 0)
+            {
+              //$("body").trigger('Custom.Start');
+              setTimeout(function ()
+              {
+                if (Recordo[0]["Status"] != "Oracle Error" && Recordo[0]["Status"] != "Siebel Error" && Recordo[0]["Status"] != "Hold" && Recordo[0]["SC Tax Verification Pending"] != 'Y' && Recordo[0]["Tax Exempt"] != 'Y')
+                {
+                  /*if (itemsCount > 0) {
+                  	$("#SC-SO-schedule-hd").modal({
+                  		backdrop: 'static'
+                  	});
+                  	$("#SC-SO-schedule-hd").css({
+                  		"display": "flex",
+                  		"justify-content": "center",
+                  		"align-items": "center"
+                  	});
+                  } else {*/
+                  //else go with isn't success
+                  // $(".modal-backdrop").css('background', '#ffffff');
+                  SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+                  //}
+                }
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 1000);
+            }
+          });
+
+          var waitTime = SCOUIMethods.SCGetOrderLoVs("[Type]= 'SC_SETTIMEOUT_RECEIPT' and [Active] = 'Y' AND [Name]='TimeOut'");
+          waitTime = parseInt(waitTime);
+          //open generate Receipt popup
+          //open generate Receipt popup for non P2PE store users
+          $(document).on('click', '#SC-generate-receipt', function ()
+          {
+            $("#SC-SO-order-complete").modal('hide');
+            $("#SC-SO-order-complete").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+
+            generate_receipt("Original");
+          });
+
+          //on click of generate store receipt pop up for P2PE store users
+          //Sandeep:13-FEB-2019
+          //open generate Receipt popup for non P2PE store users and non Store users
+          $(document).on('click', '#SC-generate-receipt-Yes', function ()
+          {
+            $("#SC-SO-store-receipt").modal('hide');
+            $("#SC-SO-store-receipt").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            generate_receipt("Original");
+          });
+          //on click of generate store receipt pop up for P2PE store users and non Store users
+
+          $(document).on('click', '#SC-generate-store-receipt', function ()
+          {
+            //Sandeep:commented below code white screen issue
+            /*$("#SC-SO-store-receipt").modal({
+            	backdrop: 'static'
+            });*/
+            $("#SC-SO-store-receipt").modal('hide');
+            $("#SC-SO-store-receipt").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            store_receipt = "Y";
+            generate_receipt("Merchant");
+            SiebelJS.Log("After generate receipt in store");
+          });
+
+          //on click of generate customer receipt pop up for P2PE store users
+          $(document).on('click', '#SC-generate-customer-receipt', function ()
+          {
+            $("#SC-SO-customer-receipt").modal('hide');
+            $("#SC-SO-customer-receipt").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            SiebelJS.Log("before generate receipt");
+            generate_receipt("Customer");
+            SiebelJS.Log("After generate receipt");
+          });
+          var waitTime = SCOUIMethods.SCGetOrderLoVs("[Type]= 'SC_SETTIMEOUT_RECEIPT' and [Active] = 'Y' AND [Name]='TimeOut'");
+          waitTime = parseInt(waitTime);
+          //Code for generating reciept starts
+          function generate_receipt(receipt_mode)
+          {
+            SiebelJS.Log("receipt mode:" + receipt_mode);
+            SiebelJS.Log("bip id:" + orderId);
+            SiebelJS.Log("bip ordernumber:" + orderNumberBS);
+            //$("body").trigger('Custom.Start');
+            $("#custommaskoverlay").show();
+            setTimeout(function ()
+            {
+              if (orderId != null)
+              {
+                orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
+                var SC_reportName = "",
+                  reportStatus = "";
+                var InPS3 = SiebelApp.S_App.NewPropertySet();
+                var OutPS3 = SiebelApp.S_App.NewPropertySet();
+                InPS3.SetProperty("bipordernumber", orderNumberBS);
+                InPS3.SetProperty("biporderrowid", orderId);
+                InPS3.SetProperty("receiptmode", receipt_mode);
+                var Service3 = SiebelApp.S_App.GetService("SC Store Data BS");
+                var OrderSubType = orderBC.GetFieldValue("SC Sub-Type");
+                if (OrderSubType == "Wholesale" || OrderSubType == "Commercial" || OrderSubType == "QVC" || OrderSubType == "Internal" || OrderSubType == "HSN")
+                  OutPS3 = Service3.InvokeMethod("SC WC Reciept Generation", InPS3);
+                else
+                  OutPS3 = Service3.InvokeMethod("SC Reciept Generation", InPS3);
+                setTimeout(function ()
+                {
+                  //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].InvokeMethod("RefreshAppletUI");
+                  //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+                  //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshAppletUI", null, false);
+                  var scReportName = theApplication().GetProfileAttr("ReportName");
+                  scReportName = '"' + scReportName + '"';
+                  FieldQueryPair = {
+                    "Report Name": scReportName
+                  };
+                  SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Report Output List Applet");
+                  $("#custommaskoverlay").hide();
+                  var scReportrcdlen = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().Get('GetRecordSet').length
+                  if (scReportrcdlen == 0)
+                  {
+                    $("#SC-Receipt-Error").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-Receipt-Error").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                  }
+                  else
+                  {
+                    reportStatus = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetBusComp().GetFieldValue("Status");
+
+                    if (reportStatus != "Success")
+                    {
+                      $("#SC-Receipt-Error").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#SC-Receipt-Error").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                      $(".modal-backdrop").css('background', '#ffffff');
+                    }
+                    else
+                    {
+                      SC_reportName = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetBusComp().GetFieldValue("ReportOutputFileName");
+                      //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+                      SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().ExecuteMethod("OnDrillDown", 'Report Name', 1);
+                      setTimeout(function ()
+                      {
+                        $(".ui-dialog-buttonset button:nth-child(2)").trigger('click');
+                        setTimeout(function ()
+                        {
+                          $(".ui-dialog-buttonset button:nth-child(3)").trigger('click');
+                          //var storeuser = "";
+                          //storeuser = SiebelApp.S_App.GetProfileAttr("SC Store User");
+                          setTimeout(function ()
+                          {
+
+                            if (paySCStoreUser == 'Y')
+                            {
+                              //SHARATH: added below if-else to print customer reciept twice in case of feature flag = "Y".
+
+                              if (sFeatureFlag == "Y" && receipt_mode == "Customer")
+                              {
+                                autoPrint(SC_reportName);
+                                autoPrint(SC_reportName);
+                              }
+                              else
+                              {
+                                if (P2PEFlag == "Y")
+                                {
+                                  autoPrint(SC_reportName);
+                                }
+                                else
+                                {
+                                  SCOUIMethods.AutoPrint(SC_reportName);
+                                }
+                              }
+
+                            }
+                            /*SPAIBAN:Feb2019:if the receipt mode is Merchant then it will open the Customer receipt popup*/
+                            if (receipt_mode == "Merchant")
+                            {
+                              var sOrderId = orderBC.GetFieldValue("Id");
+                              SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                              $("#SC-SO-store-receipt").modal('hide');
+                              $("#SC-SO-customer-receipt").modal(
+                              {
+                                backdrop: 'static'
+                              });
+                              $("#SC-SO-customer-receipt").css(
+                              {
+                                "display": "flex",
+                                "justify-content": "center",
+                                "align-items": "center"
+                              });
+                              $(".modal-backdrop").css('background', '#ffffff');
+                            }
+                            else
+                              invokeafterAutoprint(receipt_mode); //SPATIBAN:Added below commented code in this function.
+                          }, 1000);
+                        }, 1000);
+                      }, 1000);
+                    }
+                  }
+                }, waitTime);
+              }
+              $("body").trigger('Custom.End');
+            }, 10);
+          }
+          /*SPATIBAN:Created function for refresh the parent BusComp after that comparing the order status, if order is successfully
+           submitted it will navigate to order360 view otherwise based on order status opens the popups*/
+          function invokeafterAutoprint(receipt_mode)
+          {
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+            var Recordo = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+            /* if(localStorage.getItem("comingfrom")=="refundbtnsubmit"){
+            	localStorage.setItem("comingfrom","");
+            	$(".modal-backdrop").css('background', '#ffffff');
+            	SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+            } */
+            if (Recordo[0]["SC Tax Verification Pending"] === 'Y' && Recordo[0]["Tax Exempt"] === 'Y')
+            {
+              $("#SC-SO-order-hold").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-hold").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+            }
+            else if (Recordo[0]["Status"] == "Hold")
+            {
+              $("#SC-SO-order-just-hold").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-just-hold").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (Recordo[0]["Status"] == "Siebel Error")
+            {
+              $("#SC-SO-order-sibel-error").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-sibel-error").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (Recordo[0]["Status"] == "Oracle Error")
+            {
+              $("#SC-SO-order-oracle-error").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-oracle-error").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().Get('GetRecordSet').length > 0)
+            {
+              //Start loader 
+              //$("body").trigger('Custom.Start');
+              //setTimeout(function () {
+              //if (Recordo[0]["Status"] != "Oracle Error" && Recordo[0]["Status"] != "Siebel Error" && Recordo[0]["Status"] != "Hold" && Recordo[0]["SC Tax Verification Pending"] != 'Y' && Recordo[0]["Tax Exempt"] != 'Y') {
+              /*if (itemsCount > 0 && (receipt_mode == "Original" || receipt_mode == "Customer")) {
+              	$("#SC-SO-schedule-hd").modal({
+              		backdrop: 'static'
+              	});
+              	$("#SC-SO-schedule-hd").css({
+              		"display": "flex",
+              		"justify-content": "center",
+              		"align-items": "center"
+              	});
+              }else {*/
+              if (receipt_mode == "Original" || receipt_mode == "Customer")
+              {
+                SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+              }
+              else if (receipt_mode == "Merchant" && OrderSubType != "Wholesale" && OrderSubType != "Commercial" && OrderSubType != "QVC" && OrderSubType != "Internal" && OrderSubType != "HSN")
+              {
+                var sOrderId = orderBC.GetFieldValue("Id");
+                SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                $("#SC-SO-store-receipt").modal('hide');
+                $("#SC-SO-customer-receipt").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-customer-receipt").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              else
+              {
+                SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+              }
+              //}
+              //}
+              //hiding the Loader
+              $("body").trigger('Custom.End');
+              //}, 1000);
+            }
+            else
+            {
+              //else show this not success full popup
+              $("#SC-SO-generate-receipt").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-generate-receipt").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+            }
+          }
+
+
+          //on click of no button in Generate Receipt Popup
+          $(document).on('click', '#SC-generate-receipt-no', function ()
+          {
+            $("#SC-SO-order-complete").modal('hide');
+            $("#SC-SO-order-complete").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            //Code for generating reciept starts
+            SiebelJS.Log("bip id:" + orderId);
+            SiebelJS.Log("bip ordernumber:" + orderNumberBS);
+            $("body").trigger('Custom.Start');
+            setTimeout(function ()
+            {
+              if (orderId != null)
+              {
+                orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
+                /* var SC_reportName = "";
+                                var InPS3 = SiebelApp.S_App.NewPropertySet();
+                                var OutPS3 = SiebelApp.S_App.NewPropertySet();
+                                InPS3.SetProperty("bipordernumber", orderNumberBS);
+                                InPS3.SetProperty("biporderrowid", orderId);
+                                var Service3 = SiebelApp.S_App.GetService("SC Store Data BS");
+                                OutPS3 = Service3.InvokeMethod("SC Reciept Generation", InPS3);
+                                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].InvokeMethod("RefreshAppletUI");
+                                SC_reportName = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetBusComp().GetFieldValue("ReportOutputFileName");
+                                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().ExecuteMethod("OnDrillDown", 'Report Name', 1);
+                                setTimeout(function() {
+                                    $(".ui-dialog-buttonset button:nth-child(2)").trigger('click');
+                                    setTimeout(function() {
+                                        $(".ui-dialog-buttonset button:nth-child(3)").trigger('click');
+										//var storeuser = "";
+										//storeuser = SiebelApp.S_App.GetProfileAttr("SC Store User");
+										if (paySCStoreUser == 'Y') {
+											SCOUIMethods.AutoPrint(SC_reportName);
+										}
+                                    }, 1000);
+                                }, 1000);*/
+
+                //Code for generating reciept ends
+
+                //saddala added if generate receipt isn't wokring
+                //code for popups to be displayed starts from here
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+                var Recordo = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+                /* if(localStorage.getItem("comingfrom")=="refundbtnsubmit"){
+                	localStorage.setItem("comingfrom","");
+                	$(".modal-backdrop").css('background', '#ffffff');
+                	SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+                } */
+                if (Recordo[0]["SC Tax Verification Pending"] === 'Y' && Recordo[0]["Tax Exempt"] === 'Y')
+                {
+                  $("#SC-SO-order-hold").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-SO-order-hold").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+                }
+                else if (Recordo[0]["Status"] == "Hold")
+                {
+                  $("#SC-SO-order-just-hold").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-SO-order-just-hold").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                }
+                else if (Recordo[0]["Status"] == "Siebel Error")
+                {
+                  $("#SC-SO-order-sibel-error").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-SO-order-sibel-error").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                }
+                else if (Recordo[0]["Status"] == "Oracle Error")
+                {
+                  $("#SC-SO-order-oracle-error").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-SO-order-oracle-error").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                }
+                //else if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().Get('GetRecordSet').length > 0) {
+                // Business Service
+                /*else if((orderBC.GetFieldValue("SC Sub-Type") === "Sale") && (orderBC.GetFieldValue("SC Location Type") === "STORE") && (orderBC.GetFieldValue("Revision") == 1)&& (orderBC.GetFieldValue("Status") === "Booked")) {
+											if(orderId!=null && orderId!=""){
+												var inPS = SiebelApp.S_App.NewPropertySet();
+												var outPS = SiebelApp.S_App.NewPropertySet();
+												inPS.SetProperty("OrderId",orderId);
+												SiebelJS.Log("Invoking Business Service");
+												Bservice = SiebelApp.S_App.GetService("SC Get Line Items");
+												outPS = Bservice.InvokeMethod("Query",inPS); 
+												for(var pr=0;pr<outPS.GetChild(0).GetChildCount();pr++){
+		                                         if((outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")=="MATTRESS")&& (isActivityCreated != true)){
+													 //start--Create Activity Plan after Submitting the Order
+													var inPS = SiebelApp.S_App.NewPropertySet();
+													var outPS = SiebelApp.S_App.NewPropertySet();
+													inPS.SetProperty("BO", "Contact");
+													inPS.SetProperty("BC", "Activity Plan");
+													inPS.SetProperty("ContactId", contactId);
+													inPS.SetProperty("Template", "SC Insider Follow-Up");
+													Bservice = SiebelApp.S_App.GetService("SC Create Activity Plan Service"); //get service
+													outPS = Bservice.InvokeMethod("Create", inPS);
+													var isActivityCreated = true;
+													//End--Create Activity Plan after Submitting the Order
+												 }else{
+													 isActivityCreated = false;
+												 }
+											 }
+											}
+										}*/
+                //Start loader 
+                //$("body").trigger('Custom.Start');
+                setTimeout(function ()
+                {
+                  if (Recordo[0]["Status"] != "Oracle Error" && Recordo[0]["Status"] != "Siebel Error" && Recordo[0]["Status"] != "Hold" && Recordo[0]["SC Tax Verification Pending"] != 'Y' && Recordo[0]["Tax Exempt"] != 'Y')
+                  {
+                    /*if (itemsCount > 0) {
+                    	$("#SC-SO-schedule-hd").modal({
+                    		backdrop: 'static'
+                    	});
+                    	$("#SC-SO-schedule-hd").css({
+                    		"display": "flex",
+                    		"justify-content": "center",
+                    		"align-items": "center"
+                    	});
+                    } else {*/
+                    //else go with isn't success
+                    // $(".modal-backdrop").css('background', '#ffffff');
+                    SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+                    //}
+                  }
+                  //hiding the Loader
+                  $("body").trigger('Custom.End');
+                }, 1000);
+                /*  } else {
+                      //else show this not success full popup
+                      $("#SC-SO-generate-receipt").modal({
+                          backdrop: 'static'
+                      });
+                      $("#SC-SO-generate-receipt").css({
+                          "display": "flex",
+                          "justify-content": "center",
+                          "align-items": "center"
+                      });
+                      $(".modal-backdrop").css('background', '#ffffff');
+                  }*/
+              }
+              $("body").trigger('Custom.End');
+            }, 1000);
+          });
+
+          //to open hd schedule popup
+          $(document).on('click', '#SC-generate-ok', function ()
+          {
+            // Business Service
+
+            $("#SC-SO-generate-receipt").modal('hide');
+            $("#SC-SO-generate-receipt").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            })
+            /*if (itemsCount > 0) {
+                $("#SC-SO-schedule-hd").modal({
+                    backdrop: 'static'
+                });
+                $("#SC-SO-schedule-hd").css({
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                });
+            } else {*/
+            //else go with isn't success
+            // $(".modal-backdrop").css('background', '#ffffff');
+            SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+            //}
+          });
+
+          //to open order hold popup
+          $(document).on('click', '#SC-proceed-delivery', function ()
+          {
+            $("#SC-SO-schedule-hd").modal('hide');
+            $("#SC-SO-schedule-hd").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+
+            FieldQueryPair = {
+              "Status": "'START' OR 'REVISION'"
+            };
+            SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+            setTimeout(function ()
+            {
+              var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+              if (Reco.length > 0)
+              {
+                //if success the drill down on the SR created
+                invokeBookNow();
+                /*localStorage.setItem('whitescreen', 1);
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().ExecuteMethod("OnDrillDown", "SR Number", 1);*/
+              }
+              else
+              {
+                //else fail of hd delivery SR didn't get created show this
+                $("#SC-SO-SR-hold").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-SR-hold").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+              }
+            }, 2000);
+          });
+          //code for on change of reason in HD unSchedule Popup
+          $("#SC-SO-UnSchedule-item-SelectBox").change(function ()
+          {
+            if ($("#SC-SO-UnSchedule-item-SelectBox").val())
+            {
+              $("#sc-unschedule-Ok").removeClass("SC-disabled");
+            }
+          });
+          //code for on click  of cnacel button  in HD unSchedule Popup
+          $("#sc-unschedule-Cancel").click(function ()
+          {
+            $("#SC-SO-UnSchedule-popup").modal('hide');
+            $("#SC-SO-Schedule-popup").modal(
+            {
+              backdrop: 'static'
+            });
+            $("#SC-SO-Schedule-popup").css(
+            {
+              "display": "flex",
+              "justify-content": "center",
+              "align-items": "center"
+            });
+            $(".modal-backdrop").css('background', '#ffffff');
+          });
+
+          $("#sc-unschedule-Ok").click(function ()
+          {
+            $("#SC-SO-UnSchedule-popup").modal('hide');
+            $('#maskoverlay').show();
+            setTimeout(function ()
+            {
+              var Bservice = '',
+                inPS = '',
+                outPS = '';
+              var fieldnames = "Status";
+              var fieldvalues = $("#SC-SO-UnSchedule-item-SelectBox").val();
+              //SPATIBAN:JUNE19:Updated below code HD SR issue 
+              //var SRid=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().GetFieldValue("SR Number");
+              var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+              var SRrcdlen = Reco.length;
+              var srcspec = "";
+              if (SRrcdlen > 0)
+              {
+                for (var i = 0; i < SRrcdlen; i++)
+                {
+                  if ((SRrcdlen - 1) == i)
+                    srcspec += "[SR Number]='" + Reco[i]["SR Number"] + "'";
+                  else
+                    srcspec += "[SR Number]='" + Reco[i]["SR Number"] + "' OR ";
+                }
+                inPS = SiebelApp.S_App.NewPropertySet();
+                outPS = SiebelApp.S_App.NewPropertySet();
+                inPS.SetProperty("BO", "Service Request");
+                inPS.SetProperty("BC", "Service Request");
+                inPS.SetProperty("FieldsArray", fieldnames);
+                inPS.SetProperty("ValuesArray", fieldvalues);
+                //inPS.SetProperty("SearchSpecification","[SR Number]='"+SRid+"'");
+                inPS.SetProperty("SearchSpecification", srcspec);
+                Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+                outPS = Bservice.InvokeMethod("Insert", inPS);
+              }
+              //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().SetFieldValue("Status",$("#SC-SO-UnSchedule-item-SelectBox").val());
+              //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].InvokeMethod("WriteRecord");
+              if (orderBC.GetFieldValue("SC Sub-Type") == "Wholesale")
+                noReceipt();
+              else
+              {
+                //SHARATH: Added feature flag condition for Store Recipet bypass user story.
+
+                if (sFeatureFlag == "Y")
+                {
+                  $("#SC-SO-customer-receipt").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-SO-customer-receipt").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+                }
+                else if (P2PEFlag == "Y" && sFeatureFlag != "Y")
+                {
+                  $("#SC-SO-store-receipt").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-SO-store-receipt").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+                }
+                else
+                {
+                  var sOrderId = orderBC.GetFieldValue("Id");
+                  var sbilltocontactId = orderBC.GetFieldValue("Bill To Contact Id");
+                  if (sbilltocontactId != "")
+                    SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                  $("#SC-SO-order-complete").modal(
+                  {
+                    backdrop: 'static'
+
+                  });
+                  $("#SC-SO-order-complete").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+                }
+              }
+              $('#maskoverlay').hide();
+            }, 50);
+          });
+          var sHDSched;
+          $("#sc-hd-booknow").click(function ()
+          {
+            FieldQueryPair = {
+              "Status": "'START' OR 'REVISION'"
+            };
+            SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+            var MobileNum = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().GetFieldValue("SC Mobile Phone#");
+            //var MobileNum = "";
+            if ($('#sHDOptinFlag').is(":checked"))
+            {
+              if (MobileNum != null && MobileNum.length > 0)
+              {
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().SetFieldValue("SC HD Optin Flag", "Y");
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].InvokeMethod("WriteRecord");
+                var SRRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetPModel().Get("GetRecordSet");
+                var SRRowId = SRRecordSet[0]["Id"];
+                var BService = '',
+                  SR_inPS = '',
+                  SR_outPS = '';
+                SR_inPS = SiebelApp.S_App.NewPropertySet();
+                SR_outPS = SiebelApp.S_App.NewPropertySet();
+                SR_inPS.SetProperty("Object Id", SRRowId);
+                SR_inPS.SetProperty("ProcessName", "SC Send HD Opt In to Responsys WF");
+                BService = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+                SR_outPS = BService.InvokeMethod("RunProcess", SR_inPS); //invoke the method
+                invokeBookNow();
+              }
+              else
+              {
+                //alert("Mobile Number is required for HD Text Opt In.  Please add a mobile number to the contact before selecting HD Text Opt In");
+                //SNARRA 04-02-2019 Added code for Phone Number Update to Contact
+                $("#SC-SO-PN-Update-popup").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-PN-Update-popup").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+              }
+            }
+            else
+            {
+              invokeBookNow();
+            }
+
+          });
+          //SPATIBAN:Start code for on change of special instructions
+          //$("#SC-Add-Note").keyup(function(){
+          $(document).on("keyup", ".SRAddnotes", function ()
+          {
+            var srnotid = $(this).attr("id");
+            var srnotesval = $("#" + srnotid).val()
+            srnotesval = srnotesval.replace(/\s+/g, "");
+            if (srnotesval.length >= '5')
+            {
+              srnotid = srnotid.split("__");
+              srnotid = srnotid[0] + "__special";
+              $("#" + srnotid).removeClass("SC-disabled");
+            }
+            else
+            {
+              srnotid = srnotid.split("__");
+              srnotid = srnotid[0] + "__special";
+              $("#" + srnotid).addClass("SC-disabled");
+              if ($(this).attr("title") != '')
+              {
+                var Notes = $(this).val($(this).attr("title"));
+                alert("Minimum of 5 characters required");
+              }
+            }
+
+          });
+          $(document).on("change", ".SRAddnotes", function ()
+          {
+            var srnotid = $(this).attr("id");
+            if ($("#" + srnotid).val() != "")
+            {
+              srnotid = srnotid.split("__");
+              srnotid = srnotid[0] + "__special";
+              $("#" + srnotid).removeClass("SC-disabled");
+            }
+            else
+            {
+              srnotid = srnotid.split("__");
+              srnotid = srnotid[0] + "__special";
+              $("#" + srnotid).addClass("SC-disabled");
+            }
+          });
+          //Start:SPATIBAN:5-APR-2019:MAYRelease:Added code for on change of notes
+          // $("#SC-Add-Note").change(function(){
+          // if ($("#SC-Add-Note").val()!="") {
+          // $("#SC-send-button").removeClass("SC-disabled");
+          // }
+          // else
+          // $("#SC-send-button").addClass("SC-disabled"); 
+          // });
+          //Start:SPATIBAN:5-APR-2019:MAYRelease:Added code for on change of notes
+          //$("#SC-send-button").click(function(){
+          $(document).on("click", ".scSRsend", function ()
+          {
+            var srnotid = $(this).attr("id");
+            $("#" + srnotid).addClass("SC-disabled");
+            srnotid = srnotid.split("__");
+            $('#maskoverlay').show();
+            var SRid = srnotid[0];
+            $("#" + SRid + "__note").attr("title", $("#" + SRid + "__note").val());
+            //$("#"+SRid+"__special").addClass("SC-disabled");
+            setTimeout(function ()
+            {
+              //SPATIBAN:5-APR-2019:MAYRelease:Added disabled class on click of save button
+              //$("#SC-send-button").addClass("SC-disabled"); 
+              //var SRid=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().GetFieldValue("SR Number");
+              var BService = '',
+                SR_inPS = '',
+                SR_outPS = '';
+              SR_inPS = SiebelApp.S_App.NewPropertySet();
+              SR_outPS = SiebelApp.S_App.NewPropertySet();
+              SR_inPS.SetProperty("SRNumber", SRid);
+              SR_inPS.SetProperty("Note", $("#" + SRid + "__note").val());
+              SR_inPS.SetProperty("ProcessName", "SC Create SR Note WF");
+              BService = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+              SR_outPS = BService.InvokeMethod("RunProcess", SR_inPS); //invoke the method
+              $('#maskoverlay').hide();
+            }, 50);
+          });
+          //SYERUVA: 10-MAY-2021: Enabled Delivery Phone Number update
+          $(document).on("keypress", ".SRAddDelPhone", function ()
+          {
+            var inpId = $(this).attr("id");
+            var phonenumber = $("#" + inpId).val();
+            if (phonenumber.length == 3)
+            {
+              phonenumber = "(" + phonenumber + ") ";
+            }
+            else if (phonenumber.length == 9)
+            {
+              phonenumber = phonenumber + "-";
+            }
+            $(this).val(phonenumber);
+          });
+          $(document).on("keyup", ".SRAddDelPhone", function ()
+          {
+            var srnotid = $(this).attr("id");
+            var srnotesval = $("#" + srnotid).val();
+            //srnotesval = srnotesval.replace(/\s+/g, "");
+
+            if (/^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/.test(srnotesval))
+            {
+              srnotid = srnotid.split("__");
+              srnotid = srnotid[0] + "__pSave";
+              $("#" + srnotid).removeClass("SC-disabled");
+            }
+            else
+            {
+              srnotid = srnotid.split("__");
+              srnotid = srnotid[0] + "__pSave";
+              $("#" + srnotid).addClass("SC-disabled");
+            }
+          });
+          $(document).on("change", ".SRAddDelPhone", function ()
+          {
+            var srnotid = $(this).attr("id");
+            var srnotesval = $("#" + srnotid).val();
+            if (/^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/.test(srnotesval))
+            {
+              srnotid = srnotid.split("__");
+              srnotid = srnotid[0] + "__pSave";
+              $("#" + srnotid).removeClass("SC-disabled");
+            }
+            else
+            {
+              srnotid = srnotid.split("__");
+              srnotid = srnotid[0] + "__pSave";
+              $("#" + srnotid).addClass("SC-disabled");
+            }
+          });
+          $(document).on("click", ".SRDelPhnSave", function ()
+          {
+            var sroptid = $(this).attr("id");
+            var sroptid1 = sroptid.split("__");
+            var DelPhoneNum = $("#" + sroptid1[0] + "__phone").val();
+            $("#" + sroptid1[0] + "__phone").attr("title", DelPhoneNum);
+
+            //if (confirm("Are you sure you want to proceed with Opt In for Delivery Notification?")) {
+            $('#maskoverlay').show();
+            setTimeout(function ()
+            {
+              //$('#'+sroptid).addAttr("checked");
+              var FieldQueryPair = {
+                "SR #": sroptid1[0]
+              }
+              SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+              if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "WriteRecord"))
+              {
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().SetFieldValue("SC Preferred Contact", DelPhoneNum);
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].InvokeMethod("WriteRecord");
+              }
+              //var SRPhone = "(" + DelPhoneNum.substring(0, 3) + ")" + DelPhoneNum.substring(3, 6) + "-" + DelPhoneNum.substring(6, 10);
+              //$("#" + sroptid1[0] + "__phone").val(SRPhone);
+              $('#maskoverlay').hide();
+            }, 50);
+          });
+          // UALVES: 8-APR-2021: Enabled Delivery Phone Number update
+          //$(document).on("click", ".scSavePh", function() {
+          //    var srnotid = $(this).attr("id");
+          //	srnotid = srnotid.split("__");
+          //    var SRid = srnotid[0];
+          //	var sPhNum = $("#" + SRid + "__PhNum").val();
+          //	SiebelJS.Log("1.SRid='" + SRid + "', PhNum='" + sPhNum + "'");
+          //    setTimeout(function() {
+          //		SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().SetFieldValue("SC Preferred Contact", sPhNum);
+          //        SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].InvokeMethod("WriteRecord");
+          //    }, 50);
+          //});
+          //SPATIBAN:Start code for on click of BookNow button
+          $(document).on("click", ".srBooknow", function ()
+          {
+            var sroptid = $(this).attr("id");
+            var sroptid1 = sroptid.split("__");
+            $('#maskoverlay').show();
+            setTimeout(function ()
+            {
+              FieldQueryPair = {
+                "SR #": "Id='" + sroptid1[0] + "'"
+              }
+              SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+              $('#maskoverlay').hide();
+              invokeBookNow();
+            }, 50);
+          });
+          //End code for on click of BookNow button
+          //SPATIBAN:Start code for on click of hd opt flag
+          $(document).on("change", ".srhdoptflag", function ()
+          {
+            var sroptid = $(this).attr("id");
+            var sroptid1 = sroptid.split("__");
+            if ($('#' + sroptid).is(":checked"))
+            {
+              if (confirm("Are you sure you want to proceed with Opt In for Delivery Notification?"))
+              {
+                $('#maskoverlay').show();
+                setTimeout(function ()
+                {
+                  //$('#'+sroptid).addAttr("checked");
+                  FieldQueryPair = {
+                    "SR #": "Id='" + sroptid1[0] + "'"
+                  }
+                  SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+                  var MobileNum = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().GetFieldValue("SC Mobile Phone#");
+                  if (MobileNum != null && MobileNum.length > 0)
+                  {
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().SetFieldValue("SC HD Optin Flag", "Y");
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].InvokeMethod("WriteRecord");
+                    var SRRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetPModel().Get("GetRecordSet");
+                    var SRRowId = SRRecordSet[0]["Id"];
+                    var BService = '',
+                      SR_inPS = '',
+                      SR_outPS = '';
+                    SR_inPS = SiebelApp.S_App.NewPropertySet();
+                    SR_outPS = SiebelApp.S_App.NewPropertySet();
+                    SR_inPS.SetProperty("Object Id", SRRowId);
+                    SR_inPS.SetProperty("ProcessName", "SC Send HD Opt In to Responsys WF");
+                    BService = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+                    SR_outPS = BService.InvokeMethod("RunProcess", SR_inPS); //invoke the method
+                  }
+                  else
+                  {
+                    $("#SC-SO-PN-Update-popup").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-PN-Update-popup").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                  }
+                  $('#maskoverlay').hide();
+                }, 50);
+              }
+              else
+                $('#' + sroptid).removeAttr("checked");
+            }
+            else
+            {
+              $('#maskoverlay').show();
+              setTimeout(function ()
+              {
+                FieldQueryPair = {
+                  "SR #": "Id='" + sroptid1[0] + "'"
+                }
+                SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+                $("#snconfirm-HDOptOut-Modal").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#snconfirm-HDOptOut-Modal").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $("#sn-hd-sr-outId").text(sroptid);
+                //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().SetFieldValue("SC HD Optin Flag", "N");
+                //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].InvokeMethod("WriteRecord");
+                $('#maskoverlay').hide();
+              }, 50);
+            }
+          });
+          //End code for on click of hd opt flag
+          $("#SN-HDOptout-No-button").click(function ()
+          {
+            var srhdcheckboxid = $("#sn-hd-sr-outId").text();
+            $('#' + srhdcheckboxid).prop('checked', true);
+          });
+          $("#SN-HDOptoutYes-btn").click(function ()
+          {
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().SetFieldValue("SC HD Optin Flag", "N");
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].InvokeMethod("WriteRecord");
+            $("#snconfirm-HDOptOut-Modal").modal('hide');
+          });
+          //Start :code for on click of No Button in HD Schedule Popup
+          $("#sc-schedule-no").click(function ()
+          {
+            $("#SC-SO-Schedule-popup").modal('hide');
+            $('#maskoverlay').show();
+            sHDSched = "no";
+            setTimeout(function ()
+            {
+              FieldQueryPair = {
+                "SR #": ""
+              };
+              SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+              SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+              FieldQueryPair = {
+                "Status": "'START' OR 'REVISION'"
+              };
+              SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+              var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+              var headerRecord = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+              /*if (Reco.length > 0 && headerRecord[0]["Status"] == "Booked") {
+                  //if (Reco.length > 0) {
+                  $("#SC-SO-UnSchedule-item-SelectBox").val("");
+                  $("#sc-unschedule-Ok").addClass("SC-disabled");
+                  $("#SC-SO-UnSchedule-popup").modal({
+                      backdrop: 'static'
+                  });
+                  $("#SC-SO-UnSchedule-popup").css({
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+              } else {*/
+              $("#SC-SO-SR-hold").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-SR-hold").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              SRScheduleNo();
+              //}
+              $('#maskoverlay').hide();
+            }, 50);
+          });
+          //End :code for on click of No Button in HD Schedule Popup
+          //Start code for on click of Schedule no button
+          function SRScheduleNo()
+          {
+            var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+            var headerRecord = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+            if (Reco.length > 0 && ((headerRecord[0]["Status"] == "Booked") || ((headerRecord[0]["Status"] == "Submitted" || headerRecord[0]["Status"] == "Oracle Error") && headerRecord[0]["SN Decouple Live"] == "Y")))
+            {
+              setTimeout(function ()
+              {
+                if (cancelCliked == "N")
+                {
+                  $('#maskoverlay').show();
+                  setTimeout(function ()
+                  {
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+                    FieldQueryPair = {
+                      "Status": "'START' OR 'REVISION'"
+                    };
+                    SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+                    $('#maskoverlay').hide();
+                    var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+                    var headerRecord = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+                    if (Reco.length > 0 && ((headerRecord[0]["Status"] == "Booked") || ((headerRecord[0]["Status"] == "Submitted" || headerRecord[0]["Status"] == "Oracle Error") && headerRecord[0]["SN Decouple Live"] == "Y")))
+                    {
+                      $("#SC-SO-SR-hold").modal('hide');
+                      $("#SC-SO-SR-hold").css(
+                      {
+                        "display": "",
+                        "justify-content": "",
+                        "align-items": ""
+                      });
+                      $("#SC-SO-UnSchedule-item-SelectBox").val("");
+                      $("#sc-unschedule-Ok").addClass("SC-disabled");
+                      $("#SC-SO-UnSchedule-popup").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#SC-SO-UnSchedule-popup").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                      $(".modal-backdrop").css('background', '#ffffff');
+                    }
+                    else
+                    {
+                      SRScheduleNo();
+                    }
+                  }, 50);
+                }
+              }, 8000);
+
+            }
+            else
+            {
+              /* $("#SC-SO-SR-hold").modal({
+              	backdrop: 'static'
+              });
+              $("#SC-SO-SR-hold").css({
+              	"display": "flex",
+              	"justify-content": "center",
+              	"align-items": "center"
+              }); */
+              setTimeout(function ()
+              {
+                if (cancelCliked == "N")
+                {
+                  $('#maskoverlay').show();
+                  setTimeout(function ()
+                  {
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+                    FieldQueryPair = {
+                      "Status": "'START' OR 'REVISION'"
+                    };
+                    SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+                    $('#maskoverlay').hide();
+                    SRScheduleNo();
+                  }, 50);
+                }
+              }, 8000);
+            }
+            //return null;	
+          }
+          //Start code for on click of Schedule Yes button
+          function SRScheduleYes()
+          {
+            var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+            var headerRecord = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+            if (Reco.length > 0 && ((headerRecord[0]["Status"] == "Booked") || ((headerRecord[0]["Status"] == "Submitted" || headerRecord[0]["Status"] == "Oracle Error") && headerRecord[0]["SN Decouple Live"] == "Y")))
+            {
+              setTimeout(function ()
+              {
+                if (cancelCliked == "N")
+                {
+                  $('#maskoverlay').show();
+                  setTimeout(function ()
+                  {
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+                    FieldQueryPair = {
+                      "Status": "'START' OR 'REVISION'"
+                    };
+                    SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+                    $('#maskoverlay').hide();
+                    Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+                    headerRecord = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+                    if (Reco.length > 0 && ((headerRecord[0]["Status"] == "Booked") || ((headerRecord[0]["Status"] == "Submitted" || headerRecord[0]["Status"] == "Oracle Error") && headerRecord[0]["SN Decouple Live"] == "Y")))
+                    {
+                      $("#SC-SO-SR-hold").modal('hide');
+                      $("#SC-SO-SR-hold").css(
+                      {
+                        "display": "",
+                        "justify-content": "",
+                        "align-items": ""
+                      });
+                      //$("#SC-Add-Note").val("");
+                      getHDSRList();
+                      $("#SC-SO-ScheduleList-popup").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#SC-SO-ScheduleList-popup").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                      $(".modal-backdrop").css('background', '#ffffff');
+                    }
+                    else
+                      SRScheduleYes();
+                  }, 50);
+                }
+              }, 10000);
+
+            }
+            else
+            {
+              /* $("#SC-SO-SR-hold").modal({
+              	backdrop: 'static'
+              });
+              $("#SC-SO-SR-hold").css({
+              	"display": "flex",
+              	"justify-content": "center",
+              	"align-items": "center"
+              }); */
+              setTimeout(function ()
+              {
+                if (cancelCliked == "N")
+                {
+                  $('#maskoverlay').show();
+                  setTimeout(function ()
+                  {
+                    SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+                    FieldQueryPair = {
+                      "Status": "'START' OR 'REVISION'"
+                    };
+                    SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+                    $('#maskoverlay').hide();
+                    SRScheduleYes();
+                  }, 50);
+                }
+              }, 8000);
+            }
+          }
+          //SPATIBAN:JUN19:code for dispalying the line items in home delivery popup
+          function getHDSRList()
+          {
+            var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+            var Reco1 = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetPModel().Get("GetRecordSet");
+            var HDSRMarkup = "",
+              SRPhone, SrAddr;
+            var SRrcdlen1 = Reco.length;
+            HDSRRecCount = SRrcdlen1;
+            HDSRSrcSpec = "";
+            for (var sr = 0; sr < SRrcdlen1; sr++)
+            {
+              SRPhone = "";
+              SrAddr = "";
+              if ((SRrcdlen1 - 1) == sr)
+                HDSRSrcSpec += "'" + Reco[sr]["SR Number"] + "'";
+              else
+                HDSRSrcSpec += "'" + Reco[sr]["SR Number"] + "' OR ";
+              HDSRMarkup += '<tr>';
+              HDSRMarkup += '	<td class="no-padding">';
+              HDSRMarkup += '		<div class="SC-textarea">';
+              HDSRMarkup += '			<textarea class="SC-textarea-notes SRAddnotes" title="" name="addnotes" id="' + Reco[sr]["SR Number"] + '__note" class="SC-input mandatory"></textarea>';
+              HDSRMarkup += '			<button class="SC-send-button SC-disabled scSRsend" id="' + Reco[sr]["SR Number"] + '__special">Save</button>';
+              HDSRMarkup += '		</div>';
+              HDSRMarkup += '	</td>';
+              HDSRMarkup += '	<td> ';
+              HDSRMarkup += '		<div class="SC-checkbox-grey-square addmarginleft">';
+              if (Reco1[sr]["SC HD Optin Flag"] == "Y")
+                HDSRMarkup += '			<input type="checkbox" id="' + Reco1[sr]["Id"] + '__HDopt" name="" class="input-checkbox srhdoptflag" checked>';
+              else
+                HDSRMarkup += '			<input type="checkbox" id="' + Reco1[sr]["Id"] + '__HDopt" name="" class="input-checkbox srhdoptflag">';
+              HDSRMarkup += '			<label for="' + Reco1[sr]["Id"] + '__HDopt"></label>';
+              HDSRMarkup += '		</div>';
+              HDSRMarkup += '	</td>';
+              SRPhone = Reco1[sr]["SC Preferred Contact"]
+              if (SRPhone.length != 0)
+              {
+                SRPhone = "(" + SRPhone.substring(0, 3) + ")" + SRPhone.substring(3, 6) + "-" + SRPhone.substring(6, 10);
+              }
+              HDSRMarkup += '	<td title="' + SRPhone + '">' + SRPhone + '</td>';
+              /*HDSRMarkup += '	<td class="no-padding">';
+              HDSRMarkup += '		<div class="SC-textarea">';
+              HDSRMarkup += '			<input type="" class="SC-textarea-notes SRAddDelPhone"  title="' + SRPhone + '" name="addnotes" id="' + Reco[sr]["SR Number"] + '__phone" class="SC-input mandatory" maxlength="14" value="' +SRPhone+ '">';
+              HDSRMarkup += '			<button class="SC-send-button SC-disabled SRDelPhnSave" id="' + Reco[sr]["SR Number"] + '__pSave">Save</button>';
+              HDSRMarkup += '		</div>';
+              HDSRMarkup += '	</td>';*/
+
+              // UALVES: 8-APR-2021: Enabled Delivery Phone Number update
+              //HDSRMarkup += '<td><input type="" class="shipping-input total-width Ship-ShipToContactPhNum Ship-ShipToContactPhNum-lineitem" maxlength="14" id="' + Reco1[sr]["Id"] + '__PhNum" value="' + SRPhone + '">';
+              //HDSRMarkup += '<button class="SC-send-button scSavePh" id="' + Reco1[sr]["Id"] + '__savePhNum">Save Phone</button></td>';
+
+              HDSRMarkup += '	<td title="' + Reco[sr]["INS Area"] + '">' + Reco[sr]["INS Area"] + '</td>';
+              SrAddr = Reco[sr]["Personal Street Address"] + ', ' + Reco[sr]["Personal City"] + ', ' + Reco[sr]["Personal State"] + ', ' + Reco[sr]["Personal Postal Code"];
+              HDSRMarkup += '	<td class="sc-shiptoaddress" title="' + SrAddr + '">' + SrAddr + '.</td>';
+              HDSRMarkup += '	<td><button class="sc-booknow srBooknow" id="' + Reco1[sr]["Id"] + '__BookNow">Book Now</button></td>';
+              HDSRMarkup += '	<td id="' + Reco[sr]["SR Number"] + '__Status" title="' + Reco[sr]["Status"] + '">' + Reco[sr]["Status"] + '</td>';
+              HDSRMarkup += '	<td id="' + Reco[sr]["SR Number"] + '__deliverydate" title="' + Reco[sr]["SC HD Activity Sched Start Dt"] + '">' + Reco[sr]["SC HD Activity Sched Start Dt"] + '</td>';
+              HDSRMarkup += '</tr>';
+            }
+            $("#HDSR-list-Items").html(HDSRMarkup);
+            $("#SC-HDSR-Next").addClass("SC-disabled");
+          }
+          //Start:on click of close or next button in HD SR Schedule popup
+          $("#sr-close-details,#SC-HDSR-Next").click(function ()
+          {
+            $("#SC-SO-ScheduleList-popup").modal('hide');
+            $("#SC-SO-ScheduleList-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            if (orderBC.GetFieldValue("SC Sub-Type") == "Wholesale")
+              noReceipt();
+            else
+            {
+              //SHARATH: Added feature flag condition for Store Recipet bypass user story.
+              if (sFeatureFlag == "Y")
+              {
+                $("#SC-SO-customer-receipt").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-customer-receipt").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              else if (P2PEFlag == "Y" && sFeatureFlag != "Y")
+              {
+                $("#SC-SO-store-receipt").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-store-receipt").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              else
+              {
+                var sOrderId = orderBC.GetFieldValue("Id");
+                var sbilltocontactId = orderBC.GetFieldValue("Bill To Contact Id");
+                if (sbilltocontactId != "")
+                  SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                $("#SC-SO-order-complete").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-order-complete").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+            }
+          });
+          //Start :code for on click of Yes Button in HD Schedule Popup
+          $("#sc-schedule-yes").click(function ()
+          {
+            $("#SC-SO-Schedule-popup").modal('hide');
+            sHDSched = "yes";
+            $('#maskoverlay').show();
+            setTimeout(function ()
+            {
+              SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+              FieldQueryPair = {
+                "SR #": ""
+              };
+              SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+              FieldQueryPair = {
+                "Status": "'START' OR 'REVISION'"
+              };
+              SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+              var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+              var headerRecord = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+              /*if (Reco.length > 0 && headerRecord[0]["Status"] == "Booked") {
+                  //if (Reco.length > 0) {
+                  //$("#SC-Add-Note").val("");
+                  getHDSRList();
+                  $("#SC-SO-ScheduleList-popup").modal({
+                      backdrop: 'static'
+                  });
+                  $("#SC-SO-ScheduleList-popup").css({
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+              } else {*/
+              $("#SC-SO-SR-hold").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-SR-hold").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              SRScheduleYes();
+              // }
+              $('#maskoverlay').hide();
+            }, 50);
+          });
+          //end :code for on click of Yes Button in HD Schedule Popup
+          //on click of ok on on hold popup tax exempt
+          $(document).on('click', '#SC-order-hold', function ()
+          {
+            //Close the popup and navigate to 360
+            $("#SC-SO-order-hold").modal('hide');
+            $("#SC-SO-order-hold").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            //$(".modal-backdrop").css('background', '#ffffff');
+            SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+          });
+
+          //on click of sbl error ok button
+          $(document).on('click', '#SC-order-siebel-OK', function ()
+          {
+            //Close the popup and navigate to 360
+            $("#SC-SO-order-sibel-error").modal('hide');
+            $("#SC-SO-order-sibel-error").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            //$(".modal-backdrop").css('background', '#ffffff');
+            SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+          });
+
+
+          //on click of orcl error ok button
+          $(document).on('click', '#SC-order-oracle-OK', function ()
+          {
+            //Close the popup and navigate to 360
+            $("#SC-SO-order-oracle-error").modal('hide');
+            $("#SC-SO-order-oracle-error").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            //$(".modal-backdrop").css('background', '#ffffff');
+            SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+          });
+
+          //on click of just hold after generate reciept
+          $(document).on('click', '#SC-order-just-hold', function ()
+          {
+            //Close the popup and navigate to 360
+            $("#SC-SO-order-just-hold").modal('hide');
+            $("#SC-SO-order-just-hold").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            //$(".modal-backdrop").css('background', '#ffffff');
+            SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+          });
+
+          //on click of close of retry
+          //saddala for #652
+          $(document).on('click', '#SC-cancel-retry', function ()
+          {
+            //Close the popup and navigate to 360
+            $("#SC-SO-SR-hold").modal('hide');
+            $("#SC-SO-SR-hold").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            cancelCliked = "Y";
+            //$(".modal-backdrop").css('background', '#ffffff');
+            //SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+            if (orderBC.GetFieldValue("SC Sub-Type") == "Wholesale")
+              noReceipt();
+            else
+            {
+              //SHARATH: Added feature flag condition for Store Recipet bypass user story.
+              if (sFeatureFlag == "Y")
+              {
+                $("#SC-SO-customer-receipt").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-customer-receipt").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              else if (P2PEFlag == "Y" && sFeatureFlag != "Y")
+              {
+                $("#SC-SO-store-receipt").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-store-receipt").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              else
+              {
+                var sOrderId = orderBC.GetFieldValue("Id");
+                var sbilltocontactId = orderBC.GetFieldValue("Bill To Contact Id");
+                if (sbilltocontactId != "")
+                  SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                $("#SC-SO-order-complete").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-order-complete").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+            }
+          });
+
+
+          //on click of OK button on SR didn't get created popup
+          //saddala for #652
+          /* $(document).on('click', '#SC-SR-hold-retry', function() {
+                        //Close the popup and navigate to 360
+                        $("#SC-SO-SR-hold").modal('hide');
+                        $("#SC-SO-SR-hold").css({
+                            "display": "",
+                            "justify-content": "",
+                            "align-items": ""
+                        });
+
+                        FieldQueryPair = {
+                            "Status": "'START' OR 'REVISION'"
+                        };
+                        SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+                        setTimeout(function() {
+                            var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+                            if (Reco.length > 0) {
+                                //if success the drill down on the SR created
+								//invokeBookNow();
+								if(sHDSched == "yes"){
+									$("#SC-Add-Note").val("");
+									$("#SC-SO-SelectSchedule-popup").modal({
+									backdrop: 'static'
+									});
+									$("#SC-SO-SelectSchedule-popup").css({
+										"display": "flex",
+										"justify-content": "center",
+										"align-items": "center"
+									});
+									$(".modal-backdrop").css('background', '#ffffff');
+								}
+								else if(sHDSched == "no"){
+									$("#SC-SO-UnSchedule-item-SelectBox").val("");
+									$("#sc-unschedule-Ok").addClass("SC-disabled");
+									$("#SC-SO-UnSchedule-item-SelectBox").val("");
+									$("#sc-unschedule-Ok").addClass("SC-disabled");
+									$("#SC-SO-UnSchedule-popup").modal({
+										backdrop: 'static'
+									});
+									$("#SC-SO-UnSchedule-popup").css({
+										"display": "flex",
+										"justify-content": "center",
+										"align-items": "center"
+									});
+									$(".modal-backdrop").css('background', '#ffffff');
+									
+								}
+								else
+									invokeBookNow();
+									sHDSched="";
+                               // localStorage.setItem('whitescreen', 1);
+                                //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().ExecuteMethod("OnDrillDown", "SR Number", 1);
+                            } else {
+                                //else fail of hd delivery SR didn't get created show this
+                                $("#SC-SO-SR-hold").modal({
+                                    backdrop: 'static'
+                                });
+                                $("#SC-SO-SR-hold").css({
+                                    "display": "flex",
+                                    "justify-content": "center",
+                                    "align-items": "center"
+                                });
+                            }
+                        }, 1000);
+
+                    }); */
+          function invokeBookNow()
+          {
+            var HDSRPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetPModel().GetRenderer().GetPM();
+            var CanInvokebooknow = HDSRPM.ExecuteMethod("CanInvokeMethod", "SCFSBookNowHDSR");
+            if (CanInvokebooknow)
+            {
+              HDSRPM.ExecuteMethod("InvokeMethod", "SCFSBookNowHDSR", null, false);
+              $(".ui-dialog-titlebar-close").hide();
+              var HDSRStatus = [];
+              HDSRPM.AttachNotificationHandler(consts.get("SWE_PROP_BC_NOTI_GENERIC"), function (propSet)
+              {
+                var type = propSet.GetProperty(consts.get("SWE_PROP_NOTI_TYPE"));
+                if (type === "ClosePopup")
+                {
+                  //$("#SC-SO-SelectSchedule-popup").modal('hide');
+                  $(".ui-dialog-titlebar-close").show();
+                  if (HDSRStatus.length == 0)
+                  {
+                    FieldQueryPair = {
+                      "SR #": HDSRSrcSpec
+                    };
+                    SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Field Service List Applet");
+                    var Reco = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service List Applet"].GetPModel().Get("GetRecordSet");
+                    for (var sr = 0; sr < Reco.length; sr++)
+                    {
+                      HDSRStatus.push(Reco[sr]["Status"]);
+                      $("#" + Reco[sr]["SR Number"] + "__deliverydate").text(Reco[sr]["SC HD Activity Sched Start Dt"]);
+                      $("#" + Reco[sr]["SR Number"] + "__Status").text(Reco[sr]["Status"]);
+                    }
+                    if (HDSRStatus.includes("START") || HDSRStatus.includes("REVISION"))
+                      $("#SC-HDSR-Next").addClass("SC-disabled");
+                    else
+                      $("#SC-HDSR-Next").removeClass("SC-disabled");
+                  }
+
+                  /* if(orderBC.GetFieldValue("SC Sub-Type")=="Wholesale")
+                  		noReceipt();
+                  else{
+                  	if(P2PEFlag == "Y"){
+                  		$("#SC-SO-store-receipt").modal({
+                  				backdrop: 'static'
+                  			});
+                  			$("#SC-SO-store-receipt").css({
+                  				"display": "flex",
+                  				"justify-content": "center",
+                  				"align-items": "center"
+                  			});
+                  			$(".modal-backdrop").css('background', '#ffffff');
+                  		}
+                  	else{
+                  		$("#SC-SO-order-complete").modal({
+                  			backdrop: 'static'
+                  		});
+                  		$("#SC-SO-order-complete").css({
+                  			"display": "flex",
+                  			"justify-content": "center",
+                  			"align-items": "center"
+                  		});
+                  		$(".modal-backdrop").css('background', '#ffffff');
+                  	}
+                  } */
+                }
+              });
+            }
+            /* else{
+            	if(orderBC.GetFieldValue("SC Sub-Type")=="Wholesale")
+            		noReceipt();
+            	else{
+            		if(P2PEFlag == "Y"){
+            			$("#SC-SO-store-receipt").modal({
+            					backdrop: 'static'
+            				});
+            				$("#SC-SO-store-receipt").css({
+            					"display": "flex",
+            					"justify-content": "center",
+            					"align-items": "center"
+            				});
+            				$(".modal-backdrop").css('background', '#ffffff');
+            			}
+            		else{
+            			$("#SC-SO-order-complete").modal({
+            				backdrop: 'static'
+            			});
+            			$("#SC-SO-order-complete").css({
+            				"display": "flex",
+            				"justify-content": "center",
+            				"align-items": "center"
+            			});
+            			$(".modal-backdrop").css('background', '#ffffff');
+            		}
+            	}
+            } */
+          }
+
+          $("#SC-select-salesrep").click(function ()
+          {
+            $(this).addClass('SC-disabled');
+            $("#custommaskoverlay").show();
+            var loginid = $("#" + salesreprowid + " td:nth-child(1)").text();
+            var InPS = SiebelApp.S_App.NewPropertySet();
+            var OutPS = SiebelApp.S_App.NewPropertySet();
+            var Service = SiebelApp.S_App.GetService("SC Get Employee");
+            InPS.SetProperty("OrderId", orderId);
+            InPS.SetProperty("LoginId", loginid);
+            OutPS = Service.InvokeMethod("SetEmployee", InPS);
+            //SPATIBAN: added code Non-quota Sales Credit
+            var Custom_Service = "",
+              Input_BS = "",
+              Out_BS = "",
+              searchfields;
+            Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+            Input_BS = SiebelApp.S_App.NewPropertySet();
+            Out_BS = SiebelApp.S_App.NewPropertySet();
+            searchfields = "SC Sales Credit Type";
+            Input_BS.SetProperty("BO", "Order Entry (Sales)");
+            Input_BS.SetProperty("BC", "SC Order Sales Team");
+            Input_BS.SetProperty("SearchSpecification", "[SC Order Id]='" + orderId + "' AND [SC Sales Credit Type]=LookupValue('SC_SALE_CREDIT_TYPE', 'Non-quota Sales Credit')")
+            Input_BS.SetProperty("SortSpecification", "");
+            Input_BS.SetProperty("ReqNoOfRecords", "");
+            Input_BS.SetProperty("FieldsArray", searchfields);
+            Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+            var Child_BS = Out_BS.GetChild(0);
+            var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+            if (BS_Data == "}")
+            {
+              var InPS = "",
+                OutPS = "",
+                Service = "";
+              InPS = SiebelApp.S_App.NewPropertySet();
+              OutPS = SiebelApp.S_App.NewPropertySet();
+              Service = SiebelApp.S_App.GetService("SC Order Management Service");
+              InPS.SetProperty("OrderId", orderId);
+              OutPS = Service.InvokeMethod("GetCSCReferral", InPS);
+            }
+            $("#SC-sales-rep").modal('hide');
+            submitOrder();
+          });
+
+          var DupGiftcard = GiftCardCount,
+            cardseen;
+          //on selecting sales rep generate receipt to be opened
+          $("#SC-select-salesrep").click(function () {
+
+          });
+          //Get GiftCard Balance before Activation
+          //vamsi ICX : Inactivated, below logic is takencare at fusion side
+          /*$("#sc-activate-balance").click(function() {
+						pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+                        var AccessToken =  SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+                        var terminalID = SCOUIMethods.SCGetProfileAttrValue('IP');
+						var customerReference = orderBC.GetFieldValue("SC Primary Bill Contact Customer Number");
+                        var TrackInfo = $("#giftcard-token").val();
+                        pm.SetProperty("CustomerReference", customerReference);
+                        pm.SetProperty("TrackInformation", TrackInfo);
+                        pm.SetProperty("AccessToken", AccessToken);
+                        pm.SetProperty("PaymentsRowID", paymentBC.GetFieldValue("Id"));
+						pm.OnControlEvent("SU_GET_GC_ACT_BALANCE");
+                     });*/
+
+          //open giftcard Activation success popup
+          $("#sc-activate-card").click(function ()
+          {
+            //var accessToken = "29648B61-F9A2-4BE1-BDCA-E1DFD2F9B7E5";
+            pm.ExecuteMethod("InvokeMethod", "GetAccessToken", null, false);
+            var AccessToken = SiebelApp.S_App.GetProfileAttr("SCAccessToken");
+            var terminalID = SCOUIMethods.SCGetProfileAttrValue('IP');
+            var balance = $('#giftbeforeactivate').text();
+            balance = balance.replace("$", "");
+            var customerReference = orderBC.GetFieldValue("SC Primary Bill Contact Customer Number");
+            var TrackInfo = $("#giftcard-token").val();
+            pm.SetProperty("CustomerReference", customerReference);
+            pm.SetProperty("ObjectId", paymentBC.GetFieldValue("Id"));
+            //pm.SetProperty("TrackInformation", TrackInfo);
+            pm.SetProperty("AccessToken", AccessToken);
+            pm.SetProperty("TerminalID", terminalID);
+            pm.SetProperty("IYCBalance", balance);
+            if (P2PEFlag == "Y")
+            {
+              $("#custommaskoverlay").show();
+              $("#SC-P2PE-GCActivate").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-P2PE-GCActivate").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+            }
+            setTimeout(function ()
+            {
+              if (P2PEFlag == "Y")
+              {
+                pm.OnControlEvent("SU_GIFTCARD_ACTIVATE_CLICK");
+              }
+              else
+              {
+                pm.OnControlEvent("SU_GIFTCARD_ACTIVATE_CLICK");
+              }
+              if (pm.Get("CardActivated") == "Y")
+              {
+                $("#Activate-gift-card").modal('hide');
+                $("#SC-SO-gift-card").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SO-gift-card").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+                setTimeout(function ()
+                {
+                  if (DupGiftcard > 1)
+                  {
+                    $("#SC-SO-gift-card").modal('hide');
+                    $("#SC-SO-gift-card").css(
+                    {
+                      "display": "",
+                      "justify-content": "",
+                      "align-items": ""
+                    });
+                    for (var j = 0; j < GetLineOutps.GetChild(0).GetChildCount(); j++)
+                    {
+                      //VALLA:11-Aug-2021:
+                      cardseen = localStorage.getItem('CardSeen');
+                      if (GetLineOutps.GetChild(0).GetChild(j).GetProperty("SC Calc Long Description") == "GIFT CARD" && cardseen < j)
+                      {
+                        $('#giftbeforeactivate').text(GetLineOutps.GetChild(0).GetChild(j).GetProperty("Unit Price - Display"));
+                        $('#giftafteractivate').text("Gift card balance $" + GetLineOutps.GetChild(0).GetChild(j).GetProperty("Unit Price - Display"));
+                        cardseen = j;
+                        //VALLA:11-Aug-2021:
+                        localStorage.setItem('CardSeen', cardseen);
+                        DupGiftcard--;
+                        $("#Activate-gift-card").modal(
+                        {
+                          backdrop: 'static'
+                        });
+                        $("#giftcard-token").focus();
+                        break;
+                      }
+                    }
+                  }
+                  else
+                  {
+                    //to hide activated gift card popup
+                    $("#SC-SO-gift-card").modal('hide');
+                    $("#SC-SO-gift-card").css(
+                    {
+                      "display": "",
+                      "justify-content": "",
+                      "align-items": ""
+                    });
+
+                    //for which popup should show up
+                    var Record = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+                    //if order is on hold show that pop up
+                    if (Record[0]["SC Tax Verification Pending"] === 'Y' && Record[0]["Tax Exempt"] === 'Y')
+                    {
+                      $("#SC-SO-order-hold").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#SC-SO-order-hold").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                      $(".modal-backdrop").css('background', '#ffffff');
+                    }
+                    else
+                    { //if order is completed show that poup
+                      if (Record[0]["Status"] != "Oracle Error" && Record[0]["Status"] != "Siebel Error" && Record[0]["Status"] != "Hold" && Record[0]["SC Tax Verification Pending"] != 'Y' && Record[0]["Tax Exempt"] != 'Y' && itemsCount > 0)
+                      {
+
+                        $("#SC-SO-Schedule-popup").modal(
+                        {
+                          backdrop: 'static'
+                        });
+                        $("#SC-SO-Schedule-popup").css(
+                        {
+                          "display": "flex",
+                          "justify-content": "center",
+                          "align-items": "center"
+                        });
+                      }
+                      else
+                      {
+                        //SHARATH: Added below feature flag condition for Store Recipet bypass user story.
+                        if (sFeatureFlag == "Y")
+                        {
+                          $("#SC-SO-customer-receipt").modal(
+                          {
+                            backdrop: 'static'
+                          });
+                          $("#SC-SO-customer-receipt").css(
+                          {
+                            "display": "flex",
+                            "justify-content": "center",
+                            "align-items": "center"
+                          });
+                          $(".modal-backdrop").css('background', '#ffffff');
+                        }
+                        else if (P2PEFlag == "Y" && sFeatureFlag != "Y")
+                        {
+                          $("#SC-SO-store-receipt").modal(
+                          {
+                            backdrop: 'static'
+                          });
+                          $("#SC-SO-store-receipt").css(
+                          {
+                            "display": "flex",
+                            "justify-content": "center",
+                            "align-items": "center"
+                          });
+                        }
+                        else
+                        {
+                          var sOrderId = orderBC.GetFieldValue("Id");
+                          var sbilltocontactId = orderBC.GetFieldValue("Bill To Contact Id");
+                          if (sbilltocontactId != "")
+                            SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                          $("#SC-SO-order-complete").modal(
+                          {
+                            backdrop: 'static'
+                          });
+                          $("#SC-SO-order-complete").css(
+                          {
+                            "display": "flex",
+                            "justify-content": "center",
+                            "align-items": "center"
+                          });
+                        }
+                        $(".modal-backdrop").css('background', '#ffffff');
+                      }
+                    }
+                  }
+                }, 5000);
+              }
+            }, 500);
+          });
+          //Get Arrival Dates
+          $("#SN-Ava-Dates").click(function ()
+          {
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("SCFSGetArrivalDates");
+          });
+          //saddala for gift card activation
+          //to open order complete popup
+          $("#SC-complete").click(function ()
+          {
+            //Start loader 
+            $("body").trigger('Custom.Start');
+            setTimeout(function ()
+            {
+
+              //SBOORLA:Added code for Pole Dispaly
+              if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag != "Y")
+              {
+                var poleJSON = [];
+                SCOUIMethods.PoleDisplay(poleJSON, "P");
+              }
+              if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag == "Y")
+              {
+                SCOUIMethods.ClearP2PEPoleDisplay(orderId);
+              }
+
+              // logic to read the Terms dispaly flag from profile attribute
+              bShowTermsFlag = getShowTermsFlag();
+              if (P2PEFlag == "Y" && bShowTermsFlag == "Y")
+              {
+                fShowPaymentsTerms();
+              }
+              else
+              {
+                selectSalesRep();
+              }
+            }, 1500);
+
+            //SHARATH: Clear Interval.
+            if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
+            {
+              clearInterval(window.terminalcheck);
+              SCOUIMethods.ResetTerminalProfileAttrib();
+              SiebelJS.Log('Terminal Interval Cleared after Order Submit!!');
+            }
+            SCOUIMethods.CheckTerminalStatus(localStorage.getItem('OrderId')); //31July24;SL;Created for home page navigation on Terminal
+          });
+
+          $("#order360").click(function ()
+          {
+            //Start loader 
+            $("body").trigger('Custom.Start');
+            // vamsi ICX: 15APR2018 : Inactivate the below code for #792
+            if (newRecord)
+            {
+              var canUndo = pm.ExecuteMethod("CanInvokeMethod", "UndoRecord");
+              if (canUndo)
+              {
+                var undoRecord = pm.ExecuteMethod("InvokeMethod", "UndoRecord", null, false);
+                newRecord = false;
+              }
+            }
+            newRecord = false;
+            setTimeout(function ()
+            {
+              //SBOORLA:Added code for Pole Dispaly
+              if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag != "Y")
+              {
+                var poleJSON = [];
+                SCOUIMethods.PoleDisplay(poleJSON, "P");
+              }
+              if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag == "Y")
+              {
+                SCOUIMethods.ClearP2PEPoleDisplay(orderId);
+              }
+              var InPut = SiebelApp.S_App.NewPropertySet();
+              var OutPut = SiebelApp.S_App.NewPropertySet();
+              var OrderSubType = orderBC.GetFieldValue("SC Sub-Type");
+              if (OrderSubType == "Wholesale" || OrderSubType == "Commercial" || OrderSubType == "QVC" || OrderSubType == "Internal" || OrderSubType == "HSN")
+              {
+                InPut.SetProperty("View", "SC Account 360 View OUI");
+                InPut.SetProperty("Business Component", "Account");
+                InPut.SetProperty("Row Id", orderBC.GetFieldValue("Bill To Account Id"));
+              }
+              else
+              {
+                InPut.SetProperty("View", "SC Contact 360 Degree View OUI");
+                InPut.SetProperty("Business Component", "Contact");
+                InPut.SetProperty("Row Id", contactId);
+
+              }
+              var BService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
+              OutPut = BService.InvokeMethod("GotoView", InPut);
+              //hiding the Loader
+              $("body").trigger('Custom.End');
+            }, 1000);
+
+            //SHARATH: Clear Interval.
+            if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
+            {
+              clearInterval(window.terminalcheck);
+              SCOUIMethods.ResetTerminalProfileAttrib();
+              SiebelJS.Log('Terminal Interval Cleared on Go To Contact!!');
+            }
+			SC_OUI_Methods.CheckTerminalStatus(localStorage.getItem('OrderId')); //22Aug24;SL;Created for home page navigation on Terminal
+          });
+
+          $(document).on('click', '#deleteorder', function ()
+          {
+            //Start loader 
+            $("body").trigger('Custom.Start');
+            setTimeout(function ()
+            {
+              newRecord = false;
+              var deleteOrder = orderPM.ExecuteMethod("CanInvokeMethod", "DeleteRecord");
+              if (deleteOrder)
+              {
+                $("#SC-SO-Delete-order").modal(
+                {
+                  backdrop: 'static'
+                })
+                $("#SC-SO-Delete-order").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                })
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              $("body").trigger('Custom.End');
+              //VALLA:10/20/2021: Added for cursor issue
+              $('#maskoverlay').hide();
+              //hiding the Loader
+
+            }, 1000);
+
+
+          });
+
+          $(document).on("click", "#SC-yes-button", function ()
+          {
+            $("#SC-SO-Delete-order").modal('hide');
+            $("#SC-SO-Delete-order").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            //Start loader 
+            $("body").trigger('Custom.Start');
+            setTimeout(function ()
+            {
+              //SBOORLA:Added code for Pole Dispaly
+              if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag != "Y")
+              {
+                var poleJSON = [];
+                SCOUIMethods.PoleDisplay(poleJSON, "P");
+              }
+              if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag == "Y")
+              {
+                SCOUIMethods.ClearP2PEPoleDisplay(orderId);
+              }
+              var deleteOrder = orderPM.ExecuteMethod("CanInvokeMethod", "DeleteRecord");
+
+              var recordDeleted = orderPM.ExecuteMethod("InvokeMethod", "DeleteRecord", null, false);
+              if (recordDeleted)
+              {
+                //SPATIBAN:MAY2019 Release:changed the logic to navigate contact 360 instead of order search.
+                //SiebelApp.S_App.GotoView("SC Sales Order Search View OUI");
+                var InPut = SiebelApp.S_App.NewPropertySet();
+                var OutPut = SiebelApp.S_App.NewPropertySet();
+                var OrderSubType = orderBC.GetFieldValue("SC Sub-Type");
+                if (OrderSubType == "Wholesale" || OrderSubType == "Commercial" || OrderSubType == "QVC" || OrderSubType == "Internal" || OrderSubType == "HSN")
+                {
+                  InPut.SetProperty("View", "SC Account 360 View OUI");
+                  InPut.SetProperty("Business Component", "Account");
+                  InPut.SetProperty("Row Id", orderBC.GetFieldValue("Bill To Account Id"));
+                }
+                else
+                {
+                  InPut.SetProperty("View", "SC Contact 360 Degree View OUI");
+                  InPut.SetProperty("Business Component", "Contact");
+                  InPut.SetProperty("Row Id", contactId);
+
+                }
+                var BService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
+                OutPut = BService.InvokeMethod("GotoView", InPut);
+              }
+              //hiding the Loader
+              $("body").trigger('Custom.End');
+            }, 1000);
+
+            //SHARATH: Clear Interval.
+            if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
+            {
+              clearInterval(window.terminalcheck);
+              SCOUIMethods.ResetTerminalProfileAttrib();
+              SiebelJS.Log('Terminal Interval Cleared on Delete Order!!');
+            }
+SC_OUI_Methods.CheckTerminalStatus(localStorage.getItem('OrderId')); //22Aug24;SL;Created for home page navigation on Terminal
+          });
+
+          $(document).on("click", "#SC-no-button", function ()
+          {
+            $("#SC-SO-Delete-order").modal('hide');
+            $(".SC-SO-add-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+
+
+          $(document).on("click", "#saveandexit", function ()
+          {
+            //SNARRA:Added code to check the PaymentDue before exit the Payments Page
+            if (orderBC.GetFieldValue("SC Total Balance Due") == 0)
+            {
+              $("#SC-SO-Saveexit-popup").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-Saveexit-popup").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+            }
+            else
+            {
+              //Start loader 
+              setTimeout(function ()
+              {
+                newRecord = false;
+                //SBOORLA:Added code for Pole Dispaly
+                if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag != "Y")
+                {
+                  var poleJSON = [];
+                  SCOUIMethods.PoleDisplay(poleJSON, "P");
+                }
+                if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag == "Y")
+                {
+                  SCOUIMethods.ClearP2PEPoleDisplay(orderId);
+                }
+                pm.ExecuteMethod("InvokeMethod", "ClearEnteredPayments", null, false);
+                SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+                //hiding the Loader
+                $("body").trigger('Custom.End');
+              }, 100);
+            }
+
+            //SHARATH: Clear Interval.
+            if (window.terminalcheck != undefined && window.terminalcheck != "undefined")
+            {
+              clearInterval(window.terminalcheck);
+              SCOUIMethods.ResetTerminalProfileAttrib();
+              SiebelJS.Log('Terminal Interval Cleared on Save & Exit!!');
+            }
+			SC_OUI_Methods.CheckTerminalStatus(localStorage.getItem('OrderId')); //22Aug24;SL;Created for home page navigation on Terminal
+          });
+          $("#sc-saveexit-yes").click(function ()
+          {
+            $("#SC-SO-Saveexit-popup").modal('hide');
+            $("#SC-SO-Saveexit-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            $("body").trigger('Custom.Start');
+            setTimeout(function ()
+            {
+              newRecord = false;
+              //SBOORLA:Added code for Pole Dispaly
+              if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag != "Y")
+              {
+                var poleJSON = [];
+                SCOUIMethods.PoleDisplay(poleJSON, "P");
+              }
+              if (localStorage.getItem("InvokepoleDisplay") == 'Y' && P2PEFlag == "Y")
+              {
+                SCOUIMethods.ClearP2PEPoleDisplay(orderId);
+              }
+              pm.ExecuteMethod("InvokeMethod", "ClearEnteredPayments", null, false);
+              SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+              //hiding the Loader
+              $("body").trigger('Custom.End');
+            }, 100);
+
+          });
+          $("#sc-saveexit-no").click(function ()
+          {
+            $("#SC-SO-Saveexit-popup").modal('hide');
+            $("#SC-SO-Saveexit-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+
+          });
+          //Add store Location modal open
+          $("#SC-add-store-location").click(function ()
+          {
+            //StoreLocation = SCOUIMethods.StoreName(LoginId);
+            StoreLocation = SCOUIMethods.SCGetProfileAttrValue("SC Store Name OUI");
+            $("#SC-add-storelocation").modal(
+            {
+              backdrop: 'static'
+            });
+            if (StoreLocation != "")
+            {
+              document.getElementById('StoreTitle').innerHTML = StoreLocation;
+            }
+            else
+            {
+              document.getElementById('StoreTitle').innerHTML = "Add Store Location";
+            }
+          });
+
+          //on click of enter on store search
+          $("#SC-Store-Search").keyup(function (event)
+          {
+            if (event.keyCode === 13)
+            {
+              var value = document.getElementById('SC-Store-Search').value;
+              var markup = SC_OUI_Markups.StoreChange2(value);
+              $("#SC-storelocation").html(markup);
+            }
+          });
+
+          //on selecting the store for change of store
+          var selectstoreid = "";
+          $(document).on('click', '#SC-storelocation tr', function ()
+          {
+            $(this).addClass('cti-active').siblings().removeClass('cti-active');
+            selectstoreid = $(this).attr('id');
+          });
+
+          //on click of the store
+          $(document).on('click', '#SC-selectstore', function ()
+          {
+            $("#SC-Store-Search").val("");
+            selectstoreid = $("#" + selectstoreid + " td:first-child").text();
+            if (selectstoreid.length != 0)
+            {
+              SCOUIMethods.SetStore(selectstoreid);
+              SCOUIMethods.SCGetProfileAttr("SC Primary Division Type,SC Store Number,MachineInfo,SC Store User,LoginFirstTimeOUI,PoleDisplayOUI,SC Store Name OUI,Login Name,Last Name,First Name,SC Primary Division Sub Type,DISALocFound,Primary responsibility Name,SC Primary Division Name,SCHCMerchantId,SCGEMerchantId,SC Primary Division Id");
+              StoreLocation = SCOUIMethods.SCGetProfileAttrValue("SC Store Name OUI");
+              //StoreLocation = SCOUIMethods.StoreName(LoginId);
+              if (StoreLocation != "")
+              {
+                document.getElementById('storename').innerHTML = selectstoreid.substring(0, 10);
+                $("#SC-add-store-location").attr("title", "Change Store");
+                $("#storename").attr("title", selectstoreid);
+                StoreLocation = selectstoreid;
+              }
+              else
+              {
+                $("#SC-add-store-location").attr("title", "Add Store");
+              }
+            }
+            $("#SC-add-storelocation").modal('hide');
+            $("#SC-storelocation").html("");
+          });
+
+          // Getting Store location
+          // StoreLocation = SCOUIMethods.StoreName(LoginId);
+          StoreLocation = SCOUIMethods.SCGetProfileAttrValue("SC Store Name OUI");
+          if (StoreLocation != "")
+          {
+            document.getElementById('storename').innerHTML = StoreLocation.substring(0, 10);
+            $("#SC-add-store-location").attr("title", "Change Store Location");
+            $("#storename").attr("title", StoreLocation);
+          }
+          else
+          {
+            $("#SC-add-store-location").attr("title", "Add Store Location");
+          }
+          //SPATIBAN:added code for update the user location with DISA Location
+          var scdisaloc = "";
+          scdisaloc = SCOUIMethods.SCGetProfileAttrValue("DISALocFound");
+          if (scdisaloc == "Y")
+          {
+            $("#SC-add-store-location").addClass("SC-readonly");
+          }
+          //Add store Location modal open
+          $("#SC-add-store-location").click(function ()
+          {
+            $("#SC-add-storelocation").modal(
+            {
+              backdrop: 'static'
+            });
+          });
+
+          $("#SC_QuoteValidDt").datepicker(
+          {
+            dateFormat: 'mm/dd/yy',
+            minDate: 0,
+            changeYear: true,
+            changeMonth: true,
+            buttonImageOnly: true,
+            showOn: 'button',
+            buttonText: 'Show Date',
+            buttonImage: 'images/custom/Calender_blue.png',
+            onSelect: function (dateText, inst)
+            {
+              $("#SC_QuoteValidDt").parent().addClass("is-active is-completed");
+            },
+            showButtonPanel: true
+          });
+        }
+
+        SCPaymentsPR.prototype.BindData = function (bRefresh)
+        {
+          // BindData is called each time the data set changes.
+          // This is where you'll bind that data to user interface elements you might have created in ShowUI
+          // Add code here that should happen before default processing
+          SiebelJS.Log(this.GetPM().Get("GetName") + ": SCPaymentsPR:      BindData method reached.");
+          SiebelAppFacade.SCPaymentsPR.superclass.BindData.apply(this, arguments);
+          $("#custommaskoverlay").show();
+          setTimeout(function ()
+          {
+            records = pm.Get("GetRecordSet");
+            //records = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetPModel().Get("GetRecordSet");
+            var paymentdetails = PaymentDetials(records);
+            $("#SC-payment-details").html(paymentdetails);
+
+            var pendingTxns = failedPendingTxnDetials(records);
+            $("#SC-failed-payment-details").html(pendingTxns);
+
+            var paymentMethod = paymentBC.GetFieldValue("Payment Method");
+            if (paymentMethod == "Credit Card")
+            {
+              var detailsMarkup = CreditCardDetails();
+              $('#SC-CreditDetails').html(detailsMarkup);
+            }
+            else if (paymentMethod == "Gift Card")
+            {
+              var detailsMarkup = GiftCardDetails();
+              $('#sc-giftcardTxnDetails').html(detailsMarkup);
+            }
+            else if (paymentMethod == "Check")
+            {
+              var detailsMarkup = CheckDetails();
+              $('#sc-check-payment-details').html(detailsMarkup);
+            }
+            else if (paymentMethod == "Financing")
+            {
+              var detailsMarkup = FinanceDetails();
+              $('#financing-payment-details').html(detailsMarkup);
+            }
+            else if (paymentMethod == "Reward")
+            {
+              var detailsMarkup = ACRDetails();
+              $('#reward-payment-details').html(detailsMarkup);
+            }
+            else if (paymentMethod == "Accounting")
+            {
+              var detailsMarkup = ACRDetails();
+              $('#accounting-payment-details').html(detailsMarkup);
+            }
+            else
+            {
+              var detailsMarkup = ACRDetails();
+              $('#cash-payment-details').html(detailsMarkup);
+            }
+            var sOrderRecord = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+            var canInvGenRef = pm.ExecuteMethod("CanInvokeMethod", "SCGenerateRefund");
+            SiebelJS.Log("Refund Invoke..:" + canInvGenRef);
+            if (canInvGenRef)
+            {
+              $("#SC-refund").css("display", "block");
+              $("#SC-complete").addClass("displaynone");
+              $("#SN-Ava-Dates").addClass("displaynone");
+            }
+            else
+            {
+              var caninvSubOrd = orderPM.ExecuteMethod("CanInvokeMethod", orderControlSet["BSubmit"].GetMethodName());
+              if (caninvSubOrd && (sOrderRecord[0]["Status"] == "In Progress" || sOrderRecord[0]["Status"] == "Siebel Error" || sOrderRecord[0]["Status"] == "Oracle Error" || sOrderRecord[0]["Status"] == "Hold"))
+              {
+                $("#SC-complete").removeClass("SC-disabled");
+              }
+              else
+              {
+                $("#SC-complete").addClass("SC-disabled");
+              }
+            }
+            $("#custommaskoverlay").hide();
+          }, 1000);
+
+        }
+
+        SCPaymentsPR.prototype.BindEvents = function ()
+        {
+          // BindEvents is where we add UI event processing.
+          // Add code here that should happen before default processing
+          SiebelJS.Log(this.GetPM().Get("GetName") + ": SCPaymentsPR:      BindEvents method reached.");
+          SiebelAppFacade.SCPaymentsPR.superclass.BindEvents.apply(this, arguments);
+          //Start: For Driving License Validation
+          jQuery.validator.addMethod(
+            "regex",
+            function (value, element, regexp)
+            {
+              if (regexp.constructor != RegExp)
+                regexp = new RegExp(regexp);
+              else if (regexp.global)
+                regexp.lastIndex = 0;
+              return this.optional(element) || regexp.test(value);
+            },
+            "");
+          //SNARRA:06-09-2019 Added button in Finance Payments
+          $(document).on('click', '#SC-financeapp', function (e)
+          {
+            $('#custommaskoverlay').show();
+            setTimeout(function ()
+            {
+              if (newRecord)
+              {
+                var canUndo = pm.ExecuteMethod("CanInvokeMethod", "UndoRecord");
+                if (canUndo)
+                {
+                  var undoRecord = pm.ExecuteMethod("InvokeMethod", "UndoRecord", null, false);
+                  newRecord = false;
+                }
+              }
+              var InPut = "";
+              var OutPut = "";
+              InPut = SiebelApp.S_App.NewPropertySet();
+              OutPut = SiebelApp.S_App.NewPropertySet();
+              InPut.SetProperty("View", "SC Contact Finance List View OUI");
+              InPut.SetProperty("Business Component", "Contact");
+              InPut.SetProperty("Row Id", contactId);
+              BService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
+              OutPut = BService.InvokeMethod("GotoView", InPut);
+              $('#custommaskoverlay').hide();
+            }, 50);
+          });
+          //SNARRA:29-10-2018 Start: show CTI Toolbar
+          $(document).on("click", "#SC-ANI-CTItool", function ()
+          {
+            $(this).find("img").toggle();
+            //Commented for IP23 by peeyush.kumar on Dec 5 2023
+            // $('#tb_1')[0].click();
+            //Added for IP23 by peeyush.kumar on  Dec 5 2023
+            $("li[name='Toggle Communication Panel']").click();
+            setTimeout(function ()
+            {
+              $("#commPanelDockToShowpin").click();
+            }, 500);
+          });
+
+          //SNARRA 30-07-2018 Added code for finance nonstackable error popup
+          $(document).on('click', '#sc-financing-error-ok', function ()
+          {
+            $("#sc-financing-error-popup").modal("hide");
+            $("#sc-financing-error-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            //localStorage.setItem("ComingFromPayments", "Y");
+            //SiebelApp.S_App.GotoView("SC Create Sales Order View OUI", "", "", "");
+          });
+          //VALLA: 23-08-2023 Added to stop buying GC using Finance
+          $(document).on('click', '#sc-giftcard-financing-error-ok', function ()
+          {
+            $("#sc-giftcard-financing-error-popup").modal("hide");
+            $("#sc-giftcard-financing-error-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+          $(document).on('click', '#sc-financing-promo-ok', function ()
+          {
+            $("#sc-financing-promo-popup").modal("hide");
+            $("#sc-financing-promo-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+
+          //SNARRA 01-08-2018 Added code for finance popup for new record
+          $(document).on('click', '#sc-financing-ok', function ()
+          {
+            $("#sc-financing-popup").modal("hide");
+            $("#sc-financing-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+
+          $(document).on('click', '#sc-cashier-check-ok', function ()
+          {
+            $("#sc-cashier-check-popup").modal("hide");
+            $("#sc-cashier-check-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+          //sushma 19-07-2018:Added for Resizing CTI Toolbar
+          $(document).on('click', '#commPanelDockToShowUnpin', function ()
+          {
+            $("#CommunicationPanelContainer").css("cssText", "padding-top: 0px !important;");
+          });
+          $(document).on('click', '#commPanelDockToShowPin', function ()
+          {
+            $("#CommunicationPanelContainer").css("cssText", "padding-top: 77px !important;");
+          });
+          // Add code here that should happen after default processing
+          //on click of ok button check ,drafts popup
+          var sc_pay_void = 0;
+          //on click of quote button						
+          function printQuote()
+          {
+            $("body").trigger('Custom.Start');
+            VQuoteValidUntillDate = $("#SC_QuoteValidDt").val();
+            var orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
+            var sOrderId = orderBC.GetFieldValue("Id");
+            var fieldnames = 'SC Valid Until Date';
+            var fieldvalues = VQuoteValidUntillDate;
+            var Bservice = '',
+              inPS = '',
+              outPS = '';
+            inPS = SiebelApp.S_App.NewPropertySet();
+            outPS = SiebelApp.S_App.NewPropertySet();
+            inPS.SetProperty("BO", "Order Entry (Sales)");
+            inPS.SetProperty("BC", "Order Entry - Orders");
+            inPS.SetProperty("FieldsArray", fieldnames);
+            inPS.SetProperty("ValuesArray", fieldvalues);
+            inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
+            Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+            outPS = Bservice.InvokeMethod("Insert", inPS);
+            var orderSubType = orderBC.GetFieldValue("SC Sub-Type");
+            setTimeout(function ()
+            {
+
+              // VALLA : 10ARP2018 : #712 Coded for Whole Sale and Commercial
+              if (orderSubType == "Wholesale" || orderSubType == "Commercial")
+              {
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("SCWCCreateQuote");
+              }
+              else
+              {
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("SCCreateQuote");
+              }
+              SiebelJS.Log("in bind datareports button click");
+              SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].InvokeMethod("RefreshAppletUI");
+              SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().ExecuteMethod("OnDrillDown", 'Report Name', 1);
+
+              setTimeout(function ()
+              {
+                $("#SC-salesorderquote").modal("hide");
+                $(".ui-dialog-buttonset button:nth-child(2)").trigger('click');
+                setTimeout(function ()
+                {
+                  $(".ui-dialog-buttonset button:nth-child(3)").trigger('click');
+                }, 1000);
+              }, 1000);
+              $("body").trigger('Custom.End');
+            }, 1000);
+          }
+          //Generate Quote Logic
+          $(document).on("click", "#sc-print", function (e)
+          {
+            e.preventDefault();
+            printQuote();
+          });
+
+          $(document).on("click", "#SC-Quote-Payments", function ()
+          {
+            var sStoreNum = '',
+              sDivSubType = '',
+              bIsStorePresent = '',
+              sDivSubTyp = '',
+              sAllStoreNum = '';
+            VQuoteValidUntillDate = "";
+            $("#SC_QuoteValidDt").val("");
+            $("#SC_personlizedtxt").val("");
+            $(".email-error").css('display', 'none');
+            $(".emial-id-valid").css('display', 'none');
+            $(".email-id-contact").css('display', 'none');
+            $(".emial-id-validate").css('display', 'none')
+
+            sStoreNum = SiebelApp.S_App.GetProfileAttr("SC Store Number");
+            sDivSubType = SiebelApp.S_App.GetProfileAttr("SC Primary Division Sub Type");
+            var strDivType = SiebelApp.S_App.GetProfileAttr("SC Primary Division Type");
+
+            var InPS = '',
+              OutPS = '',
+              sOrderId = '',
+              BService = '';
+            InPS = SiebelApp.S_App.NewPropertySet();
+            OutPS = SiebelApp.S_App.NewPropertySet();
+            Bservice = SiebelApp.S_App.GetService("SC Check LOV Values"); //get service
+            var sSearchSpec = "[Name] = '" + sStoreNum + "' AND [Type] = 'SC_EMAIL_QUOTE'";
+            InPS.SetProperty("searchExpr", sSearchSpec);
+            OutPS = Bservice.InvokeMethod("CheckLovValues", InPS);
+            var child = OutPS.GetChild(0);
+            bIsStorePresent = child.GetProperty("ISRecordFlag");
+
+            InPS = SiebelApp.S_App.NewPropertySet();
+            OutPS = SiebelApp.S_App.NewPropertySet();
+            Bservice = SiebelApp.S_App.GetService("SC Check LOV Values"); //get service
+            var sSearchSpec = "[Name] = '" + strDivType + "-" + sDivSubType + "' AND [Type] = 'SC_EMAIL_RECEIPT'";
+            InPS.SetProperty("searchExpr", sSearchSpec);
+            OutPS = Bservice.InvokeMethod("CheckLovValues", InPS);
+            var child = OutPS.GetChild(0);
+            sDivSubTyp = child.GetProperty("ISRecordFlag");
+
+            if (bIsStorePresent == "Y" || sDivSubTyp == "Y")
+            {
+              $("#SC-Sendemail").removeClass("SC-disabled");
+              $("#SC-salesorderquote").modal(
+              {
+                backdrop: 'static'
+              });
+            }
+            else
+            {
+              printQuote();
+            }
+          });
+
+          $(document).on("click", "#SC-salesOrderquote-close", function ()
+          {
+            // For SalesQuote PopUp
+            VQuoteValidUntillDate = "";
+            $("#SC_QuoteValidDt").val("");
+            $("#SC-salesorderquote").modal("hide");
+          });
+
+          function emailQuote()
+          {
+            var emailInPS = '',
+              emailOutPS = '',
+              sOrderId = '',
+              BService = '';
+            Vqemailchngflg = "N";
+            emailInPS = SiebelApp.S_App.NewPropertySet();
+            emailOutPS = SiebelApp.S_App.NewPropertySet();
+            sOrderId = orderBC.GetFieldValue("Id");;
+            Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+            emailInPS.SetProperty("ProcessName", "CX Email Quote Workflow");
+            emailInPS.SetProperty("Object Id", sOrderId);
+            emailInPS.SetProperty("ReportType", "Sales Order Quote");
+            // 24032020 - For SalesQuote PopUp
+            if (VQuoteValidUntillDate != "" && VQuoteValidUntillDate != undefined)
+            {
+              emailInPS.SetProperty("ValidUntilDate", VQuoteValidUntillDate);
+            }
+            if (VPersonalizedMsg != "" && VPersonalizedMsg != undefined)
+            {
+              emailInPS.SetProperty("Comment", VPersonalizedMsg);
+            }
+            emailOutPS = Bservice.InvokeMethod("RunProcess", emailInPS);
+            $("#SC-salesorderquote").modal("hide");
+            $("#SC-send-message-popup").modal("hide");
+
+          }
+          $(document).on("click", "#SC-Sendemail", function (e)
+          {
+            e.preventDefault();
+            //  For SalesQuote PopUp
+
+            VPersonalizedMsg = $("#SC_personlizedtxt").val();
+            var contactId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Bill To Contact Id");
+            var VquoteEmailaddr = $("#SC-qemailaddr").val();
+            var Emailaddress = $("#SC-qemailaddr").val();
+            //console.log(Emailaddress);
+            var reg = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+            if (VquoteEmailaddr == null || VquoteEmailaddr == "")
+            {
+              $(".email-id-contact").css('display', 'none');
+              $(".emial-id-validate").css('display', 'none');
+              $(".email-error").css('display', 'inline-block');
+              $(".emial-id-valid").css('display', 'block');
+              //$("#SC-qemailaddr").select();
+            }
+            else if (!(reg.test(VquoteEmailaddr)))
+            {
+              $(".email-id-contact").css('display', 'none');
+              $(".emial-id-valid").css('display', 'none');
+              $(".email-error").css('display', 'inline-block');
+              $(".emial-id-validate").css('display', 'block');
+            }
+            else
+            {
+              $("#custommaskoverlay").show();
+              setTimeout(function ()
+              {
+                if (Vqemailchngflg == "Y")
+                {
+                  emailaddrupdate(contactId, VquoteEmailaddr);
+                }
+                Vqemailchngflg == "N"
+                //var OrderId = ShipToContactRecordSet[0]["Id"];
+                var OrderId = orderBC.GetFieldValue("Id");
+                $("#SC-Sendemail").addClass("SC-disabled");
+                SCOUIMethods.triggerEmailQuote(OrderId, VQuoteValidUntillDate, VPersonalizedMsg) // emailQuote();
+                $("#SC-salesorderquote").modal("hide");
+                $("#SC-send-message-popup").modal("hide");
+                $("#SC-SO-Email-Update-popup").modal('hide');
+                $("#custommaskoverlay").hide();
+              }, 50);
+            }
+          });
+
+          $(document).on("click", "#SC-sales-sendemailquote-close", function ()
+          {
+            VPersonalizedMsg = "";
+            $("#SC_personlizedtxt").val("");
+            Vqemailchngflg = "N";
+            $("#SC-send-message-popup").modal("hide");
+            $(".email-error").css('display', 'none');
+            $(".emial-id-valid").css('display', 'none');
+            $(".email-id-contact").css('display', 'none');
+            $(".emial-id-validate").css('display', 'none');
+          });
+
+          $(document).on("click", "#sc-Cancelsend-button", function ()
+          {
+            // 23032020 - For SalesQuote PopUp
+            VPersonalizedMsg = "";
+            $("#SC_personlizedtxt").val("");
+            Vqemailchngflg = "N";
+            $("#SC-send-message-popup").modal("hide");
+            $(".email-error").css('display', 'none');
+            $(".emial-id-valid").css('display', 'none');
+            $(".email-id-contact").css('display', 'none');
+            $(".emial-id-validate").css('display', 'none');
+          });
+
+          $(document).on("click", "#sc-email", function ()
+          {
+            // 23032020 - For SalesQuote PopUp
+            VQuoteValidUntillDate = $("#SC_QuoteValidDt").val();
+            var contactAddr = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Primary Bill To Email Address");
+            $("#SC-qemailaddr").val(contactAddr);
+            $("#SC-salesorderquote").modal("hide");
+            $("#SC-send-message-popup").modal(
+            {
+              backdrop: 'static'
+            });
+          });
+
+          $(document).on("click", "#SC-qeditemailadress", function (e)
+          {
+            Vqemailchngflg = "Y";
+            $("#SC-qemailaddr").select();
+            $(".emial-id-valid").css('display', 'none');
+            $(".emial-id-validate").css('display', 'none');
+            $(".email-error").css('display', 'inline-block');
+            $(".email-id-contact").css('display', 'block');
+          });
+
+          $(document).on("click", "#SC-qemailaddr", function (e)
+          {
+            Vqemailchngflg = "Y";
+            $(".emial-id-valid").css('display', 'none');
+            $(".emial-id-validate").css('display', 'none');
+            $(".email-error").css('display', 'inline-block');
+            $(".email-id-contact").css('display', 'block');
+          });
+
+
+          $(document).on("keyup", "#SC_personlizedtxt", function (event)
+          {
+            $("#SC_personlizedtxtCnt").text($(this).val().length + "/500");
+          });
+
+
+          $(document).on("change", "#SC-qemailaddr", function (event)
+          {
+            Vqemailchngflg = "Y";
+          });
+
+          function emailaddrupdate(contactId, VquoteEmailaddr)
+          {
+
+            var fieldnames = "Email Address";
+            var fieldvalues = VquoteEmailaddr;
+            var Bservice = '',
+              inPS = '',
+              outPS = '';
+            inPS = SiebelApp.S_App.NewPropertySet();
+            outPS = SiebelApp.S_App.NewPropertySet();
+            inPS.SetProperty("BO", "Contact");
+            inPS.SetProperty("BC", "Contact");
+            inPS.SetProperty("FieldsArray", fieldnames);
+            inPS.SetProperty("ValuesArray", fieldvalues);
+            inPS.SetProperty("SearchSpecification", "[Id] = '" + contactId + "'");
+            Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+            outPS = Bservice.InvokeMethod("Insert", inPS);
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+            //$("#SC-salesorderquote").modal("hide");
+          }
+
+
+          $(document).on("click", "#sc-both", function (e)
+          {
+            e.preventDefault();
+            // 23032020 - For SalesQuote PopUp
+            printQuote();
+            VQuoteValidUntillDate = $("#SC_QuoteValidDt").val();
+            $("#SC-salesorderquote").modal("hide");
+
+            $("#SC-send-message-popup").modal(
+            {
+              backdrop: 'static'
+            });
+
+          });
+          //End--Atfer Clicking CreateQuote Button
+
+          //vamsi:06APR18:  #649 Handling esc key
+          $(document).keyup(function (e)
+          {
+            if (e.keyCode == 27)
+            { // escape key maps to keycode '27'
+              newRecord = false;
+              $(".active-tab").each(function ()
+              {
+                $('#' + this.id).removeClass("active-tab");
+              });
+            }
+          });
+
+          //NGollA defect for 663
+          $(document).on('click', '#SC-Clear-store', function ()
+          {
+            SCOUIMethods.SetStore("");
+            //StoreLocation = SCOUIMethods.StoreName(LoginId);
+            SCOUIMethods.SCGetProfileAttr("SC Primary Division Type,SC Store Number,MachineInfo,SC Store User,LoginFirstTimeOUI,PoleDisplayOUI,SC Store Name OUI,Login Name,Last Name,First Name,SC Primary Division Sub Type,DISALocFound,Primary responsibility Name,SC Primary Division Name,SCHCMerchantId,SCGEMerchantId,SC Primary Division Id");
+            StoreLocation = SCOUIMethods.SCGetProfileAttrValue("SC Store Name OUI");
+            $("#storename").text('Add Store');
+            $("#StoreTitle").text('Add Store Location');
+            $("#StoreTitle").attr("title", "Add Store Location");
+          });
+
+          $(document).on("click", "#SC-check-ok", function ()
+          {
+            $("#SC-SO-Cash-open-popup").modal('hide');
+            $("#SC-SO-Cash-open-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+
+          //on click of ok of void payment error of submit
+          $(document).on("click", "#SC-pay-error-ok", function ()
+          {
+            $("#SC-Payerror-popup").modal('hide');
+            $("#SC-Payerror-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            $(".modal-backdrop").css('background', '#ffffff');
+          });
+          //on click of void button
+          //added code for defect 635
+          $(document).on("click", ".sc-pay-void,.sc-line-pay-void", function ()
+          {
+            var lineid = $(this).attr('id');
+            var line_row_id = lineid.split("s");
+            line_row_id = line_row_id[0];
+            //var line_row_id = lineid.charAt(0);
+            SiebelJS.Log(line_row_id);
+            sc_pay_void = line_row_id;
+            $("#SC-SO-void-popup").modal(
+            {
+              backdrop: 'static'
+            });
+            $("#SC-SO-void-popup").css(
+            {
+              "display": "flex",
+              "justify-content": "center",
+              "align-items": "center"
+            });
+            $(".modal-backdrop").css('background', '#ffffff');
+          });
+
+          //on click of delete payment 
+          //SBOORLA:on click of yes button in void popup
+          $(document).on("click", "#sc-void-yes", function ()
+          {
+            $("body").trigger('Custom.Start');
+            setTimeout(function ()
+            {
+              $("#s_" + appletSeq + "_l tr#" + sc_pay_void + "").trigger("click");
+              //var isStoreUser = SiebelApp.S_App.GetProfileAttr("SC Store User");
+              if (paySCStoreUser == "Y")
+              {
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("StoreVoidPayment");
+              }
+              else
+              {
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].InvokeMethod("Void");
+              }
+              $("#SC-SO-void-popup").modal('hide');
+              $("#SC-SO-void-popup").css(
+              {
+                "display": "",
+                "justify-content": "",
+                "align-items": ""
+              });
+              $("body").trigger('Custom.End');
+            }, 1000);
+          });
+          //SBOORLA:on click of no button in void popup
+          $(document).on("click", "#sc-void-no", function ()
+          {
+            $("#SC-SO-void-popup").modal('hide');
+            $("#SC-SO-void-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+
+          //#600 by saddala to delete payments
+          $(document).on("click", ".pay-delete", function ()
+          {
+            var lineid = $(this).attr('id');
+            var line_row_id = lineid.split("v");
+            line_row_id = line_row_id[0];
+            //var line_row_id = lineid.charAt(0);
+            SiebelJS.Log(line_row_id);
+            $("#s_" + appletSeq + "_l tr#" + line_row_id + "").trigger("click");
+            var canDelete = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetPModel().ExecuteMethod("CanInvokeMethod", "DeleteRecord");
+            if (canDelete)
+            {
+              var deleteRecord = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetPModel().ExecuteMethod("InvokeMethod", "DeleteRecord", null, false);
+              SiebelJS.Log("DeleteRecord..:" + deleteRecord);
+              if (sChatUser == "Y" && giftCardFlag != "Y")
+              {
+                clearInterval(getChatCCAccountNumInterval);
+                clearInterval(getChatGCAccountNumInterval);
+                var FieldQueryPair = {
+                  "Payment Id": "[Id] IS NOT NULL"
+                };
+                SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+              }
+              if (sVoiceUser == "Y" && giftCardFlag != "Y")
+              {
+                //clearInterval(getVoiceCCAccountNumInterval);
+                //clearInterval(getVoiceGCAccountNumInterval);
+                var FieldQueryPair = {
+                  "Payment Id": "[Id] IS NOT NULL"
+                };
+                SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+              }
+              newRecord = false;
+              $(".active-tab").each(function ()
+              {
+                $('#' + this.id).removeClass("active-tab");
+              });
+              $(".SC-Payment-nav-item").each(function ()
+              {
+                $('#' + this.id).removeClass("p-item-active");
+              });
+
+              if ($(".pay-delete").hasClass("financing"))
+              {
+                isFinancing = "N";
+
+                /*SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Freight Calculated Flag", "Y");
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().InvokeMethod("RefreshRecord");
+
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetBusComp().InvokeMethod("RefreshBusComp");
+                
+                var canInvokeRePrice = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "CalculatePriceAll");
+                if (canInvokeRePrice) {
+                	SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].InvokeMethod("CalculatePriceAll");
+                }
+                	
+                var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
+                if (canInvokeCalculate) {
+                	SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Item List Applet (Sales) OUI"].InvokeMethod("SC Calculate Shipping");
+                }
+
+                var canInvokeVerify = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "QuotesAndOrdersValidate");
+                if (canInvokeVerify) {
+                	SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("QuotesAndOrdersValidate");
+                }*/
+
+                FieldQueryPair = {
+                  "Payment Id": ''
+                };
+                SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+
+                var inPS = SiebelApp.S_App.NewPropertySet();
+                var outPS = SiebelApp.S_App.NewPropertySet();
+                var bService = "";
+                inPS.SetProperty("OrderId", orderId);
+                SiebelJS.Log("Invoking Business Service");
+                bService = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
+                outPS = bService.InvokeMethod("Query", inPS); //invoke the method
+                var shippingcost = outPS.GetChild(0).GetProperty("Shipping cost");
+                var shippinglinediscounts = outPS.GetChild(0).GetProperty("Shipping Line Discounts");
+                var summaryMarkup = SCOUIMethods.OrderSummary(orderPM, shippingcost, shippinglinediscounts);
+
+                $("#SC-Order-Summary").html(summaryMarkup);
+              }
+            }
+          });
+
+          $(document).on("click", "#SC-Quote-Payments", function ()
+          {
+            SiebelJS.Log("Create Quote");
+            var createQuote = orderPM.ExecuteMethod("CanInvokeMethod", "SCCreateQuote");
+            if (createQuote)
+            {
+              var recordDeleted = orderPM.ExecuteMethod("InvokeMethod", "SCCreateQuote", null, false);
+            }
+          });
+
+          $(document).on("click", ".sc-failed-payment-row", function ()
+          {
+            var paymentsid = (this.id).split('-');
+            paymentsid = paymentsid[1];
+            SiebelJS.Log("click on failed payments ");
+            var recordsp = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetPModel().Get("GetRecordSet");
+            SiebelJS.Log(paymentsid);
+            $("#s_" + appletSeq + "_l tr#" + paymentsid + "").trigger("click");
+            //to differentiate new payment or revising the payment
+            failedpaymentselected = true;
+
+            switch (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetBusComp().GetFieldValue("Payment Method"))
+            {
+              case 'Credit Card':
+                $('#credit-card-paymnet').click();
+                break;
+              case 'Gift Card':
+                $('#giftcard-payment').click();
+                break;
+              case 'Financing':
+                isFinancing = "N";
+                $('#financing-payment').click();
+                break;
+              case 'Accounting':
+                $('#accounting-payment').click();
+                break;
+              case 'Cash':
+                $('#cash-payment').click();
+                break;
+              case 'Reward':
+                $('#reward-payment').click();
+                break;
+              case 'Check':
+                $('#check-payment').click();
+                break;
+            }
+          });
+          //SNARRA 04-02-2019 
+          $(document).on('click', '#sc-PN-Ok', function (e)
+          {
+            var phonenumber = $("#SCphone").val();
+            if (phonenumber.length >= 10)
+            {
+              $("#custommaskoverlay").show();
+              setTimeout(function ()
+              {
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetBusComp().SetFieldValue("SC HD Optin Flag", "Y");
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].InvokeMethod("WriteRecord");
+                var fieldnames = "Cellular Phone #";
+                var fieldvalues = phonenumber;
+                var Bservice = '',
+                  inPS = '',
+                  outPS = '';
+                inPS = SiebelApp.S_App.NewPropertySet();
+                outPS = SiebelApp.S_App.NewPropertySet();
+                inPS.SetProperty("BO", "Contact");
+                inPS.SetProperty("BC", "Contact");
+                inPS.SetProperty("FieldsArray", fieldnames);
+                inPS.SetProperty("ValuesArray", fieldvalues);
+                inPS.SetProperty("SearchSpecification", "[Id] = '" + contactId + "'");
+                Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+                outPS = Bservice.InvokeMethod("Insert", inPS);
+                //SPATIBAN: 16-DEC-2019 Added below code for HD Opt/in flag updating the activity type of TimeFrame Call to SMS
+                var SRRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Field Service Detail Applet"].GetPModel().Get("GetRecordSet");
+                var SRRowId = SRRecordSet[0]["Id"];
+                var BService = '',
+                  SR_inPS = '',
+                  SR_outPS = '';
+                SR_inPS = SiebelApp.S_App.NewPropertySet();
+                SR_outPS = SiebelApp.S_App.NewPropertySet();
+                var ai = {};
+                ai.async = true;
+                ai.selfbusy = true;
+                ai.scope = this;
+                ai.mask = true;
+                ai.opdecode = true;
+                SR_inPS.SetProperty("Object Id", SRRowId);
+                SR_inPS.SetProperty("ProcessName", "SC Send HD Opt In to Responsys WF");
+                BService = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+                BService.InvokeMethod("RunProcess", SR_inPS, ai); //invoke the method
+                //ended: HD Opt/in flag updating the activity type of TimeFrame Call to SMS
+                //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");*/
+
+                $("#SC-SO-PN-Update-popup").modal('hide');
+                $("#SC-SO-PN-Update-popup").css(
+                {
+                  "display": "",
+                  "justify-content": "",
+                  "align-items": ""
+                });
+                $("#custommaskoverlay").hide();
+              }, 50);
+            }
+            else
+              alert("Please Enter HD Text Opt-In Phone Number");
+
+          });
+          $(document).on('click', '#sc-PN-Cancel', function (e)
+          {
+            $("#SC-SO-PN-Update-popup").modal('hide');
+            $("#SC-SO-PN-Update-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+            $("#sHDOptinFlag").prop("checked", false);
+
+          });
+
+          $(document).on("click", "#SC-finance-lookup", function (e)
+          {
+            $("#SC-AccoutLookup-popup").modal(
+            {
+              backdrop: 'static'
+            });
+            $("#SC-AccoutLookup-popup").css(
+            {
+              "display": "flex",
+              "justify-content": "center",
+              "align-items": "center"
+            });
+            $(".modal-backdrop").css('background', '#ffffff');
+            $(".fin-set1").parent().hide();
+            $(".fin-set2").parent().show();
+            $("#fin-lookupMethod").val('Phone');
+            $("#fin-phoneNumber").val($("#SC-phone").text().replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3'));
+            $("#fin-firstName").val(orderBC.GetFieldValue("Primary Bill To First Name"));
+            $("#fin-lastName").val(orderBC.GetFieldValue("Primary Bill To Last Name"));
+            $("#fin-zipCode").val(orderBC.GetFieldValue("Primary Bill To Postal Code").split("-")[0]);
+          });
+
+          $(document).on("click", "#sc-fin-lookup-close", function (e)
+          {
+            $("#SC-AccoutLookup-popup").modal('hide');
+            $("#SC-AccoutLookup-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+
+          $("#SC-FinLookup-Cancel").click(function (e)
+          {
+            $("#SC-AccoutLookup-popup").modal('hide');
+            $("#SC-AccoutLookup-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+          $("#SC-FinLookup-Submit").click(function (e)
+          {
+            $("#sc-fin-Acc-Lookup-Details").submit();
+          });
+          $("#SC-FinLookup-Accept").click(function (e)
+          {
+            $("#financeaccountnumber").val($("#sn-fin-AccNumber").val())
+            $("#financeaccountnumber").focus();
+            $("#SC-AccoutLookup-Response").modal('hide');
+            $("#SC-AccoutLookup-Response").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+          $("#SC-FinLookup-Reject").click(function (e)
+          {
+            $("#SC-AccoutLookup-Response").modal('hide');
+            $("#SC-AccoutLookup-Response").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+
+            $("#SC-AccoutLookup-popup").modal(
+            {
+              backdrop: 'static'
+            });
+            $("#SC-AccoutLookup-popup").css(
+            {
+              "display": "flex",
+              "justify-content": "center",
+              "align-items": "center"
+            });
+            $(".modal-backdrop").css('background', '#ffffff');
+
+          });
+          $("#SC-SYNAccLookup-NotFound-ok").click(function (e)
+          {
+            $("#SC-SYNAccLookup-NotFound").modal('hide');
+            $("#SC-SYNAccLookup-NotFound").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+
+            $("#SC-AccoutLookup-popup").modal(
+            {
+              backdrop: 'static'
+            });
+            $("#SC-AccoutLookup-popup").css(
+            {
+              "display": "flex",
+              "justify-content": "center",
+              "align-items": "center"
+            });
+            $(".modal-backdrop").css('background', '#ffffff');
+
+          });
+          $("#SC-SYNAccLookup-Error-ok").click(function (e)
+          {
+            $("#SC-SYNAccLookup-Error").modal('hide');
+            $("#SC-SYNAccLookup-Error").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+
+            $("#SC-AccoutLookup-popup").modal(
+            {
+              backdrop: 'static'
+            });
+            $("#SC-AccoutLookup-popup").css(
+            {
+              "display": "flex",
+              "justify-content": "center",
+              "align-items": "center"
+            });
+            $(".modal-backdrop").css('background', '#ffffff');
+
+          });
+          //Start:submit handler for Finance Account Lookup
+          var finerrorCodes = SCErrorCodes.errorcodes();
+          var SSNErrorCode = "Please Enter valid 4-digit SSN";
+          $("#sc-fin-Acc-Lookup-Details").validate(
+          {
+            rules:
+            {
+              finfirstName:
+              {
+                required: true,
+                maxlength: 25
+              },
+              finlastName:
+              {
+                required: true,
+                maxlength: 25
+              },
+              finssn4:
+              {
+                required: true,
+                minlength: 4,
+                maxlength: 4,
+                regex: /^\d{4}$/
+              },
+              finzipCode:
+              {
+                required: true,
+                minlength: 5,
+                maxlength: 5,
+                regex: /^\d{5}$/
+              },
+              finphoneNumber:
+              {
+                required: true,
+                regex: /^\d{3}-\d{3}-\d{4}$/
+              }
+            },
+            messages:
+            {
+              finfirstName:
+              {
+                required: "First name is required.",
+                maxlength: "First name should not exceed 25 characters."
+              },
+              finlastName:
+              {
+                required: "Last name is required.",
+                maxlength: "Last name should not exceed 25 characters."
+              },
+              finzipCode:
+              {
+                required: "Zip code is required.",
+                minlength: "Zip code should have 5 digits.",
+                maxlength: "Zip code should have 5 digits.",
+                regex: "Input is not valid. Please enter exactly five digits."
+              },
+              finphoneNumber:
+              {
+                required: "Phone number is required.",
+                regex: "Phone number format is invalid. Should be like XXX-XXX-XXXX."
+              },
+              finssn4:
+              {
+                required: "SSN last 4 digits are required.",
+                minlength: "SSN should have 4 digits.",
+                maxlength: "SSN should have 4 digits.",
+                regex: "Input is not valid. Please enter exactly four digits."
+              },
+            },
+            tooltip_options:
+            {
+              finfirstName:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              finlastName:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              finzipCode:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              finphoneNumber:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              },
+              finssn4:
+              {
+                trigger: 'focus',
+                placement: 'bottom',
+                html: true
+              }
+            },
+            submitHandler: function (form)
+            {
+              $("#SC-AccoutLookup-popup").modal('hide');
+
+              var BService = SiebelApp.S_App.GetService("PRM ANI Utility Service");
+              var Input = SiebelApp.S_App.NewPropertySet();
+              var GetSyfAccDetailsReqOut = SiebelApp.S_App.NewPropertySet();
+              Input.SetProperty("Hierarchy Name", "GetSyfAccountDetailsRequest");
+              GetSyfAccDetailsReqOut = BService.InvokeMethod("CreateEmptyPropSet", Input);
+
+              var GetSyfAccDetailsReqIOIn = GetSyfAccDetailsReqOut.GetChild(0).GetChild(0).GetChild(0).GetChild(0);
+              if (GetSyfAccDetailsReqIOIn.GetType() == "GetSyfAccountDetailsRequest")
+              {
+                if ($("#fin-lookupMethod").val() != "Phone")
+                {
+                  GetSyfAccDetailsReqIOIn.SetProperty("firstName", $("#fin-firstName").val());
+                  GetSyfAccDetailsReqIOIn.SetProperty("lastName", $("#fin-lastName").val());
+                  GetSyfAccDetailsReqIOIn.SetProperty("ssn4", $("#fin-ssn4").val());
+                  GetSyfAccDetailsReqIOIn.SetProperty("zipCode", $("#fin-zipCode").val());
+                }
+                else
+                {
+                  GetSyfAccDetailsReqIOIn.SetProperty("phoneNumber", $("#fin-phoneNumber").val().replace(/\D/g, ''));
+                }
+                GetSyfAccDetailsReqIOIn.SetProperty("merchantNumber", SCOUIMethods.SCGetProfileAttrValue("SCGEMerchantId"));
+              }
+
+              GetSyfAccDetailsReqOut = GetSyfAccDetailsReqOut.GetChild(0).GetChild(0);
+              GetSyfAccDetailsReqOut.SetType("SiebelMessage");
+
+              var WF_Service = "",
+                Input_BS = "",
+                Out_BS = "";
+              var scOrderLovValues = [],
+                lovvalues = "";
+              WF_Service = SiebelApp.S_App.GetService("Workflow Process Manager");
+              Input_BS = SiebelApp.S_App.NewPropertySet();
+              Out_BS = SiebelApp.S_App.NewPropertySet();
+              Input_BS.AddChild(GetSyfAccDetailsReqOut);
+              Input_BS.SetProperty("ProcessName", "SN Get Finance Lookup Info");
+              Out_BS = WF_Service.InvokeMethod("RunProcess", Input_BS);
+
+              var wfOutput = Out_BS.GetChild(0);
+              var errorcode = wfOutput.GetProperty("Error Code");
+              var errormessage = wfOutput.GetProperty("Error Message");
+
+              if (errormessage == null || errormessage == "")
+              {
+                $("#sn-fin-firstName").val(wfOutput.GetProperty("FirstName"));
+                $("#sn-fin-AccNumber").val(wfOutput.GetProperty("AccountNumber"));
+                var activationRequired = wfOutput.GetProperty("ActivationRequired");
+                var statusValue = (activationRequired === "false") ? "Active" : "Inactive";
+                $("#sn-fin-status").val(statusValue);
+                $("#sn-fin-addrline1").val(wfOutput.GetProperty("AddressLine1"));
+                $("#sn-fin-state").val(wfOutput.GetProperty("State"));
+                $("#sn-fin-phn").val(wfOutput.GetProperty("PhoneNumber"));
+
+                $("#sn-fin-lastName").val(wfOutput.GetProperty("LastName"));
+                $("#sn-fin-CrdLimt").val(wfOutput.GetProperty("CreditLine"));
+                $("#sn-fin-expirydate").val(wfOutput.GetProperty("ExpirationMonth") + "/" + wfOutput.GetProperty("ExpirationYear"));
+                $("#sn-fin-city").val(wfOutput.GetProperty("City"));
+                $("#sn-fin-zipcode").val(wfOutput.GetProperty("ZipCode"));
+
+                $("#SC-AccoutLookup-Response").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-AccoutLookup-Response").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              else if (errormessage == "Account Not Found")
+              {
+                $("#SC-SYNAccLookup-NotFound").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SYNAccLookup-NotFound").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                document.getElementById("AccLookupResponse").textContent = "No Account was found. Please try again.";
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              else if (errormessage == "Accounts closed")
+              {
+                $("#SC-SYNAccLookup-NotFound").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SYNAccLookup-NotFound").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                document.getElementById("AccLookupResponse").textContent = "Synchrony Private Label Account has been closed.  Please either apply for a new Sleep Number Synchrony account or contact Synchrony for any concerns.";
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+              else
+              {
+                $("#SC-SYNAccLookup-Error").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-SYNAccLookup-Error").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                $(".modal-backdrop").css('background', '#ffffff');
+              }
+            }
+          });
+          //End:submit handler for Finance Account Lookup
+
+          $("#fin-lookupMethod").change(function (e)
+          {
+            if ($("#fin-lookupMethod").val() == "Phone")
+            {
+              $(".fin-set1").parent().hide();
+              $(".fin-set2").parent().show();
+            }
+            else
+            {
+              $(".fin-set2").parent().hide();
+              $(".fin-set1").parent().show();
+            }
+          });
+          // start: code for reddem points
+          var ExistRdmLen = 0,
+            ExistRdmRcdSet = [];
+          var canNewRecord = pm.ExecuteMethod("CanInvokeMethod", "NewRecord");
+          $(".SC-Payment-nav-item").removeClass("p-item-active");
+          var contactId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Bill To Contact Id");
+          if (canNewRecord && contactId != "" && contactId != null && contactId != "No Match Row Id")
+          {
+            setTimeout(function ()
+            {
+
+              var Custom_Service = "",
+                Input_BS = "",
+                Out_BS = "";
+              Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+              Input_BS = SiebelApp.S_App.NewPropertySet();
+              Out_BS = SiebelApp.S_App.NewPropertySet();
+              searchfields = "Id,Product Name,SC Status,Voucher Number,Voucher Issued Date,Expiration Date";
+              Input_BS.SetProperty("BO", "Contact");
+              Input_BS.SetProperty("BC", "LOY Voucher");
+              Input_BS.SetProperty("SearchSpecification", "[SC Status] = 'Active' AND ([Expiration Date] >= Today() OR [Expiration Date] IS NULL)  AND [SC LOY Member Contact Id] = '" + contactId + "'")
+              Input_BS.SetProperty("SortSpecification", "");
+              Input_BS.SetProperty("ReqNoOfRecords", "");
+              Input_BS.SetProperty("FieldsArray", searchfields);
+              Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+              var Child_BS = Out_BS.GetChild(0);
+              var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+              console.log(BS_Data)
+              if (BS_Data != "}")
+              {
+                ExistRdmRcdSet = BS_Data.split(";");
+                ExistRdmLen = ExistRdmRcdSet.length;
+                for (var ps = 0; ps < ExistRdmLen; ps++)
+                {
+                  console.log("ExistRdmRcdSet:" + ps + ":" + ExistRdmRcdSet[ps]);
+                  ExistRdmRcdSet[ps] = JSON.parse(ExistRdmRcdSet[ps])
+                }
+                if (ExistRdmLen > 0)
+                {
+                  $("#SC-reddem-reward-popup").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-reddem-reward-popup").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+                }
+              }
+            }, 100);
+          }
+
+
+          $('#SC-reddempoints-yes').click(function ()
+          {
+            var exMarkup = "",
+              VissueDate = "",
+              vExprDate = "";
+            for (var ex = 0; ex < ExistRdmLen; ex++)
+            {
+              VissueDate = ExistRdmRcdSet[ex]["Voucher Issued Date"];
+              if (VissueDate != "" && VissueDate != null)
+                VissueDate = VissueDate.split(' ')[0];
+              vExprDate = ExistRdmRcdSet[ex]["Expiration Date"];
+              if (vExprDate != "" && vExprDate != null)
+                vExprDate = vExprDate.split(' ')[0];
+              exMarkup += '<tr>';
+
+              exMarkup += '<td class="lesspadding" title="' + ExistRdmRcdSet[ex]["Product Name"] + '">' + ExistRdmRcdSet[ex]["Product Name"] + '</td>';
+
+              exMarkup += '<td class="lesspadding" title="' + VissueDate + '">' + VissueDate + '</td>';
+              exMarkup += '<td class="lesspadding" title="' + vExprDate + '">' + vExprDate + '</td>';
+              exMarkup += '<td class="lesspadding select-width"><input type="CheckBox" name="existsr" id="manual' + ExistRdmRcdSet[ex]["Voucher Number"] + '" class="Checkbox scexRdmcheckbox select-width"></td>';
+              exMarkup += '</tr>';
+            }
+
+            $("#SC-exist-Rdm-Tbody").html(exMarkup);
+            $("#sc-select-exRdm").addClass("SC-disabled");
+            $("#SC-reddem-reward-popup").modal("hide");
+            $("#SC-manual-reddem-Modal").modal(
+            {
+              backdrop: 'static'
+            });
+            $('.scexRdmcheckbox').change(function ()
+            {
+              if ($(this).prop("checked"))
+                $(this).parent().parent().addClass("main-bg");
+              else
+                $(this).parent().parent().removeClass("main-bg");
+              $("#sc-select-exRdm").addClass("SC-disabled");
+              $('.scexRdmcheckbox').each(function ()
+              {
+                if ($(this).prop("checked"))
+                {
+                  $("#sc-select-exRdm").removeClass("SC-disabled");
+                }
+              });
+            });
+          });
+          $('#SC-reddempoints-no').click(function ()
+          {
+            $("#SC-reddem-reward-popup").modal("hide");
+            $("#SC-reddem-reward-popup").css(
+            {
+              "display": "",
+              "justify-content": "",
+              "align-items": ""
+            });
+          });
+          $('#sc-select-exRdm').click(function ()
+          {
+            $("#custommaskoverlay").show();
+            setTimeout(function ()
+            {
+              var Rdm_inPSChild = SiebelApp.S_App.NewPropertySet(),
+                vcNumber;
+              $('.scexRdmcheckbox').each(function ()
+              {
+                if ($(this).prop("checked"))
+                {
+                  vcNumber = $(this).attr("id").split("manual");
+                  Rdm_inPSChild.SetProperty(vcNumber[1], vcNumber[1]);
+                }
+              });
+              var sOrderId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Id");
+              var BService = '',
+                Rdm_inPS = '',
+                Rdm_outPS = '';
+              Rdm_inPS = SiebelApp.S_App.NewPropertySet();
+              Rdm_outPS = SiebelApp.S_App.NewPropertySet();
+              Rdm_inPS.AddChild(Rdm_inPSChild);
+              Rdm_inPS.SetProperty("OrderId", sOrderId);
+              BService = SiebelApp.S_App.GetService("SC Order Promo Validation"); //get service
+              Rdm_outPS = BService.InvokeMethod("AddICRewards", Rdm_inPS); //invoke the method
+              $("#SC-manual-reddem-Modal").modal("hide");
+              $("#SC-manual-reddem-Modal").css(
+              {
+                "display": "",
+                "justify-content": "",
+                "align-items": ""
+              });
+              FieldQueryPair = {
+                "Id": 'IS NOT NULL'
+              };
+              SCOUIMethods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Payment Sales List Applet OUI");
+              $("#custommaskoverlay").hide();
+              refreshDueAmt();
+            }, 50);
+
+
+          });
+          // End: code for reddem points
+
+          function refreshDueAmt()
+          {
+            $("body").trigger('Custom.Start');
+            setTimeout(function ()
+            {
+              var inpPS = "",
+                outPS = "",
+                oBS = "";
+              inpPS = SiebelApp.S_App.NewPropertySet();
+              outPS = SiebelApp.S_App.NewPropertySet();
+              oBS = SiebelApp.S_App.GetService("FINS Teller UI Navigation");
+              inpPS.SetProperty("Refresh All", "Y");
+              outPS = oBS.InvokeMethod("RefreshCurrentApplet", inpPS);
+              $("body").trigger('Custom.End');
+            }, 1000);
+
+          }
+        }
+
+
+        SCPaymentsPR.prototype.EndLife = function ()
+        {
+          // EndLife is where we perform any required cleanup.
+          // Add code here that should happen before default processing
+          SiebelJS.Log(this.GetPM().Get("GetName") + ": SCPaymentsPR:      EndLife method reached.");
+          SiebelAppFacade.SCPaymentsPR.superclass.EndLife.apply(this, arguments);
+          localStorage.setItem("comingfrom", "");
+          localStorage.setItem("refreshHDSR", "Y");
+          if (newRecord == true)
+          {
+            var canUndo = pm.ExecuteMethod("CanInvokeMethod", "UndoRecord");
+            if (canUndo)
+            {
+              var undoRecord = pm.ExecuteMethod("InvokeMethod", "UndoRecord", null, false);
+            }
+          }
+          newRecord = false;
+          var paymentStatus = paymentBC.GetFieldValue("SC Payment Status");
+          if (paymentStatus == "Entered")
+          {
+            var canUndo = pm.ExecuteMethod("CanInvokeMethod", "UndoRecord");
+            if (canUndo)
+            {
+              var undoRecord = pm.ExecuteMethod("InvokeMethod", "UndoRecord", null, false);
+            }
+          }
+
+          if ($("#SC-Sales-manual-voice-payment").hasClass("in"))
+          {
+
+            $("#SC-Sales-manual-voice-payment").modal('hide');
+            $(".modal-backdrop").remove();
+            if (pm.ExecuteMethod("CanInvokeMethod", "DeleteRecord"))
+              pm.ExecuteMethod("GCINVOKEDELETERCD", null, false);
+
+          }
+
+          if (localStorage.getItem('whitescreen') == 0)
+          {
+            $("#_swescrnbar").hide();
+            $("#_swethreadbar").hide();
+            $("#_sweappmenu").hide();
+            $("#s_vctrl_div").hide();
+            $(".siebui-button-toolbar").hide();
+            $("#_sweview").hide();
+            $('#_swecontent').prepend(SC_OUI_Markups.CustomWhiteScreenTimer());
+            $("#custommaskoverlay").show();
+          }
+          else if (localStorage.getItem('whitescreen') == 1)
+          {
+            $("#_swescrnbar").show();
+            $("#_swethreadbar").show();
+            $("#_sweappmenu").show();
+            $("#s_vctrl_div").show();
+            $(".siebui-button-toolbar").show();
+            $("#_sweview").show();
+            $('#CommunicationPanelContainer').css("padding-top", "0px");
+          }
+          $(document).unbind();
+          $("#SC-SR-hold-retry").unbind("click");
+          $("#SC-generate-receipt").unbind("click");
+          $("#SC-generate-store-receipt").unbind("click");
+          $("#SC-generate-customer-receipt").unbind("click");
+        } //end life
+
+        //Venkat R 12/01/2020 added for Chat user Credit Card for Secure Payment
+        function getChatCCAccountNum()
+        {
+          var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+          var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+          if (sAccountNumber == "")
+          {
+            var Input = SiebelApp.S_App.NewPropertySet();
+            var Output = SiebelApp.S_App.NewPropertySet();
+            Input.SetProperty("BO", "Order Entry (Sales)");
+            Input.SetProperty("BC", "Payments");
+            Input.SetProperty("SortSpecification", "");
+            Input.SetProperty("ReqNoOfRecords", "");
+            Input.SetProperty("SearchSpecification", "Id ='" + sPaymentRecordId + "'");
+            var fieldsArray_new = "Id,Account Number,SC Payment Status,SC Semaphone Capture Status";
+            Input.SetProperty("FieldsArray", fieldsArray_new);
+            var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+            Output = Custom_Service.InvokeMethod("Query", Input);
+            var Child = Output.GetChild(0);
+            var BS_Data = Child.GetProperty("OutputRecordSet");
+            if (BS_Data != "}")
+            {
+              BS_Data = JSON.parse(BS_Data);
+              var sAccountNumber = BS_Data["Account Number"];
+              var sCaptureStatus = BS_Data["SC Semaphone Capture Status"];
+              $("#CreditCapt-Status").val(sCaptureStatus);
+              pm.SetProperty("AccountNumber", sAccountNumber);
+              pm.SetProperty("PaymentsRowID", sPaymentRecordId);
+              console.log('sAccountNumber...:' + sAccountNumber);
+              if (sAccountNumber != "")
+              {
+                $("#SC-CreditCard").removeClass("SC-disabled");
+                SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+                clearInterval(getChatCCAccountNumInterval);
+                var records = pm.Get("GetRecordSet");
+                var pendingTxns = failedPendingTxnDetials(records);
+                $("#SC-failed-payment-details").html(pendingTxns);
+                var seqNum = $("td[title='" + sPaymentRecordId + "']").closest('tr').attr('id');
+                $(".seq-" + seqNum).click();
+                setTimeout(function ()
+                {
+                  $("#creditPaymentDue").prop('readonly', false);
+                }, 10);
+              }
+            }
+            else
+            {
+              clearInterval(getChatCCAccountNumInterval);
+            }
+          }
+          else
+          {
+            pm.SetProperty("AccountNumber", sAccountNumber);
+            pm.SetProperty("PaymentsRowID", sPaymentRecordId);
+            clearInterval(getChatCCAccountNumInterval);
+          }
+        } //End..Venkat R added for Chat user Credit Card for Secure Payment
+        //Venkat R 12/01/2020 added for Chat user Gift Card for Secure Payment
+        function getChatGCAccountNum()
+        {
+          var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+          var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+          if (sAccountNumber == "" && giftCardFlag != "Y")
+          {
+            var Input = SiebelApp.S_App.NewPropertySet();
+            var Output = SiebelApp.S_App.NewPropertySet();
+            Input.SetProperty("BO", "Order Entry (Sales)");
+            Input.SetProperty("BC", "Payments");
+            Input.SetProperty("SortSpecification", "");
+            Input.SetProperty("ReqNoOfRecords", "");
+            Input.SetProperty("SearchSpecification", "Id ='" + sPaymentRecordId + "'");
+            var fieldsArray_new = "Id,Account Number,SC Payment Status,SC Semaphone Capture Status";
+            Input.SetProperty("FieldsArray", fieldsArray_new);
+            var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+            Output = Custom_Service.InvokeMethod("Query", Input);
+            var Child = Output.GetChild(0);
+            var BS_Data = Child.GetProperty("OutputRecordSet");
+            if (BS_Data != "}")
+            {
+              BS_Data = JSON.parse(BS_Data);
+              var sAccountNumber = BS_Data["Account Number"];
+              var sCaptureStatus = BS_Data["SC Semaphone Capture Status"];
+              $("#Gift-Capt-Status").val(sCaptureStatus);
+              pm.SetProperty("AccountNumber", sAccountNumber);
+              pm.SetProperty("PaymentsRowID", sPaymentRecordId);
+              console.log('sAccountNumber...:' + sAccountNumber);
+              if (sAccountNumber != "")
+              {
+
+                SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+                clearInterval(getChatGCAccountNumInterval);
+                var records = pm.Get("GetRecordSet");
+                var pendingTxns = failedPendingTxnDetials(records);
+                $("#SC-failed-payment-details").html(pendingTxns);
+                var seqNum = $("td[title='" + sPaymentRecordId + "']").closest('tr').attr('id');
+                $(".seq-" + seqNum).click();
+                setTimeout(function ()
+                {
+                  $("#SC-giftcard").addClass("SC-disabled");
+                  $("#giftPaymentDue").prop('readonly', false);
+                }, 10);
+              }
+            }
+            else
+            {
+              clearInterval(getChatGCAccountNumInterval);
+            }
+          }
+          else
+          {
+            pm.SetProperty("AccountNumber", sAccountNumber);
+            pm.SetProperty("PaymentsRowID", sPaymentRecordId);
+            clearInterval(getChatGCAccountNumInterval);
+          }
+        } //End..Venkat R added for Chat user Gift Card for Secure Payment
+        //Venkat R 12/29/2020 added for Voice user Credit Card for Secure Payment
+        function getVoiceCCAccountNum()
+        {
+          var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+          var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+          if (sAccountNumber == "" && giftCardFlag != "Y")
+          {
+            var Input = SiebelApp.S_App.NewPropertySet();
+            var Output = SiebelApp.S_App.NewPropertySet();
+            Input.SetProperty("BO", "Order Entry (Sales)");
+            Input.SetProperty("BC", "Payments");
+            Input.SetProperty("SortSpecification", "");
+            Input.SetProperty("ReqNoOfRecords", "");
+            Input.SetProperty("SearchSpecification", "Id ='" + sPaymentRecordId + "'");
+            var fieldsArray_new = "Id,Account Number";
+            Input.SetProperty("FieldsArray", fieldsArray_new);
+            var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+            Output = Custom_Service.InvokeMethod("Query", Input);
+            var Child = Output.GetChild(0);
+            var BS_Data = Child.GetProperty("OutputRecordSet");
+            if (BS_Data != "}")
+            {
+              BS_Data = JSON.parse(BS_Data);
+              var sAccountNumber = BS_Data["Account Number"];
+              pm.SetProperty("AccountNumber", sAccountNumber);
+              pm.SetProperty("PaymentsRowID", sPaymentRecordId);
+              console.log('sAccountNumber...:' + sAccountNumber);
+              if (sAccountNumber != "")
+              {
+                $("#SC-CreditCard").removeClass("SC-disabled");
+                SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+                clearInterval(getVoiceCCAccountNumInterval);
+                var records = pm.Get("GetRecordSet");
+                var pendingTxns = failedPendingTxnDetials(records);
+                $("#SC-failed-payment-details").html(pendingTxns);
+                var seqNum = $("td[title='" + sPaymentRecordId + "']").closest('tr').attr('id');
+                $("#seq-" + seqNum).click();
+                $("#creditPaymentDue").prop('readonly', false);
+              }
+            }
+            else
+            {
+              clearInterval(getVoiceCCAccountNumInterval);
+            }
+          }
+          else
+          {
+            pm.SetProperty("AccountNumber", sAccountNumber);
+            pm.SetProperty("PaymentsRowID", sPaymentRecordId);
+            clearInterval(getVoiceCCAccountNumInterval);
+          }
+        } // End.. Venkat R added for Voice user Credit Card for Secure Payment
+
+        //Venkat R 12/29/2020 added for Voice user Gift Card for Secure Payment
+        function getVoiceGCAccountNum()
+        {
+          var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+          var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+          if (sAccountNumber == "" && giftCardFlag != "Y")
+          {
+            var Input = SiebelApp.S_App.NewPropertySet();
+            var Output = SiebelApp.S_App.NewPropertySet();
+            Input.SetProperty("BO", "Order Entry (Sales)");
+            Input.SetProperty("BC", "Payments");
+            Input.SetProperty("SortSpecification", "");
+            Input.SetProperty("ReqNoOfRecords", "");
+            Input.SetProperty("SearchSpecification", "Id ='" + sPaymentRecordId + "'");
+            var fieldsArray_new = "Id,Account Number";
+            Input.SetProperty("FieldsArray", fieldsArray_new);
+            var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+            Output = Custom_Service.InvokeMethod("Query", Input);
+            var Child = Output.GetChild(0);
+            var BS_Data = Child.GetProperty("OutputRecordSet");
+            if (BS_Data != "}")
+            {
+              BS_Data = JSON.parse(BS_Data);
+              var sAccountNumber = BS_Data["Account Number"];
+              pm.SetProperty("AccountNumber", sAccountNumber);
+              pm.SetProperty("PaymentsRowID", sPaymentRecordId);
+              console.log('sAccountNumber...:' + sAccountNumber);
+              if (sAccountNumber != "")
+              {
+
+                SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+                clearInterval(getVoiceGCAccountNumInterval);
+                var records = pm.Get("GetRecordSet");
+                var pendingTxns = failedPendingTxnDetials(records);
+                $("#SC-failed-payment-details").html(pendingTxns);
+                var seqNum = $("td[title='" + sPaymentRecordId + "']").closest('tr').attr('id');
+                $(".seq-" + seqNum).click();
+                setTimeout(function ()
+                {
+                  $("#SC-giftcard").addClass("SC-disabled");
+                  $("#giftPaymentDue").prop('readonly', false);
+                }, 10);
+              }
+            }
+            else
+            {
+              clearInterval(getVoiceGCAccountNumInterval);
+            }
+          }
+          else
+          {
+            pm.SetProperty("AccountNumber", sAccountNumber);
+            pm.SetProperty("PaymentsRowID", sPaymentRecordId);
+            clearInterval(getVoiceGCAccountNumInterval);
+          }
+        } //End.. Venkat R added for Voice user Gift Card for Secure Payment
+
+        function submitOrder()
+        {
+          $("#SC-SO-Add-SalesRep").modal(
+          {
+            backdrop: 'static'
+          });
+          $("#SC-SO-Add-SalesRep").css(
+          {
+            "display": "flex",
+            "justify-content": "center",
+            "align-items": "center"
+          });
+          $(".modal-backdrop").css('background', '#ffffff');
+          $("#custommaskoverlay").show();
+          //for generate reciept
+          setTimeout(function ()
+          {
+            var refreshRec = orderBC.InvokeMethod("RefreshRecord");
+            SiebelJS.Log("Refresh Record..:" + refreshRec);
+
+            var canSubmitRecord = pm.ExecuteMethod("CanInvokeMethod", "SubmitOrder");
+            SiebelJS.Log("canSubmitRecord...:" + canSubmitRecord);
+
+            var BCReadOnly = orderBC.GetFieldValue("SC BC ReadOnly");
+            SiebelJS.Log("BC Readonly..:" + BCReadOnly);
+            var VerifiedFlag = orderBC.GetFieldValue("SC Verified Flag");
+            SiebelJS.Log("BC VerifiedFlag..:" + VerifiedFlag);
+            var BalanceDue = orderBC.GetFieldValue("SC Total Balance Due");
+            SiebelJS.Log("BalanceDue..:" + BalanceDue);
+
+            //click on submit order button on the header applet
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("SubmitOrder");
+            //hiding the Loader
+            //for #578 added functionality to check if the order is submitted from EBS
+            var myVar = setInterval(function ()
+            {
+              SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+              if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status") != "In Progress")
+              {
+                clearInterval(myVar);
+                $("#SC-sales-rep").modal('hide');
+                $('#custommaskoverlay').hide();
+
+                var voiderror = false;
+                var FieldQueryPair = {
+                  "Id": ""
+                };
+                SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Validation Message - Payments List Applet");
+                validatemessagepaymentlist = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Validation Message - Payments List Applet"].GetBusComp().GetRecordSet();
+                SiebelJS.Log("validatemessage::" + JSON.stringify(validatemessagepaymentlist));
+                for (var err = 0; err < validatemessagepaymentlist.length; err++)
+                {
+                  if (validatemessagepaymentlist[err]["Message Code"] == "SC_VOID_ORDER_SUBMIT")
+                  {
+                    voiderror = true;
+                  }
+                }
+                if (voiderror == true)
+                {
+                  $("#SC-Payerror-popup").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-Payerror-popup").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+                }
+                else if (GiftCardCount <= 0)
+                { //if there are no gift cards				
+                  //for which popup should show up
+                  var Record = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+                  if (Record[0]["Status"] == "Siebel Error")
+                  {
+                    $("#SC-SO-order-sibel-error").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-order-sibel-error").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                  }
+                  else if (Record[0]["Status"] == "Oracle Error")
+                  {
+                    $("#SC-SO-order-oracle-error").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-order-oracle-error").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                  }
+                  else
+                  {
+                    if (Record[0]["Status"] != "Oracle Error" && Record[0]["Status"] != "Siebel Error" && Record[0]["Status"] != "Hold" && Record[0]["SC Tax Verification Pending"] != 'Y' && Record[0]["Tax Exempt"] != 'Y' && itemsCount > 0)
+                    {
+
+                      $("#SC-SO-Schedule-popup").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#SC-SO-Schedule-popup").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                    }
+                    else
+                    {
+                      //if order is completed show that poup
+                      //SHARATH: Added below feature flag condition for Store Recipet bypass user story.
+                      if (sFeatureFlag == "Y")
+                      {
+                        $("#SC-SO-customer-receipt").modal(
+                        {
+                          backdrop: 'static'
+                        });
+                        $("#SC-SO-customer-receipt").css(
+                        {
+                          "display": "flex",
+                          "justify-content": "center",
+                          "align-items": "center"
+                        });
+                        $(".modal-backdrop").css('background', '#ffffff');
+                      }
+                      else if (P2PEFlag == "Y" && sFeatureFlag != "Y")
+                      {
+                        $("#SC-SO-store-receipt").modal(
+                        {
+                          backdrop: 'static'
+                        });
+                        $("#SC-SO-store-receipt").css(
+                        {
+                          "display": "flex",
+                          "justify-content": "center",
+                          "align-items": "center"
+                        });
+                        $(".modal-backdrop").css('background', '#ffffff');
+                      }
+                      else
+                      {
+                        var sOrderId = orderBC.GetFieldValue("Id");
+                        var sbilltocontactId = orderBC.GetFieldValue("Bill To Contact Id");
+                        if (sbilltocontactId != "")
+                          SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                        $("#SC-SO-order-complete").modal(
+                        {
+                          backdrop: 'static'
+                        });
+                        $("#SC-SO-order-complete").css(
+                        {
+                          "display": "flex",
+                          "justify-content": "center",
+                          "align-items": "center"
+                        });
+                        $(".modal-backdrop").css('background', '#ffffff');
+                      }
+                    }
+                  }
+                }
+                else
+                {
+                  //printing first gift card info on the activation cards
+                  for (var j = 0; j < GetLineOutps.GetChild(0).GetChildCount(); j++)
+                  {
+                    if (GetLineOutps.GetChild(0).GetChild(j).GetProperty("SC Calc Long Description") == "GIFT CARD")
+                    {
+                      cardseen = j;
+                      localStorage.setItem('CardSeen', cardseen);
+                      $('#giftbeforeactivate').text("$" + GetLineOutps.GetChild(0).GetChild(j).GetProperty("Unit Price - Display"));
+                      $('#giftafteractivate').text("Gift card balance $" + GetLineOutps.GetChild(0).GetChild(j).GetProperty("Unit Price - Display"));
+                      j = GetLineOutps.GetChild(0).GetChildCount();
+                      //showing the giftcard modal
+                      $("#Activate-gift-card").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                    }
+                  }
+                  setTimeout(function ()
+                  {
+                    $("#giftcard-token").focus();
+                  }, 100);
+                }
+              }
+              $("#SC-SO-Add-SalesRep").modal('hide');
+              $("#SC-SO-Add-SalesRep").css(
+              {
+                "display": "",
+                "justify-content": "",
+                "align-items": ""
+              });
+              $("#custommaskoverlay").hide();
+            }, 1000);
+
+          }, 1000);
+        }
+
+        function getShowTermsFlag()
+        {
+          var Bservice = '',
+            inPS = '',
+            outPS = '';
+          inPS = SiebelApp.S_App.NewPropertySet();
+          outPS = SiebelApp.S_App.NewPropertySet();
+          inPS.SetProperty("Name", "SC Terms Flag");
+          Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+          outPS = Bservice.InvokeMethod("GetProfileAttr", inPS);
+          var sTermsFlag = outPS.GetChild(0).GetProperty("Value");
+          return sTermsFlag;
+        }
+
+        function fShowPaymentsTerms()
+        {
+          var sOrderId = orderBC.GetFieldValue("Id");
+          var inPS = SiebelApp.S_App.NewPropertySet();
+          var outPS = SiebelApp.S_App.NewPropertySet();
+          var searchfields = "SC Financing Disclaimer,SC Customer Receipt Text,SC Payment Type Code,SC Payment Group,SC Pmt Receipt Text";
+          inPS.SetProperty("BO", "Order Entry (Sales)");
+          inPS.SetProperty("BC", "Payments");
+          inPS.SetProperty("SearchSpecification", "[Order Id] = '" + sOrderId + "' AND ([Payment Method] = 'Financing' OR [Payment Method] = 'Credit Card') AND [Payment Status] = 'Authorized'");
+          inPS.SetProperty("ReqNoOfRecords", "");
+          inPS.SetProperty("FieldsArray", searchfields);
+          var BserviceT = SiebelApp.S_App.GetService("SC Custom Query"); //get service
+          outPS = BserviceT.InvokeMethod("PromoQuery", inPS);
+          var Child_BS = outPS.GetChild(0);
+          var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+          var payTACOS = "";
+          var popPayTACOS = "";
+          var popSynchTACOS = "";
+          var popHelpCardTACOS = "";
+          var curTACOS = "";
+          var sSyncTACOS = "";
+          var sHelpTACOS = "";
+          var sFixedTACOS = "";
+          sFixedPopTACOS = "";
+          if (BS_Data != "}")
+          {
+            var ResArray = new Array;
+            ResArray = BS_Data.split("|@|");
+            for (var i = 0; i < ResArray.length; i++)
+            {
+              curTACOS = "";
+              var jsonRes = JSON.parse(ResArray[i].replace(/\n/g, '__'));
+              if (jsonRes["SC Payment Group"] == "SYNCHRONY")
+              {
+                curTACOS = jsonRes["SC Financing Disclaimer"];
+                sSyncTACOS = sSyncTACOS + curTACOS.replace(/__/g, '\n') + '\n';
+                popSynchTACOS = popSynchTACOS + curTACOS.replace(/__/g, '<br/>') + '<br/>';
+              }
+              else if (jsonRes["SC Payment Group"] == "HELPCARD")
+              {
+                curTACOS = jsonRes["SC Financing Disclaimer"];
+                sHelpTACOS = sHelpTACOS + curTACOS.replace(/__/g, '\n') + '\n';
+                popHelpCardTACOS = popHelpCardTACOS + curTACOS.replace(/__/g, '<br/>') + '<br/>';
+                /*var HjsonRes = '';
+                var HInPS = SiebelApp.S_App.NewPropertySet();
+                var HOutPS = SiebelApp.S_App.NewPropertySet();
+                var HSearchfields = "Financing Disclaimer";
+                HInPS.SetProperty("BO", "SC Financing Promotion - Admin");
+                HInPS.SetProperty("BC", "SC Payment Type - Admin");
+                HInPS.SetProperty("SearchSpecification","[Payment Group]='"+jsonRes["SC Payment Group"]+"' AND [Payment Code] = '"+jsonRes["SC Payment Type Code"] +"' AND [Active Flag] = 'Y'");
+                HInPS.SetProperty("ReqNoOfRecords", "");
+                HInPS.SetProperty("FieldsArray", HSearchfields);
+                var HBserviceT = SiebelApp.S_App.GetService("SC Custom Query"); //get service
+                HOutPS = HBserviceT.InvokeMethod("Query", HInPS);
+                var HChild_BS = HOutPS.GetChild(0);
+                var HBS_Data = HChild_BS.GetProperty("OutputRecordSet");
+                if (HBS_Data != "}") {
+                	var ResArray = new Array;
+                	ResArray = HBS_Data.split(";");
+                	for (var i = 0; i < ResArray.length; i++) {
+                		HjsonRes = JSON.parse(ResArray[i].replace(/\n/g,'__'));
+                		curTACOS = HjsonRes["Financing Disclaimer"];
+                	}
+                	sHelpTACOS = sHelpTACOS + curTACOS.replace(/__/g,'\n') +'\n';
+                	popHelpCardTACOS = popHelpCardTACOS + curTACOS.replace(/__/g,'<br/>') +'<br/>';
+                }*/
+              }
+              else
+              {
+                // do nothing
+                //curTACOS = jsonRes["SC Customer Receipt Text"];
+              }
+            }
+
+            if (sSyncTACOS != "")
+            {
+              var inPS = SiebelApp.S_App.NewPropertySet();
+              var outPS = SiebelApp.S_App.NewPropertySet();
+              var searchfields = "Description";
+              inPS.SetProperty("BO", "SC TACOS");
+              inPS.SetProperty("BC", "SC TACOS Admin");
+              var Type = "Fixed SYNCHRONY TACOS";
+              inPS.SetProperty("SearchSpecification", "[Type] = '" + Type + "' AND [Effective Start Date] <= TODAY() AND ([Effective End Date] >= TODAY() OR [Effective End Date] IS NULL)");
+              inPS.SetProperty("ReqNoOfRecords", "");
+              inPS.SetProperty("FieldsArray", searchfields);
+              var BserviceT = SiebelApp.S_App.GetService("SC Custom Query"); //get service
+              outPS = BserviceT.InvokeMethod("PromoQuery", inPS);
+              var Child_BS = outPS.GetChild(0);
+              var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+              if (BS_Data != "}")
+              {
+                var ResArray = new Array;
+                ResArray = BS_Data.split("|@|");
+                for (var i = 0; i < ResArray.length; i++)
+                {
+                  jsonRes = JSON.parse(ResArray[i].replace(/\n/g, '__'));
+                  SiebelJS.Log(jsonRes["Description"]);
+                  sFixedTACOS = sFixedTACOS + jsonRes["Description"].replace(/__/g, '\n') + '\n';
+                  sFixedPopTACOS = sFixedPopTACOS + jsonRes["Description"].replace(/__/g, '<br/>') + '<br/>';
+                }
+              }
+
+              popPayTACOS = sFixedPopTACOS + '<br/>' + popSynchTACOS;
+              payTACOS = sFixedTACOS + '\n' + sSyncTACOS;
+            }
+            if (sHelpTACOS != '')
+            {
+              if (payTACOS != '')
+              {
+                popPayTACOS = popPayTACOS + '<br/>' + popHelpCardTACOS;
+                payTACOS = payTACOS + '\n' + sHelpTACOS;
+              }
+              else
+              {
+                popPayTACOS = popHelpCardTACOS;
+                payTACOS = sHelpTACOS;
+              }
+            }
+
+            if (sSyncTACOS != "" || sHelpTACOS != '')
+            {
+              $("#SC-Payments-TACOS-Info").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-Payments-TACOS-Info").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $("#PraymentTermsHeader").html("Please ask the customer to accept the payment specific terms");
+              $("#Payment_TACOS").html(popPayTACOS);
+              //$(".modal-backdrop").css('background', '#ffffff');
+
+              setTimeout(function ()
+              {
+                var sOrderId = orderBC.GetFieldValue("Id");
+                var addrInPS = SiebelApp.S_App.NewPropertySet();
+                var addrOutPS = SiebelApp.S_App.NewPropertySet();
+
+                /*var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+                addrInPS.SetProperty("ProcessName", "SC P2PE Customer Info Prompt");
+                addrInPS.SetProperty("PromptConfirmQuestion", "Please Review");
+                addrInPS.SetProperty("PromptConfirmValue", payTACOS);
+                addrInPS.SetProperty("Object Id", sOrderId);
+                addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method */
+
+                var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+                addrInPS.SetProperty("ProcessName", "SC P2PE Product Terms Info Prompt");
+                addrInPS.SetProperty("Object Id", sOrderId);
+                addrInPS.SetProperty("TermsandConditions", payTACOS);
+                addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method
+                var bProdTACOSSales = addrOutPS.GetChild(0).GetProperty("PromptResponse");
+
+                //var bProdTACOSSales = addrOutPS.GetChild(0).GetProperty("PromptConfirmResult");
+                if (bProdTACOSSales == "A")
+                {
+                  $("#SC-Payments-TACOS-Info").modal("hide");
+                  setTimeout(function ()
+                  {
+                    var oDate = new Date();
+                    var dd = oDate.getDate();
+                    var mm = oDate.getMonth() + 1;
+                    var yy = oDate.getFullYear();
+                    var hh = oDate.getHours();
+                    var min = oDate.getMinutes();
+                    var secs = oDate.getSeconds()
+                    var ocurdate = mm + '/' + dd + '/' + yy + ' ' + hh + ':' + min + ':' + secs;
+                    var fieldnames = 'SC Payments TACOS Acceptance,SC Payments TACOS Acceptance Date';
+                    var fieldvalues = 'Y,' + ocurdate;
+                    var Bservice = '',
+                      inPS = '',
+                      outPS = '';
+                    inPS = SiebelApp.S_App.NewPropertySet();
+                    outPS = SiebelApp.S_App.NewPropertySet();
+                    inPS.SetProperty("BO", "Order Entry (Sales)");
+                    inPS.SetProperty("BC", "Order Entry - Orders");
+                    inPS.SetProperty("FieldsArray", fieldnames);
+                    inPS.SetProperty("ValuesArray", fieldvalues);
+                    inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
+                    Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+                    outPS = Bservice.InvokeMethod("Insert", inPS);
+                    fShowSignaturePopup();
+                  }, 1000);
+                }
+                else
+                {
+                  //$("#SC-Payments-TACOS-Info").modal("hide");
+                  //setTimeout(function(){
+                  var addrInPS = SiebelApp.S_App.NewPropertySet();
+                  var addrOutPS = SiebelApp.S_App.NewPropertySet();
+                  var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+                  addrInPS.SetProperty("ProcessName", "SC P2PE Customer Info Prompt");
+                  addrInPS.SetProperty("PromptConfirmQuestion", "");
+                  addrInPS.SetProperty("Object Id", sOrderId);
+                  addrInPS.SetProperty("PromptConfirmQuestion", "Do you want to cancel?");
+                  addrInPS.SetProperty("PromptConfirmValue", "By Declining the summary of the finance terms and conditions, you are requesting to cancel your transaction. Please select Yes if you would like to cancel and No if you would like to review the Financing terms again.");
+                  addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method
+                  var closeConfFlag = addrOutPS.GetChild(0).GetProperty("PromptConfirmResult");
+                  if (closeConfFlag == "Y")
+                  {
+                    $("#SC-Payments-TACOS-Info").modal("hide");
+                    setTimeout(function ()
+                    {
+                      $("#SC-esignature-Decline").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#SC-esignature-Decline").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                      $('#SC-esignature-Decline-ok').click(function ()
+                      {
+                        $("#SC-esignature-Decline").modal("hide");
+                        setTimeout(function ()
+                        {
+                          var oDate = new Date();
+                          var dd = oDate.getDate();
+                          var mm = oDate.getMonth() + 1;
+                          var yy = oDate.getFullYear();
+                          var hh = oDate.getHours();
+                          var min = oDate.getMinutes();
+                          var secs = oDate.getSeconds()
+                          var ocurdate = mm + '/' + dd + '/' + yy + ' ' + hh + ':' + min + ':' + secs;
+                          var fieldnames = 'SC Payments TACOS Acceptance,SC Payments TACOS Acceptance Date';
+                          var fieldvalues = 'N,' + ocurdate;
+                          var Bservice = '',
+                            inPS = '',
+                            outPS = '';
+                          inPS = SiebelApp.S_App.NewPropertySet();
+                          outPS = SiebelApp.S_App.NewPropertySet();
+                          inPS.SetProperty("BO", "Order Entry (Sales)");
+                          inPS.SetProperty("BC", "Order Entry - Orders");
+                          inPS.SetProperty("FieldsArray", fieldnames);
+                          inPS.SetProperty("ValuesArray", fieldvalues);
+                          inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
+                          Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+                          outPS = Bservice.InvokeMethod("Insert", inPS);
+                        }, 1000);
+                      });
+                    }, 1000);
+                  }
+                  else
+                  {
+                    $("#SC-Payments-TACOS-Info").modal("hide");
+                    setTimeout(function ()
+                    {
+                      fShowPaymentsTerms();
+                    }, 1000);
+                  }
+                  //},1000)
+                }
+              }, 1000);
+            }
+            else
+            {
+              fShowSignaturePopup();
+            }
+          }
+          else
+          {
+            fShowSignaturePopup();
+          }
+        }
+
+        function fShowSignaturePopup()
+        {
+          var inPS = SiebelApp.S_App.NewPropertySet();
+          var outPS = SiebelApp.S_App.NewPropertySet();
+          var searchfields = "Description";
+          inPS.SetProperty("BO", "SC TACOS");
+          inPS.SetProperty("BC", "SC TACOS Admin");
+          var Type = "ESignature Terms";
+          inPS.SetProperty("SearchSpecification", "[Type] = '" + Type + "' AND [Effective Start Date] <= TODAY() AND ([Effective End Date] >= TODAY() OR [Effective End Date] IS NULL)");
+          inPS.SetProperty("ReqNoOfRecords", "");
+          inPS.SetProperty("FieldsArray", searchfields);
+          var BserviceT = SiebelApp.S_App.GetService("SC Custom Query"); //get service
+          outPS = BserviceT.InvokeMethod("Query", inPS);
+          var Child_BS = outPS.GetChild(0);
+          var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+          var TACOS = "";
+          var popTACOS = "";
+          if (BS_Data != "}")
+          {
+            var ResArray = new Array;
+            ResArray = BS_Data.split(";");
+            for (var i = 0; i < ResArray.length; i++)
+            {
+              jsonRes = JSON.parse(ResArray[i].replace(/\n/g, '__'));
+              SiebelJS.Log(jsonRes["Description"]);
+              TACOS = TACOS + jsonRes["Description"].replace(/__/g, '\n') + '\n';
+              popTACOS = popTACOS + jsonRes["Description"].replace(/__/g, '<br/>') + '<br/>';
+            }
+          }
+
+
+          $("#SC-Payments-TACOS-Info").modal(
+          {
+            backdrop: 'static'
+          });
+          $("#SC-Payments-TACOS-Info").css(
+          {
+            "display": "flex",
+            "justify-content": "center",
+            "align-items": "center"
+          });
+
+          $("#PraymentTermsHeader").html("Please ask the customer to acknowledge and accept or decline the terms")
+          $("#Payment_TACOS").html(popTACOS);
+          //$(".modal-backdrop").css('background', '#ffffff');
+
+          setTimeout(function ()
+          {
+            var sOrderId = orderBC.GetFieldValue("Id");
+            var addrInPS = SiebelApp.S_App.NewPropertySet();
+            var addrOutPS = SiebelApp.S_App.NewPropertySet();
+            var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+            addrInPS.SetProperty("ProcessName", "SC P2PE Product Terms Info Prompt");
+            addrInPS.SetProperty("Object Id", sOrderId);
+            addrInPS.SetProperty("TermsandConditions", TACOS);
+            addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method
+            var bProdTACOSSales = addrOutPS.GetChild(0).GetProperty("PromptResponse");
+            if (bProdTACOSSales == "A")
+            {
+              var oDate = new Date();
+              var dd = oDate.getDate();
+              var mm = oDate.getMonth() + 1;
+              var yy = oDate.getFullYear();
+              var hh = oDate.getHours();
+              var min = oDate.getMinutes();
+              var secs = oDate.getSeconds()
+              var ocurdate = mm + '/' + dd + '/' + yy + ' ' + hh + ':' + min + ':' + secs;
+              var fieldnames = 'SC ESignature Acceptance,SC ESignature Acceptance Date';
+              var fieldvalues = 'Y,' + ocurdate;
+              var Bservice = '',
+                inPS = '',
+                outPS = '';
+              inPS = SiebelApp.S_App.NewPropertySet();
+              outPS = SiebelApp.S_App.NewPropertySet();
+              inPS.SetProperty("BO", "Order Entry (Sales)");
+              inPS.SetProperty("BC", "Order Entry - Orders");
+              inPS.SetProperty("FieldsArray", fieldnames);
+              inPS.SetProperty("ValuesArray", fieldvalues);
+              inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
+              Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+              outPS = Bservice.InvokeMethod("Insert", inPS);
+
+              var inPS = SiebelApp.S_App.NewPropertySet();
+              var outPS = SiebelApp.S_App.NewPropertySet();
+              var searchfields = "Id,Type";
+              inPS.SetProperty("BO", "SC TACOS");
+              inPS.SetProperty("BC", "SC TACOS Admin");
+              var subSearchSpec = "[Type] = 'In-Home Trial Policy' OR [Type] = 'For Upholstered Furniture Only' OR [Type] = 'Order Tracking' OR [Type] = 'Fixed SYNCHRONY TACOS' OR [Type] = 'Returns' OR [Type] = 'Limited Warranty' OR [Type] = 'Shipping and Delivery' OR [Type] = 'Mattress/Bed and Base Recycling Fees' OR [Type] = 'SleepIQ'  OR [Type] = 'Order Tracking' OR [Type] = 'Promo Terms Notice' OR [Type] = 'ESignature Terms'";
+              inPS.SetProperty("SearchSpecification", "(" + subSearchSpec + ") AND [Effective Start Date] <= TODAY() AND ([Effective End Date] >= TODAY() OR [Effective End Date] IS NULL)");
+              inPS.SetProperty("ReqNoOfRecords", "");
+              inPS.SetProperty("FieldsArray", searchfields);
+              var BserviceT = SiebelApp.S_App.GetService("SC Custom Query"); //get service
+              outPS = BserviceT.InvokeMethod("Query", inPS);
+              var Child_BS = outPS.GetChild(0);
+              var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+              if (BS_Data != "}")
+              {
+                var ResArray = new Array;
+                var homeDelivery = "",
+                  fixedCARecycle = "",
+                  fixedSyn = "",
+                  returnTacos = "",
+                  limitWarranty = "",
+                  shippingDelivery = "",
+                  recycling = "",
+                  sleepIQ = "",
+                  orderTracking = "",
+                  promoNotice = "",
+                  eSignature = "";
+                ResArray = BS_Data.split(";");
+                for (var i = 0; i < ResArray.length; i++)
+                {
+                  jsonRes = JSON.parse(ResArray[i]);
+                  SiebelJS.Log(jsonRes["Id"]);
+                  if (jsonRes["Type"] == "In-Home Trial Policy")
+                  {
+                    homeDelivery = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "For Upholstered Furniture Only")
+                  {
+                    fixedCARecycle = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "Fixed SYNCHRONY TACOS")
+                  {
+                    fixedSyn = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "Returns")
+                  {
+                    returnTacos = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "Limited Warranty")
+                  {
+                    limitWarranty = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "Shipping and Delivery")
+                  {
+                    shippingDelivery = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "Mattress/Bed and Base Recycling Fees")
+                  {
+                    recycling = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "SleepIQ")
+                  {
+                    sleepIQ = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "Order Tracking")
+                  {
+                    orderTracking = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "Promo Terms Notice")
+                  {
+                    promoNotice = jsonRes["Id"];
+                  }
+                  else if (jsonRes["Type"] == "ESignature Terms")
+                  {
+                    eSignature = jsonRes["Id"];
+                  }
+                  else
+                  {
+                    // do nothing
+                  }
+                }
+                var fieldnames = 'SC In Home Trial Policy Fixed TNC,SC Order CA Recycling Fixed TNC,SC Base Recycling Fees Fixed TNC,SC Limited Warranty Fixed TNC,SC Returns Fixed TNC,SC Shipping Delivery Fixed TNC,SC SleepIQ Technology Fixed TNC,SC Order Tracking Fixed TNC,SC Promo Notice Terms Fixed TNC,SC Agreement Fixed TNC';
+                var fieldvalues = homeDelivery + ',' + fixedCARecycle + ',' + recycling + ',' + limitWarranty + ',' + returnTacos + ',' + shippingDelivery + ',' + sleepIQ + ',' + orderTracking + ',' + promoNotice + ',' + eSignature;
+                var Bservice = '',
+                  inPS = '',
+                  outPS = '';
+                inPS = SiebelApp.S_App.NewPropertySet();
+                outPS = SiebelApp.S_App.NewPropertySet();
+                inPS.SetProperty("BO", "Order Entry (Sales)");
+                inPS.SetProperty("BC", "Order Entry - Orders");
+                inPS.SetProperty("FieldsArray", fieldnames);
+                inPS.SetProperty("ValuesArray", fieldvalues);
+                inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
+                Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+                outPS = Bservice.InvokeMethod("Insert", inPS);
+                $("#SC-Payments-TACOS-Info").modal("hide");
+              }
+              setTimeout(function ()
+              {
+                selectSalesRep();
+                //signatureCapture();
+              }, 1000);
+            }
+            else
+            {
+              var addrInPS = SiebelApp.S_App.NewPropertySet();
+              var addrOutPS = SiebelApp.S_App.NewPropertySet();
+              var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+              addrInPS.SetProperty("ProcessName", "SC P2PE Customer Info Prompt");
+              addrInPS.SetProperty("PromptConfirmQuestion", "");
+              addrInPS.SetProperty("Object Id", sOrderId);
+              addrInPS.SetProperty("PromptConfirmQuestion", "Do you want to cancel?");
+              addrInPS.SetProperty("PromptConfirmValue", "By Declining the summary of the terms and conditions, you are requesting to cancel your transaction. Please select Yes if you would like to cancel and No if you would like to review the terms again.");
+              addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method
+              var closeConfFlag = addrOutPS.GetChild(0).GetProperty("PromptConfirmResult");
+              if (closeConfFlag == "Y")
+              {
+                $("#SC-Payments-TACOS-Info").modal("hide");
+                $("#SC-esignature-Decline").modal(
+                {
+                  backdrop: 'static'
+                });
+                $("#SC-esignature-Decline").css(
+                {
+                  "display": "flex",
+                  "justify-content": "center",
+                  "align-items": "center"
+                });
+                setTimeout(function ()
+                {
+                  $('#SC-esignature-Decline-ok').click(function ()
+                  {
+                    $("#SC-esignature-Decline").modal("hide");
+                    setTimeout(function ()
+                    {
+                      var oDate = new Date();
+                      var dd = oDate.getDate();
+                      var mm = oDate.getMonth() + 1;
+                      var yy = oDate.getFullYear();
+                      var hh = oDate.getHours();
+                      var min = oDate.getMinutes();
+                      var secs = oDate.getSeconds()
+                      var ocurdate = mm + '/' + dd + '/' + yy + ' ' + hh + ':' + min + ':' + secs;
+                      var fieldnames = 'SC ESignature Acceptance,SC ESignature Acceptance Date';
+                      var fieldvalues = 'N,' + ocurdate;
+                      var Bservice = '',
+                        inPS = '',
+                        outPS = '';
+                      inPS = SiebelApp.S_App.NewPropertySet();
+                      outPS = SiebelApp.S_App.NewPropertySet();
+                      inPS.SetProperty("BO", "Order Entry (Sales)");
+                      inPS.SetProperty("BC", "Order Entry - Orders");
+                      inPS.SetProperty("FieldsArray", fieldnames);
+                      inPS.SetProperty("ValuesArray", fieldvalues);
+                      inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
+                      Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+                      outPS = Bservice.InvokeMethod("Insert", inPS);
+                      $("#SC-Payments-TACOS-Info").modal("hide");
+                    }, 1000);
+                  })
+                }, 1000);
+              }
+              else
+              {
+                $("#SC-Payments-TACOS-Info").modal("hide");
+                fShowSignaturePopup();
+              }
+            }
+          }, 1000);
+        }
+
+        //VAMSI:21-FEB-2021: Created to ask the signature Capture 
+        function signatureCapture()
+        {
+          $("#SC-Payments-TACOS-Info").modal(
+          {
+            backdrop: 'static'
+          });
+          $("#SC-Payments-TACOS-Info").css(
+          {
+            "display": "flex",
+            "justify-content": "center",
+            "align-items": "center"
+          });
+
+          $("#PraymentTermsHeader").html("Please ask customer to provide signature on payment terminal");
+          setTimeout(function ()
+          {
+            var sOrderId = orderBC.GetFieldValue("Id");
+            var InPS = SiebelApp.S_App.NewPropertySet();
+            var OutPS = SiebelApp.S_App.NewPropertySet();
+            var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+            InPS.SetProperty("ProcessName", "SC Customer Signature Capture");
+            InPS.SetProperty("Object Id", sOrderId);
+            OutPS = Bservice.InvokeMethod("RunProcess", InPS);
+            $("#SC-Payments-TACOS-Info").modal("hide");
+            selectSalesRep();
+          }, 1000);
+        }
+
+        //start: function is used for without Order Receipt genartion 
+        function noReceipt()
+        {
+          $("#custommaskoverlay").show();
+          setTimeout(function ()
+          {
+            //code for popups to be displayed starts from here
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+            var Recordo = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+
+            if (Recordo[0]["SC Tax Verification Pending"] === 'Y' && Recordo[0]["Tax Exempt"] === 'Y')
+            {
+              $("#SC-SO-order-hold").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-hold").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+              $(".modal-backdrop").css('background', '#ffffff');
+            }
+            else if (Recordo[0]["Status"] == "Hold")
+            {
+              $("#SC-SO-order-just-hold").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-just-hold").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (Recordo[0]["Status"] == "Siebel Error")
+            {
+              $("#SC-SO-order-sibel-error").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-sibel-error").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (Recordo[0]["Status"] == "Oracle Error")
+            {
+              $("#SC-SO-order-oracle-error").modal(
+              {
+                backdrop: 'static'
+              });
+              $("#SC-SO-order-oracle-error").css(
+              {
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center"
+              });
+            }
+            else if (Recordo[0]["Status"] != "Oracle Error" && Recordo[0]["Status"] != "Siebel Error" && Recordo[0]["Status"] != "Hold" && Recordo[0]["SC Tax Verification Pending"] != 'Y' && Recordo[0]["Tax Exempt"] != 'Y')
+            {
+              /*if (itemsCount > 0) {
+              	$("#SC-SO-schedule-hd").modal({
+              		backdrop: 'static'
+              	});
+              	$("#SC-SO-schedule-hd").css({
+              		"display": "flex",
+              		"justify-content": "center",
+              		"align-items": "center"
+              	});
+              }else {*/
+              $("#custommaskoverlay").hide();
+              SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+
+              //}
+            }
+            else
+            {
+              $("#custommaskoverlay").hide();
+              SiebelApp.S_App.GotoView("SC Sales Order 360 Degree View OUI");
+
+            }
+            $("#custommaskoverlay").hide();
+          }, 100);
+        }
+        //End: function is used for without Order Receipt genartion
+        function selectSalesRep()
+        {
+          //saddala for calculating no of items
+          var InPS = SiebelApp.S_App.NewPropertySet();
+          var OutPS = SiebelApp.S_App.NewPropertySet();
+          var Service = SiebelApp.S_App.GetService("SC HomeDelivery Items Check");
+          SiebelJS.Log("In BC..:" + orderId);
+          InPS.SetProperty("OrderId", orderId);
+          OutPS = Service.InvokeMethod("HomeDelivery", InPS);
+          var Child = OutPS.GetChild(0);
+          itemsCount = Child.GetProperty("NoOfItems");
+
+          //revise flow submit order and show gnrt receipt popup
+          if (localStorage.getItem("comingfrom") == "refundbtn")
+          {
+            localStorage.setItem("comingfrom", "refundbtnsubmit");
+            SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("SubmitOrder");
+            var myVar = setInterval(function ()
+            {
+              SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+              if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status") != "In Progress")
+              {
+                clearInterval(myVar);
+                $("body").trigger('Custom.End');
+                //for which popup should show up
+                var Record = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+                var voiderror = false;
+                var FieldQueryPair = {
+                  "Id": ""
+                };
+                SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Validation Message - Payments List Applet");
+                validatemessagepaymentlist = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Validation Message - Payments List Applet"].GetBusComp().GetRecordSet();
+                SiebelJS.Log("validatemessage::" + JSON.stringify(validatemessagepaymentlist));
+                for (var err = 0; err < validatemessagepaymentlist.length; err++)
+                {
+                  if (validatemessagepaymentlist[err]["Message Code"] == "SC_VOID_ORDER_SUBMIT")
+                  {
+                    voiderror = true;
+                  }
+                }
+                if (voiderror == true)
+                {
+                  $("#SC-Payerror-popup").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-Payerror-popup").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                  $(".modal-backdrop").css('background', '#ffffff');
+                }
+                /* else if (Record[0]["SC Tax Verification Pending"] === 'Y' && Record[0]["Tax Exempt"] === 'Y') { //if order is on hold show that pop up
+									$("#SC-SO-order-hold").modal({
+										backdrop: 'static'
+									});
+									$("#SC-SO-order-hold").css({
+										"display": "flex",
+										"justify-content": "center",
+										"align-items": "center"
+									});
+									$(".modal-backdrop").css('background', '#ffffff');
+								} else if (Record[0]["Status"] == "Hold") {
+									$("#SC-SO-order-just-hold").modal({
+										backdrop: 'static'
+									});
+									$("#SC-SO-order-just-hold").css({
+										"display": "flex",
+										"justify-content": "center",
+										"align-items": "center"
+									});
+								} */
+                else if (Record[0]["Status"] == "Siebel Error")
+                {
+                  $("#SC-SO-order-sibel-error").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-SO-order-sibel-error").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                }
+                else if (Record[0]["Status"] == "Oracle Error")
+                {
+                  $("#SC-SO-order-oracle-error").modal(
+                  {
+                    backdrop: 'static'
+                  });
+                  $("#SC-SO-order-oracle-error").css(
+                  {
+                    "display": "flex",
+                    "justify-content": "center",
+                    "align-items": "center"
+                  });
+                }
+                else
+                {
+                  /* if((orderBC.GetFieldValue("SC Sub-Type") === "Sale") && (orderBC.GetFieldValue("SC Location Type") === "STORE") && (orderBC.GetFieldValue("Revision") == 1)&& (orderBC.GetFieldValue("Status") === "Booked")) {
+										if(orderId!=null && orderId!=""){
+											var inPS = SiebelApp.S_App.NewPropertySet();
+											var outPS = SiebelApp.S_App.NewPropertySet();
+											inPS.SetProperty("OrderId",orderId);
+											SiebelJS.Log("Invoking Business Service");
+											Bservice = SiebelApp.S_App.GetService("SC Get Line Items");
+											outPS = Bservice.InvokeMethod("Query",inPS); 
+											for(var pr=0;pr<outPS.GetChild(0).GetChildCount();pr++){
+											 if((outPS.GetChild(0).GetChild(pr).GetProperty("SC Product Primary Product Line")=="MATTRESS")&& (isActivityCreated != true)){
+												 //start--Create Activity Plan after Submitting the Order
+												var inPS = SiebelApp.S_App.NewPropertySet();
+												var outPS = SiebelApp.S_App.NewPropertySet();
+												inPS.SetProperty("BO", "Contact");
+												inPS.SetProperty("BC", "Activity Plan");
+												inPS.SetProperty("ContactId", contactId);
+												inPS.SetProperty("Template", "SC Insider Follow-Up");
+												Bservice = SiebelApp.S_App.GetService("SC Create Activity Plan Service"); //get service
+												outPS = Bservice.InvokeMethod("Create", inPS);
+												var isActivityCreated = true;
+												//End--Create Activity Plan after Submitting the Order
+											 }else{
+												 isActivityCreated = false;
+											 }
+										 }
+										}
+									}*/
+                  if (Record[0]["Status"] != "Oracle Error" && Record[0]["Status"] != "Siebel Error" && Record[0]["Status"] != "Hold" && Record[0]["SC Tax Verification Pending"] != 'Y' && Record[0]["Tax Exempt"] != 'Y' && itemsCount > 0)
+                  {
+
+                    $("#SC-SO-Schedule-popup").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-Schedule-popup").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                  }
+                  else
+                  {
+                    if (orderBC.GetFieldValue("SC Sub-Type") == "Wholesale")
+                      noReceipt();
+                    else
+                    {
+                      //if order is completed show that poup
+                      var sOrderId = orderBC.GetFieldValue("Id");
+                      var sbilltocontactId = orderBC.GetFieldValue("Bill To Contact Id");
+                      if (sbilltocontactId != "")
+                        SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                      $("#SC-SO-order-complete").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#SC-SO-order-complete").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                      $(".modal-backdrop").css('background', '#ffffff');
+
+                    }
+                  }
+                }
+              }
+            }, 1000);
+
+          }
+          else
+          { //not revise process
+            $("body").css("cursor", "progress");
+            var storeNumber = SCOUIMethods.SCGetProfileAttrValue('SC Store Number');
+            SiebelJS.Log("Store Number..:" + storeNumber);
+
+            //for store user show Salesrep popup
+            //SBOORLA: Added condidtion if revision number is equal to 0ne 
+            var RevisionFlg = "";
+            RevisionFlg = orderBC.GetFieldValue("Revision");
+            var Channel = orderBC.GetFieldValue("SC Location Type");
+            var SubChannel = orderBC.GetFieldValue("SC Location Sub-Channel");
+
+            if (paySCStoreUser == 'Y' && RevisionFlg == 1)
+            {
+              var InPS = SiebelApp.S_App.NewPropertySet();
+              var OutPS = SiebelApp.S_App.NewPropertySet();
+              var Service = SiebelApp.S_App.GetService("SC Get Employee");
+              var empsearchSpec = "[Employee Type Code]='Employee'";
+              InPS.SetProperty("SearchExpr", "[SC Division Name] Like '" + storeNumber + "*' AND " + empsearchSpec + "");
+              OutPS = Service.InvokeMethod("GetEmployee", InPS);
+              var Child = OutPS.GetChild(0);
+              var BS_Data = Child.GetProperty("Count");
+              if (BS_Data > 0)
+              {
+                BS_Data = Child.GetProperty("FieldValues");
+                Dataarray = BS_Data.split(',');
+                var seen = {};
+                var out = [];
+                var len = Dataarray.length;
+                var j = 0;
+                for (var i = 0; i < len; i++)
+                {
+                  var item = Dataarray[i];
+                  if (seen[item] !== 1)
+                  {
+                    seen[item] = 1;
+                    out[j++] = item;
+                  }
+                }
+                Dataarray = out;
+                SC_OUI_Markups.SCSalesRepTable(Dataarray, "neww");
+              }
+              else
+              {
+                $("#sc-sales-rep-table").html("");
+              }
+              $("body").css("cursor", "default");
+              $("body").trigger('Custom.End');
+              $("#SC-sales-rep").modal(
+              {
+                backdrop: 'static'
+              });
+            }
+            //NTHARRE:03-MAY-2021:Added show sales rep popup for non store users STRY0011602,STRY0124385 
+            else if (paySCStoreUser == 'N' && RevisionFlg == 1 && ((Channel == "WHOLESALE" && SubChannel == "COMMERCIAL") || (Channel == "DIRECT" && SubChannel == "CSC") || (Channel == "ECOM" && SubChannel == "CS")))
+            {
+              var PrDivsn = SCOUIMethods.SCGetProfileAttrValue('SC Primary Division Name');
+              var PrDvsnType = SCOUIMethods.SCGetProfileAttrValue('SC Primary Division Type');
+
+              var InPS = SiebelApp.S_App.NewPropertySet();
+              var OutPS = SiebelApp.S_App.NewPropertySet();
+              var Service = SiebelApp.S_App.GetService("SC Get Employee");
+              var empsearchSpec = "[Employee Type Code]='Employee'";
+              InPS.SetProperty("SearchExpr", "[SC Division Type] = '" + PrDvsnType + "' AND [Division] = '" + PrDivsn + "' AND " + empsearchSpec + "");
+              OutPS = Service.InvokeMethod("GetEmployee", InPS);
+              var Child = OutPS.GetChild(0);
+              var BS_Data = Child.GetProperty("Count");
+              if (BS_Data > 0)
+              {
+                BS_Data = Child.GetProperty("FieldValues");
+                Dataarray = BS_Data.split(',');
+                var seen = {};
+                var out = [];
+                var len = Dataarray.length;
+                var j = 0;
+                for (var i = 0; i < len; i++)
+                {
+                  var item = Dataarray[i];
+                  if (seen[item] !== 1)
+                  {
+                    seen[item] = 1;
+                    out[j++] = item;
+                  }
+                }
+                Dataarray = out;
+                SC_OUI_Markups.SCSalesRepTable(Dataarray, "neww");
+              }
+              else
+              {
+                $("#sc-sales-rep-table").html("");
+              }
+              $("body").css("cursor", "default");
+              $("body").trigger('Custom.End');
+              $("#SC-sales-rep").modal(
+              {
+                backdrop: 'static'
+              });
+            }
+            //for other user than store dont show sales rep popup
+            else
+            {
+              SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("SubmitOrder");
+              var myVar = setInterval(function ()
+              {
+                SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+                if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status") != "In Progress")
+                {
+                  clearInterval(myVar);
+                  $("body").css("cursor", "default");
+                  var Record = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+                  var voiderror = false;
+                  var FieldQueryPair = {
+                    "Id": ""
+                  };
+                  SCOUIMethods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Validation Message - Payments List Applet");
+                  validatemessagepaymentlist = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Validation Message - Payments List Applet"].GetBusComp().GetRecordSet();
+                  SiebelJS.Log("validatemessage::" + JSON.stringify(validatemessagepaymentlist));
+                  for (var err = 0; err < validatemessagepaymentlist.length; err++)
+                  {
+                    if (validatemessagepaymentlist[err]["Message Code"] == "SC_VOID_ORDER_SUBMIT")
+                    {
+                      voiderror = true;
+                    }
+                  }
+                  if (voiderror == true)
+                  {
+                    $("#SC-Payerror-popup").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-Payerror-popup").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                  }
+                  else if (Record[0]["Status"] == "Siebel Error")
+                  {
+                    $("#SC-SO-order-sibel-error").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-order-sibel-error").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                  }
+                  else if (Record[0]["Status"] == "Oracle Error")
+                  {
+                    $("#SC-SO-order-oracle-error").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-order-oracle-error").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                  }
+                  else
+                  {
+                    //if order is completed show that poup
+                    $("body").trigger('Custom.End');
+                    if (Record[0]["Status"] != "Oracle Error" && Record[0]["Status"] != "Siebel Error" && Record[0]["Status"] != "Hold" && Record[0]["SC Tax Verification Pending"] != 'Y' && Record[0]["Tax Exempt"] != 'Y' && itemsCount > 0)
+                    {
+
+                      $("#SC-SO-Schedule-popup").modal(
+                      {
+                        backdrop: 'static'
+                      });
+                      $("#SC-SO-Schedule-popup").css(
+                      {
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center"
+                      });
+                    }
+                    else
+                    {
+                      if (orderBC.GetFieldValue("SC Sub-Type") == "Wholesale")
+                        noReceipt();
+                      else
+                      {
+                        var sOrderId = orderBC.GetFieldValue("Id");
+                        var sbilltocontactId = orderBC.GetFieldValue("Bill To Contact Id");
+                        if (sbilltocontactId != "")
+                          SCOUIMethods.emailTrigger(RevisionNumber, RevisionReason, sOrderId);
+                        $("#SC-SO-order-complete").modal(
+                        {
+                          backdrop: 'static'
+                        });
+                        $("#SC-SO-order-complete").css(
+                        {
+                          "display": "flex",
+                          "justify-content": "center",
+                          "align-items": "center"
+                        });
+                        $(".modal-backdrop").css('background', '#ffffff');
+                      }
+                    }
+                  }
+                }
+              }, 1000);
+            }
+          }
+          //hiding the Loader
+        }
+
+        function PaymentDetials(records)
+        {
+          Markup = '';
+          Markup += '<div class="row">';
+          Markup += '<div class="payment-due-item">';
+          Markup += '<div class="col-md-4 col-lg-4 col-sm-4">';
+          Markup += '</div>';
+          Markup += '<div class="col-md-4 col-lg-4 col-sm-4">';
+          Markup += '<div class="payment-label">';
+          Markup += '<label class="no-margin main-label">Payment Due:</label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '<div class="col-md-4 col-lg-4 col-sm-4 no-padding">';
+          var balanceDue = orderBC.GetFieldValue("SC Total Balance Due");
+          //saddala for #677
+          balanceDue = Number(balanceDue).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+          if (parseFloat(balanceDue) < 0)
+          {
+            balanceDue = balanceDue.replace("-", "");
+            Markup += '<p class="no-margin due-amount">$(' + balanceDue + ')</p>';
+
+          }
+          else
+          {
+            Markup += '<p class="no-margin due-amount">$' + balanceDue + '</p>';
+          }
+          if (parseFloat(balanceDue) <= 0)
+          {
+            //payment Due is zero disable the create quote button
+            $("#SC-Quote-Payments").addClass("SC-disabled");
+          }
+          else
+          {
+            //payment Due is greater than zero enable the create quote button
+            $("#SC-Quote-Payments").removeClass("SC-disabled");
+          }
+
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '</div>';
+          var payrcdlen = "";
+          payrcdlen = records.length;
+          for (var i = 0; i < payrcdlen; i++)
+          {
+            if (records[i]['SC Payment Status'] == 'Settled' || records[i]['SC Payment Status'] == 'Authorized')
+            {
+              Markup += '<div class="row" id="seq-' + records[i]['Line Number'] + '">';
+              Markup += '<div class="payment-due-item">';
+              Markup += '<div class="col-md-4 col-lg-4 col-sm-4">';
+              Markup += '</div>';
+              Markup += '<div class="col-md-4 col-lg-4 col-sm-4">';
+              Markup += '<div class="payment-label">';
+              var transAmt = "";
+              transAmt = records[i]["Transaction Amount"];
+              transAmt = transAmt.replace(/[$,]/g, "");
+              transAmt = parseInt(transAmt);
+              if (((records[i]["Payment Method"] == "Credit Card" || records[i]["Payment Method"] == "Gift Card") && records[i]["SC Void Enable"] == "Y" && transAmt >= 0 && records[i]["SC Enable Delete"] == "N" && records[i]["SC CVV Failed Flag"] == "N" && records[i]["SC Admin View"] == "N") || (records[i]["SC Allow Refund Void"] == "Y"))
+                Markup += '<img src="images/custom/minus-circle-orange.png" class="circle-icon sc-pay-void" id="' + (i + 1) + 'sc-pay-void">';
+              else
+                Markup += '<img src="images/custom/minus-circle-orange.png" class="circle-icon" style="display: none" id="' + (i + 1) + 'sc-pay-void">';
+              Markup += '<label class="no-margin item-name">' + records[i]['Payment Method'] + '</label>';
+              Markup += '</div>';
+              Markup += '</div>';
+              Markup += '<div class="col-md-4 col-lg-4 col-sm-4 no-padding">';
+              Markup += '<p class="no-margin due-amount item-value">' + records[i]['Transaction Amount'] + '</p>';
+              Markup += '</div>';
+              Markup += '</div>';
+              Markup += '</div>';
+            }
+          }
+          $(".sc-pay-void").css(
+          {
+            "pointer-events": 'all'
+          });
+          return Markup;
+        }
+
+        function failedPendingTxnDetials(records)
+        {
+          $('#SC-failed-payment-details').hide();
+          Markup = '';
+          Markup += '<div class="payment-panel-body clearfix">';
+          Markup += '<div class="heading">';
+          Markup += '<p style="color:#20558a;font-weight:600">Payments</p>';
+          Markup += '</div>';
+          Markup += '<div class="row">';
+          Markup += '<div class="failed-pay-rows">';
+          Markup += '<div class="col-md-3 col-lg-3 col-sm-3 add-width">';
+          Markup += ' <p style="color:#20558a;font-weight:600">PAYMENT METHOD</p>';
+          Markup += '</div>';
+          Markup += '<div class="col-md-3 col-lg-3 col-sm-3">';
+          Markup += ' <p style="color:#20558a;font-weight:600">PAYMENT STATUS</p>';
+          Markup += '</div>';
+          Markup += '<div class="col-md-3 col-lg-3 col-sm-3">';
+          Markup += ' <p style="color:#20558a;font-weight:600">DATE AND TIME</p>';
+          Markup += '</div>';
+          Markup += '<div class="col-md-3 col-lg-3 col-sm-3">';
+          Markup += ' <p style="color:#20558a;font-weight:600">AMOUNT</p>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '</div>';
+          var payrcdlen = "";
+          payrcdlen = records.length;
+          for (var i = 0; i < payrcdlen; i++)
+          {
+            // if (records[i]['SC Payment Status'] != 'Settled' && records[i]['SC Payment Status'] != 'Authorized') {
+            SiebelJS.Log("Payment Status..:" + records[i]['SC Payment Status']);
+            $('#SC-failed-payment-details').show();
+            Markup += '<div class="row">';
+            Markup += '<div class="failed-pay-rows failed-pay-data">';
+            Markup += '<div class="col-md-3 col-lg-3 col-sm-3" style="cursor:pointer;display:flex;padding-left:0px">';
+            var transAmt = "";
+            transAmt = records[i]["Transaction Amount"];
+            transAmt = transAmt.replace(/[$,]/g, "");
+            transAmt = parseInt(transAmt);
+            if (records[i]['SC Payment Status'] == 'Entered' || records[i]['SC Payment Status'] == 'In Progress')
+            {
+              if (records[i]["Payment Method"] == 'Financing')
+              {
+                isFinancing = "Y";
+                Markup += '<p><img src="images/custom/delete-blue.png" style="height:18px;width:18px;margin-right:2px" class="cross-img pay-delete financing" id="' + (i + 1) + 'void"></p>';
+              }
+              else
+              {
+                isFinancing = "N";
+                Markup += '<p><img src="images/custom/delete-blue.png" style="height:18px;width:18px;margin-right:2px" class="cross-img pay-delete" id="' + (i + 1) + 'void"></p>';
+              }
+              Markup += '<p><img src="images/custom/edit_fill.png" style="background-color:#20558a!important; border:#20558a!important;border-radius:100%;height:20px !important;width:20px!important;padding:5px!important;margin-right:5px!important" class="blue-bg sc-failed-payment-row seq-' + (i + 1) + '" style="background-color:#20558a!important" id="seq-' + (i + 1) + '"><span class="sc-failed-payment-row" style="color:#000" id="seq-' + (i + 1) + '">' + records[i]["Payment Method"] + '<span></p>';
+              Markup += '</div>';
+            }
+            else
+            {
+              if ((((records[i]["Payment Method"] == "Credit Card" || records[i]["Payment Method"] == "Gift Card") && records[i]["SC Void Enable"] == "Y" && transAmt >= 0 && records[i]["SC Enable Delete"] == "N" && records[i]["SC CVV Failed Flag"] == "N" && records[i]["SC Admin View"] == "N") || (records[i]["SC Allow Refund Void"] == "Y")) && (records[i]['SC Payment Status'] != 'Declined'))
+              {
+                if (records[i]['SC Payment Status'] == 'Need Verbal Authorization')
+                {
+                  Markup += '<p style="color:#000"><img src="images/custom/blue_void.png" style="height:18px;width:18px;margin-right:2px" class="cross-img pay-delete sc-line-pay-void sc-failed-payment-row" id="' + (i + 1) + 'sc-pay-void"></p>';
+                  Markup += '<p><img src="images/custom/edit_fill.png" style="background-color:#20558a!important; border:#20558a!important;border-radius:100%;height:20px !important;width:20px!important;padding:5px!important;margin-right:2px!important" class="sc-failed-payment-row" id="seq-' + (i + 1) + '"></p>';
+                }
+                else
+                {
+                  Markup += '<p style="margin-left:14px"><img src="images/custom/icon-cancel.png" class="cross-img pay-delete" style="display: none" id=' + (i + 1) + '"void"></p>';
+                  Markup += '<p style="color:#000"><img src="images/custom/blue_void.png" style="height:18px;width:18px;margin-right:2px" class="cross-img pay-delete sc-line-pay-void sc-failed-payment-row" id="' + (i + 1) + 'sc-pay-void"></p>';
+                }
+              }
+              else
+              {
+                if (records[i]['SC Payment Status'] == 'Need Verbal Authorization')
+                {
+                  Markup += '<p style="margin-left:14px"><img src="images/custom/icon-cancel.png" class="cross-img pay-delete" style="display: none" id=' + (i + 1) + '"void"></p>';
+                  Markup += '<p><img src="images/custom/edit_fill.png" style="background-color:#20558a!important; border:#20558a!important;border-radius:100%;height:20px !important;width:20px!important;padding:5px!important;margin-right:2px!important" class="sc-failed-payment-row" id="seq-' + (i + 1) + '"></p>';
+                }
+                else
+                  Markup += '<p style="margin-left:40px"><img src="images/custom/icon-cancel.png" class="cross-img pay-delete" style="display: none" id=' + (i + 1) + '"void"></p>';
+              }
+              Markup += '<p><span class="sc-failed-payment-row" id="seq-' + (i + 1) + '" style="color:#000">' + records[i]["Payment Method"] + ' <span></p></div>';
+            }
+            Markup += '<div class="col-md-3 col-lg-3 col-sm-3 sc-failed-payment-row" id="seq-' + (i + 1) + '" style="cursor:pointer">';
+            Markup += '<p style="color:#000">' + records[i]['SC Payment Status'] + '</p>';
+            if ((records[i]['SC Payment Status'] != 'Entered') && (records[i]["Payment Method"] == 'Financing'))
+              isFinancing = "N";
+            Markup += '</div>';
+            Markup += '<div class="col-md-3 col-lg-3 col-sm-3 sc-failed-payment-row" id="seq-' + (i + 1) + '" style="cursor:pointer">';
+            Markup += ' <p style="color:#000">' + records[i]['Payment Date'] + '</p>';
+            Markup += '</div>';
+            Markup += '<div class="col-md-3 col-lg-3 col-sm-3 sc-failed-payment-row" style="cursor:pointer">';
+            Markup += '<p style="color:#000">' + records[i]['Transaction Amount'] + '</p>';
+            Markup += '</div>';
+            Markup += '</div>';
+            Markup += '</div>';
+            //}
+          }
+          Markup += '</div>';
+
+          return Markup;
+        }
+
+        function CreditCardDetails()
+        {
+          Markup = "";
+          Markup += '<div class="payment-panel-body clearfix">';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase mandatory">PAYMENT STATUS:</label>';
+          Markup += '<label class="input-title man-input">' + paymentBC.GetFieldValue('SC Payment Status') + '</label>';
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">INVOICE REFERENCE #:</label>';
+          if (paymentBC.GetFieldValue('SC Invoice Ref#').length != 0)
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Invoice Ref#') + '</label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">ADDRESS VERIFIED:</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+
+          if (paymentBC.GetFieldValue["SC Add Check Verified"] == "Y")
+          {
+            Markup += '<input type="checkbox" id="cc-address-verified" name="" class="input-checkbox" checked="checked" disabled="disabled">';
+          }
+          else
+          {
+            Markup += '<input type="checkbox" id="cc-address-verified" name="" class="input-checkbox" disabled="disabled">';
+          }
+
+          Markup += '<label for="cc-address-verified"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">authorization CODE:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Status') == "Need Verbal Authorization")
+          {
+            Markup += '<input type="text" name="ccAuthCode" id="CCAuthCode" style="background:#fff;margin-bottom:0px !important" class="input-box big">';
+          }
+          else
+          {
+            if (paymentBC.GetFieldValue('Authorization Code').length != 0)
+            {
+              Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Authorization Code') + '</label>';
+            }
+            else
+            {
+              Markup += '<label class="input-title"></label>';
+            }
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">AUTHORIZATION DATE:</label>';
+          if (paymentBC.GetFieldValue('SC Auth Date').length != 0)
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Auth Date') + '</label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">Account Number:</label>';
+          if (paymentBC.GetFieldValue('Account Number') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Account Number') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">CVV FAILED:</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+
+          if (paymentBC.GetFieldValue["SC CVV Failed Flag"] == "Y")
+          {
+            Markup += '<input type="checkbox" id="cc-ccv-failed" name="cc-ccv-failed" class="input-checkbox" checked="checked" disabled="disabled">';
+          }
+          else
+          {
+            Markup += '<input type="checkbox" id="cc-ccv-failed" name="cc-ccv-failed" class="input-checkbox" disabled="disabled">';
+          }
+
+          Markup += '<label for="cc-ccv-failed"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">PAYMENT RECEIPT TEXT:</label>';
+          if (paymentBC.GetFieldValue('SC Pmt Receipt Text').length != 0)
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Invoice Ref#') + '</label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">SETTLEMENT AMOUNT:</label>';
+          if (paymentBC.GetFieldValue('SC Settled Amount').length != 0)
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Settled Amount') + '</label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">SETTLEMENT DATE:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Settlement Date').length != 0)
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Payment Settlement Date') + '</label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          Markup += ' </div>';
+          //NGOLLA:defect N0 802
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title">manual authorization</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+          Markup += '<input type="checkbox" id="cc-manual-auth" name="cc-manual-auth" class="input-checkbox" disabled="disabled">';
+          Markup += '<label for="cc-manual-auth"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '</div>';
+          return Markup;
+        }
+
+        function GiftCardDetails()
+        {
+          Markup = "";
+          Markup += '<div class="payment-panel-body clearfix">';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title  input-uppercase mandatory">payment status:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Status') == "")
+          {
+            Markup += '<label class="input-title man-input"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title man-input">' + paymentBC.GetFieldValue('SC Payment Status') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">invoice reference#:</label>';
+          if (paymentBC.GetFieldValue('SC Invoice Ref#') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Invoice Ref#') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">authorization code:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Status') == "Need Verbal Authorization")
+          {
+            Markup += '<input type="text" name="gcAuthCode" id="GCAuthCode" style="background:#fff;margin-bottom:0px !important" class="input-box big">';
+          }
+          else
+          {
+            if (paymentBC.GetFieldValue('Authorization Code').length != 0)
+            {
+              Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Authorization Code') + '</label>';
+            }
+            else
+            {
+              Markup += '<label class="input-title"></label>';
+            }
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">Authorization date:</label>';
+          if (paymentBC.GetFieldValue('SC Auth Date') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Auth Date') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">Account Number:</label>';
+          if (paymentBC.GetFieldValue('Account Number') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Account Number') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">address verified:</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+
+          if (paymentBC.GetFieldValue["SC Add Check Verified"] == "Y")
+          {
+            Markup += '<input type="checkbox" id="gc-address-verified" name="gc-address-verified" class="input-checkbox" checked="checked" disabled="disabled">';
+          }
+          else
+          {
+            Markup += '<input type="checkbox" id="manual-auth" name="" class="input-checkbox" disabled="disabled">';
+          }
+
+          Markup += '<label for="gc-address-verified"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">payment receipt text:</label>';
+          if (paymentBC.GetFieldValue('SC Pmt Receipt Text') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Pmt Receipt Text') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">settlement amount:</label>';
+          if (paymentBC.GetFieldValue('SC Settled Amount') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Settled Amount') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">settlement date:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Settlement Date') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Payment Settlement Date') + '</label>';
+          }
+
+          Markup += ' </div>';
+          //NGOLLA:defect N0 802
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title">manual authorization</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+          Markup += '<input type="checkbox" id="gc-manual-auth" name="gc-manual-auth" class="input-checkbox" disabled="disabled">';
+          Markup += '<label for="gc-manual-auth"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '</div>';
+          return Markup;
+        }
+
+        function CheckDetails()
+        {
+          Markup = "";
+          Markup += ' <div class="payment-panel-body clearfix">';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title mandatory input-uppercase">Payment status:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Status') == "")
+          {
+            Markup += '<label class="input-title man-input"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title man-input">' + paymentBC.GetFieldValue('SC Payment Status') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">invoice reference#:</label>';
+          if (paymentBC.GetFieldValue('SC Invoice Ref#') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Invoice Ref#') + '</label>';
+          }
+
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">account number:</label>';
+          if (paymentBC.GetFieldValue('Account Number') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Account Number') + '</label>';
+          }
+
+          Markup += ' </div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">authorization code:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Status') == "Need Verbal Authorization" && paymentBC.GetFieldValue('Authorization Code') == "")
+          {
+            Markup += '<input type="text" name="checkAuthCode" id="CheckAuthCode" style="background:#fff" class="input-box big">';
+          }
+          else
+          {
+            if (paymentBC.GetFieldValue('Authorization Code').length != 0)
+            {
+              Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Authorization Code') + '</label>';
+            }
+            else
+            {
+              Markup += '<label class="input-title"></label>';
+            }
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">Authorization date:</label>';
+          if (paymentBC.GetFieldValue('SC Auth Date') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Auth Date') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">Account Number:</label>';
+          if (paymentBC.GetFieldValue('Account Number') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Account Number') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">payment receipt text:</label>';
+          if (paymentBC.GetFieldValue('SC Pmt Receipt Text') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Pmt Receipt Text') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">settlement amount:</label>';
+          if (paymentBC.GetFieldValue('SC Settled Amount') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Settled Amount') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">settlement date:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Settlement Date') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Payment Settlement Date') + '</label>';
+          }
+          Markup += ' </div>';
+          //NGOLLA:defect N0 802
+          Markup += '<div class="input-group">';
+          Markup += ' <label class="input-title">deposited at store</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+          if (paymentBC.GetFieldValue('SC Deposited at Store') == "Y")
+          {
+            Markup += '<input type="checkbox" id="ck-dep-str" name="ck-dep-str" class="input-checkbox" checked="checked" disabled="disabled">';
+          }
+          else
+          {
+            Markup += '<input type="checkbox" id="ck-dep-str" name="ck-dep-str" class="input-checkbox" disabled="disabled">';
+          }
+          Markup += '<label for="ck-dep-str"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title">manual authorization</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+          if (paymentBC.GetFieldValue('Manual Authorization Flag') == "Y")
+          {
+            Markup += '<input type="checkbox" id="ck-manual-auth" name="ck-manual-auth" class="input-checkbox" checked="checked" disabled="disabled">';
+          }
+          else
+          {
+            Markup += '<input type="checkbox" id="ck-manual-auth" name="ck-manual-auth" class="input-checkbox" disabled="disabled">';
+          }
+          Markup += '<label for="ck-manual-auth"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '</div>';
+          return Markup;
+        }
+
+
+        function FinanceDetails()
+        {
+          Markup = "";
+          Markup += '<div class="payment-panel-body clearfix">';
+          Markup += '<div class="input-group input-min-height">';
+          Markup += '<label class="input-title mandatory input-uppercase">payment status:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Status') == "")
+          {
+            Markup += '<label class="input-title man-input"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title man-input">' + paymentBC.GetFieldValue('SC Payment Status') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group input-min-height">';
+          Markup += '<label class="input-title input-uppercase">address verified:</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+          if (paymentBC.GetFieldValue["SC Add Check Verified"] == "Y")
+          {
+            Markup += '<input type="checkbox" id="fc-address-verified" name="fc-address-verified" class="input-checkbox" checked="checked" disabled="disabled">';
+          }
+          else
+          {
+            Markup += '<input type="checkbox" id="fc-address-verified" name="fc-address-verified" class="input-checkbox" disabled="disabled">';
+          }
+          Markup += '<label for="fc-address-verified"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '<div class="input-group input-min-height">';
+          Markup += '<label class="input-title input-uppercase">authorization code:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Status') != "Authorized" && paymentBC.GetFieldValue('SC Payment Status') != "Entered")
+          {
+            Markup += '<input type="text" name="financeAuthCode" id="FinanceAuthCode" style="background:#fff;margin-bottom:0px !important" class="input-box big">';
+          }
+          else
+          {
+            if (paymentBC.GetFieldValue('Authorization Code').length != 0)
+            {
+              Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Authorization Code') + '</label>';
+            }
+            else
+            {
+              Markup += '<label class="input-title"></label>';
+            }
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group input-min-height">';
+          Markup += '<label class="input-title input-uppercase">Authorization date:</label>';
+          if (paymentBC.GetFieldValue('SC Auth Date') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Auth Date') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">Account Number:</label>';
+          if (paymentBC.GetFieldValue('Account Number') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Account Number') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group input-min-height">';
+          Markup += '<label class="input-title mandatory input-uppercase">Disclaimer:</label>';
+          if (paymentBC.GetFieldValue('SC Financing Disclaimer') == "")
+          {
+            Markup += '<input type="text" name="" class="input-box in-big">';
+          }
+          else
+          {
+            Markup += '<input type="text" name="" class="input-box in-big" value="' + paymentBC.GetFieldValue('SC Financing Disclaimer') + '">';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group input-min-height">';
+          Markup += '<label class="input-title input-uppercase">settlement amount:</label>';
+          if (paymentBC.GetFieldValue('SC Settled Amount') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Settled Amount') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group input-min-height">';
+          Markup += '<label class="input-title input-uppercase">settlement date:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Settlement Date') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Payment Settlement Date') + '</label>';
+          }
+
+          Markup += ' </div>';
+          //NGOLLA:defect N0 802
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title">manual authorization</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+          if (paymentBC.GetFieldValue('Manual Authorization Flag') == "Y")
+          {
+            Markup += '<input type="checkbox" id="fc-manual-auth" name="" class="input-checkbox" checked="checked" disabled="disabled">';
+          }
+          else
+          {
+            Markup += '<input type="checkbox" id="fc-manual-auth" name="" class="input-checkbox" disabled="disabled">';
+          }
+          Markup += '<label for="fc-manual-auth"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '  </div>';
+          return Markup;
+        }
+
+        function ACRDetails()
+        {
+          Markup = "";
+          Markup += '<div class="payment-panel-body clearfix">';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">Payment status:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Status') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Payment Status') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">authorization code:</label>';
+          if (paymentBC.GetFieldValue('Authorization Code') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Authorization Code') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">authorization date:</label>';
+          if (paymentBC.GetFieldValue('SC Auth Date') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Auth Date') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">Account Number:</label>';
+          if (paymentBC.GetFieldValue('Account Number') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('Account Number') + '</label>';
+          }
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">settlement amount:</label>';
+          if (paymentBC.GetFieldValue('SC Settled Amount') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Settled Amount') + '</label>';
+          }
+
+          Markup += '</div>';
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title input-uppercase">settlement date:</label>';
+          if (paymentBC.GetFieldValue('SC Payment Settlement Date') == "")
+          {
+            Markup += '<label class="input-title"></label>';
+          }
+          else
+          {
+            Markup += '<label class="input-title">' + paymentBC.GetFieldValue('SC Payment Settlement Date') + '</label>';
+          }
+          Markup += '</div>';
+          //NGOLLA:defect N0 802
+          Markup += '<div class="input-group">';
+          Markup += '<label class="input-title">Deposited at store</label>';
+          Markup += '<div class="SC-checkbox-grey-square">';
+          if (paymentBC.GetFieldValue('SC Deposited at Store') == "Y")
+          {
+            Markup += '<input type="checkbox" id="ch-dep-str" name="ch-dep-str" class="input-checkbox" checked="checked" disabled="disabled">';
+          }
+          else
+          {
+            Markup += '<input type="checkbox" id="ch-dep-str" name="ch-dep-str" class="input-checkbox" disabled="disabled">';
+          }
+          Markup += '<label for="ch-dep-str"></label>';
+          Markup += '</div>';
+          Markup += '</div>';
+          Markup += '</div>';
+
+          return Markup;
+        }
+
+
+        /*function emailReceipttrigger() {
+					//var RevisionNumber = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision");
+					//var RevisionReason = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Order Form Applet (Sales) OUI"].GetBusComp().GetFieldValue("Revision Reason");
+					 var RecptOrderrevId =  SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Id");
+                      var Custom_Service = "",
+                                Input_BS = "",
+                                Out_BS = "";
+                            Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+                            Input_BS = SiebelApp.S_App.NewPropertySet();
+                            Out_BS = SiebelApp.S_App.NewPropertySet();
+                            searchfields = "Id,Revision Reason";
+                            Input_BS.SetProperty("BO", "Order Entry (Sales)");
+                            Input_BS.SetProperty("BC", "Order Entry - Orders");
+                            Input_BS.SetProperty("SearchSpecification", "[Id] = '" + RecptOrderrevId + "'");
+                            Input_BS.SetProperty("SortSpecification", "");
+                            Input_BS.SetProperty("ReqNoOfRecords", "");
+                            Input_BS.SetProperty("FieldsArray", searchfields);
+                            Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
+                            var Child_BS = Out_BS.GetChild(0);
+                            var BS_Data = Child_BS.GetProperty("OutputRecordSet");
+                            if (BS_Data != "}") {
+                                var ResArray = new Array;
+                                ResArray = BS_Data.split(";");
+
+                                jsonRes = JSON.parse(ResArray[0]);
+                               RevisionReason = jsonRes["Revision Reason"];								
+                               // SiebelJS.Log("jsonSK" + jsonRes["Id"]);
+                            }
+					var searchExpr = "[Type] = 'SC_EVENT_TYPE_REASON1' AND [Name] = 'Internally Initiated' AND [Active] = 'Y'";
+					var RevisionReasonLov = SCOUIMethods.SCGetOrderLoVs(searchExpr);
+					var Revrsnflg = "";
+					if (RevisionNumber > 1 && RevisionReason == RevisionReasonLov) {
+						Revrsnflg = "N";
+					} else
+						Revrsnflg = "Y";
+
+					if (Revrsnflg == "Y") {
+						var frstorderInPS = SiebelApp.S_App.NewPropertySet();
+						var frstorderOutPS = SiebelApp.S_App.NewPropertySet();
+						orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
+						var sOrderId = orderBC.GetFieldValue("Id");
+						var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
+						frstorderInPS.SetProperty("ProcessName", "CX Email Quote Workflow");
+						frstorderInPS.SetProperty("Object Id", sOrderId);
+						frstorderInPS.SetProperty("ReportType", "Sales Order Receipt");
+						frstorderOutPS = Bservice.InvokeMethod("RunProcess", frstorderInPS);
+					}
+				}*/
+
+        function autoPrint(fileName)
+        {
+          var siebConsts = SiebelJS.Dependency("SiebelApp.Constants");
+          var DISA_PLUGIN = "plugin_print";
+          siebConsts.set("WS_" + DISA_PLUGIN.toUpperCase() + "_VERSION", "1.0.0");
+          var DISAPrintHandler = null,
+            alertFirstTime = "Y";;
+          //Invoke Disa AutoPrint
+          disaPrint(fileName);
+
+          function disaPrint(fileName)
+          {
+            console.log("Calling DISA PLUGIN with : ");
+            //console.log(myContent);
+            var handler = getDISAPrintHandler.call(this);
+            // here we create an object containing data which the Java application will read.
+
+            var msgJSON = {};
+            msgJSON["Command"] = "Ready";
+            msgJSON["FileName"] = fileName;
+            msgJSON["PrintOnce"] = "Y";
+            var scProfileAttr = localStorage.getItem("ProfileAttr");
+            scProfileAttr = JSON.parse(scProfileAttr);
+            msgJSON["CurrentUser"] = scProfileAttr['Login Name'];
+            handler.SendMessage(msgJSON);
+          }
+          //DISA Handler
+          function getDISAPrintHandler()
+          {
+            if (DISAPrintHandler === null)
+            {
+              (function (proxied)
+              {
+                window.alert = function ()
+                {
+                  if (arguments[0].includes("Failed to connect to Desktop Integration Siebel Agent on your machine"))
+                  {}
+                  else
+                    return proxied.apply(this, arguments);
+                };
+              })(window.alert);
+              DISAPrintHandler = SiebelApp.WebSocketManager.CreateWSHandler(DISA_PLUGIN);
+              // communications with DISA are asynchronous. We define handler functions here to deal with
+              // possible responses from DISA, such as a message or communication failure conditions.
+              DISAPrintHandler.OnMessage = onWSMessage.bind(this);
+              DISAPrintHandler.OnFail = onWSSendFail.bind(this);
+              DISAPrintHandler.OnClose = onWSClose.bind(this);
+            }
+            return DISAPrintHandler;
+          }
+
+          function onWSMessage(msg)
+          {
+            // this is the result of callDISAPlugin if all goes well
+            handleMsg.call(this, msg);
+
+          }
+
+          // Normally this indicates something wrong with communication attempt to operator at DISA
+          // Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+          // Maybe because the version number at two sides are not matched, operator version should be equal or newer
+          // Reset state or other variables if necessary
+          function onWSSendFail()
+          {
+            handleException("Failed to send message to DISA");
+          }
+
+          // This indicates Siebel OpenUI with DISA connection was lost
+          // Maybe because Siebel OpenUI never establishes connection with DISA due to various reasons
+          // Maybe because DISA exited (by user) or crashed
+          // Reset state or other variables if necessary
+          function onWSClose()
+          {
+            handleException("Connection to DISA was lost");
+          }
+
+          // Called by onWSMessage event handler
+
+          function handleMsg(msg)
+          {
+            // Log the message received
+            console.log("JSON message received: " + JSON.stringify(msg) + "");
+            // Pass the message to the PR
+            //console.log("DISAResponse", msg);
+          }
+
+          // Called by onWSClose or onWSSendFail event handler
+          function handleException(msg)
+          {
+            // Add other error handling logic
+            console.log("Handle Exception" + msg);
+            if (alertFirstTime == "Y")
+            {
+              alertFirstTime = "N";
+              alert("There is an issue with the software that auto prints from Siebel (DISA). Please contact the Service Desk.");
+            }
+          }
+        }
+
+
+        return SCPaymentsPR;
+      }());
+      return "SiebelAppFacade.SCPaymentsPR";
+    })
+}

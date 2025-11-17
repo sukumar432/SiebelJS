@@ -1,0 +1,477 @@
+// globally rename GiftCardDetailPR to the name you desire for your custom class.
+// Save the file in siebel/custom/ using the same case for the file name as the class name.
+function validateInputGC(thisPM){
+	var retVal = true;
+	var errorMessage = "Following Fields are required:\n\n";
+	var errorCount = 0;
+	
+	if(thisPM.Get("SCStoreUser") == "Y"){
+		errorMessage = "Authorizations for Store users is limited to 'Rewards'; Please use POS to Authorize other payment methods"
+		retVal = false;		
+	}
+	else if(thisPM.Get("SCChatUser") != "Y" && thisPM.Get("SCVoicerUser") != "Y"){
+		if(thisPM.Get("GetGCBalanceFlag") == "N" && !thisPM.Get("AccountNumber")){
+			errorMessage = "Please perform “GC Balance Check” prior to “Authorization” request"
+			retVal = false;
+		}
+		else{
+			if(!thisPM.Get("GiftCardType")){				
+				errorCount++;
+				errorMessage += errorCount + ". Payment Type\n"
+				retVal = false;
+			}
+			if(thisPM.Get("GetGCBalanceFlag") == "Y" && !thisPM.Get("AccountNumber") && !thisPM.Get("CalcGiftCardNumber")){
+				errorCount++;
+				errorMessage += errorCount + ". Gift Card#\n"
+				retVal = false;
+			}			
+			if(!thisPM.Get("CalcPIN")){
+				errorCount++;
+				errorMessage += errorCount + ". PIN #\n"
+				retVal = false;
+			}			
+			if (thisPM.Get("GetGCBalanceFlag") == "N"){ //Added for defect #3295
+				if(!thisPM.Get("PaymentAmount") || thisPM.Get("PaymentAmount").slice(1) == "0.00"){
+					errorCount++;
+					errorMessage += errorCount + ". Payment Amount\n"
+					retVal = false;
+				}
+				else{
+					var PaymentAmount = thisPM.Get("PaymentAmount");
+					var OrderTotal = thisPM.Get("SCOrderTotal");
+					PaymentAmount = PaymentAmount.replace(/\D/g, ""); 
+					OrderTotal = OrderTotal.replace(/\D/g, ""); 
+					//Comparing the integers is much more robust than comparing floating point/decimal numbers as the comparison of int does not depend on JavaScript, hardware architecture and floating point arithmetic implementation.
+					var intPA = parseInt(PaymentAmount);
+					var intOT = parseInt(OrderTotal);
+					if (intPA > intOT){
+						errorMessage += "Payment Amount cannot exceed Order Total for Authorization"
+						retVal = false;							
+					}
+					if (thisPM.Get("PaymentAmount").substring(0,1) == "("){
+						errorMessage += "Negative Payment Amounts cannot be sent for authorization\n"
+						retVal = false;							
+					}	
+				}				
+			}
+		}
+	}
+	else if (thisPM.Get("SCChatUser") == "Y" || thisPM.Get("SCVoicerUser")=="Y"){
+		if(thisPM.Get("GetGCBalanceFlag") != "Y"){
+			errorMessage = "Please perform “GC Balance Check” prior to “Authorization” request"
+			retVal = false;
+		}	
+		else if(!thisPM.Get("PaymentAmount") || thisPM.Get("PaymentAmount").slice(1) == "0.00"){
+			errorCount++;
+			errorMessage += errorCount + ". Payment Amount\n"
+			retVal = false;
+		}
+		else{
+			var PaymentAmount = thisPM.Get("PaymentAmount");
+			var OrderTotal = thisPM.Get("SCOrderTotal");
+			PaymentAmount = PaymentAmount.replace(/\D/g, ""); 
+			OrderTotal = OrderTotal.replace(/\D/g, ""); 
+			//Comparing the integers is much more robust than comparing floating point/decimal numbers as the comparison of int does not depend on JavaScript, hardware architecture and floating point arithmetic implementation.
+			var intPA = parseInt(PaymentAmount);
+			var intOT = parseInt(OrderTotal);
+			if (intPA > intOT){
+				errorMessage += "Payment Amount cannot exceed Order Total for Authorization"
+				retVal = false;							
+			}
+			if (thisPM.Get("PaymentAmount").substring(0,1) == "("){
+				errorMessage += "Negative Payment Amounts cannot be sent for authorization\n"
+				retVal = false;							
+			}	
+		}
+		
+	}
+	if(!retVal){
+		alert(errorMessage);
+	}
+	return retVal;
+}
+
+if (typeof(SiebelAppFacade.GiftCardDetailPR) === "undefined") {
+
+	SiebelJS.Namespace("SiebelAppFacade.GiftCardDetailPR");
+
+	define("siebel/custom/SC_giftcarddetailpr", ["siebel/phyrenderer"],
+		function () {
+		SiebelAppFacade.GiftCardDetailPR = (function () {
+
+			//Venkat R 11/19/2020 for Secure Payment
+			var orderBC, paymentBC, appletName, sChatUser="", sVoiceUser = "",GiftCardPM; 
+			function GiftCardDetailPR(pm) {
+				SiebelAppFacade.GiftCardDetailPR.superclass.constructor.apply(this, arguments);
+			}
+			SiebelJS.Extend(GiftCardDetailPR, SiebelAppFacade.PhysicalRenderer);
+			
+			GiftCardDetailPR.prototype.Init = function () {
+				SiebelAppFacade.GiftCardDetailPR.superclass.Init.apply(this, arguments);
+				//Venkat 10/26/2020 for Secure Payment added sChatUser variable
+				//sChatUser = theApplication().GetProfileAttr("SC Chat User");
+				//sVoiceUser = theApplication().GetProfileAttr("SC Voice User");
+				var ccPM = this.GetPM();
+				GiftCardPM=ccPM;
+				sChatUser = ccPM.Get("SCChatUser");
+				sVoiceUser = ccPM.Get("SCVoicerUser");
+				//sChatUser = "Y";
+				//var ccPM = this.GetPM();
+				//ccPM.AddProperty( "SCVoicerUser",sVoiceUser);
+				var oBO = SiebelApp.S_App.GetActiveBusObj().GetName();
+				if(oBO == "Order Entry (Sales)"){
+					orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["Order Entry - Order Form Applet (Sales)"].GetBusComp();
+				}else{
+					if(SiebelApp.S_App.GetActiveView().GetAppletMap().hasOwnProperty("Order Entry - Order Form Applet"))
+						orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["Order Entry - Order Form Applet"].GetBusComp();
+					else if(SiebelApp.S_App.GetActiveView().GetAppletMap().hasOwnProperty("SC SRO Order Entry - Order Wholesale Form Applet"))
+						orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC SRO Order Entry - Order Wholesale Form Applet"].GetBusComp();
+				}
+			}
+
+			GiftCardDetailPR.prototype.BindData = function (bRefresh) {
+				SiebelAppFacade.GiftCardDetailPR.superclass.BindData.apply(this, arguments);
+			}
+
+			GiftCardDetailPR.prototype.ShowUI = function () {
+				SiebelAppFacade.GiftCardDetailPR.superclass.ShowUI.apply(this, arguments);
+				var PM = this.GetPM();
+				//Start..Venkat R 11/19/2020 for Secure Payment
+				var appletName = PM.Get("GetName");
+                paymentBC = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetBusComp();
+				var controls = this.GetPM().Get("GetControls");
+				if (sChatUser == "Y"){
+										
+					//$("[name="+controls["Payment Type"].GetInputName()+"]").prop("disabled",true).css({"color":"#727780","background-color":"#dddddd"});
+					//$("#" + controls["Payment Type"].GetInputName() + "_icon").prop("disabled",true).css({"color":"#727780","background-color":"#dddddd"});
+					
+					$("[name="+controls["SC Payment Link"].GetInputName()+"]").css('visibility', 'visible');
+					$("[name="+controls["SC Semaphone Capture Status"].GetInputName()+"]").css('visibility', 'visible');
+					$( "span#SC_Payment_Link_Label" ).parent().fadeIn(500);
+					$( "span#SC_Semaphone_Capture_Status_Label" ).parent().fadeIn(500);
+				}else{
+					$("[name="+controls["SC Payment Link"].GetInputName()+"]").css('visibility', 'hidden');
+					$("[name="+controls["SC Semaphone Capture Status"].GetInputName()+"]").css('visibility', 'hidden');
+					$( "span#SC_Payment_Link_Label" ).parent().fadeOut(500);
+					$( "span#SC_Semaphone_Capture_Status_Label" ).parent().fadeOut(500);
+				}
+				if (sChatUser == "Y" || sVoiceUser=="Y")
+				{
+					var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+					console.log("Account Number: " + sAccountNumber);
+					if (sAccountNumber.length == 0)
+					{
+						$("#" + controls[ "Authorize" ].GetInputName() + "_Ctrl").prop('disabled',true).css("opacity",0.3);
+					}
+				}
+				if(!$("#_sweclient").hasClass("sc-sro-giftcardsemaphone")){
+					var mainMarkup="";
+					mainMarkup += ' <div id="applet1" class="sc-sro-giftcardsemaphone">';
+					mainMarkup += ' <div class="container-fluid no-margin no-padding">';
+					mainMarkup += ' <div class="modal fade sc-create-manual-asset" id="SC-SRO-manual-gc-voice-payment" role="dialog">';
+					mainMarkup += ' </div>';
+					mainMarkup += '</div>';
+					mainMarkup += '</div>';
+					$("#_sweclient").append(mainMarkup);
+				}
+			}
+			
+			GiftCardDetailPR.prototype.BindEvents = function (controlSet) {
+				SiebelAppFacade.GiftCardDetailPR.superclass.BindEvents.apply(this);
+				var PM = this.GetPM();
+				var controls = PM.Get( "GetControls" );
+				var giftcardbalance = controls[ "Gift Card Balance" ];
+				var authorizeButton = controls[ "Authorize" ];				
+				var PaymentLineId = controls[ "Payment Id" ];	
+				var SCOrderTotal = controls[ "SC Order Total" ];	
+				
+				if(PaymentLineId != undefined){
+				    $("[name="+PaymentLineId.GetInputName()+"]").css('visibility', 'hidden');
+				}
+				if(SCOrderTotal != undefined){
+				    $("[name="+SCOrderTotal.GetInputName()+"]").css('visibility', 'hidden');
+			    }
+
+				$("#s_" + this.GetPM().Get("GetFullId") + "_div").parent().delegate("#" + giftcardbalance.GetInputName() + "_Ctrl",
+					"click",
+					{ctx:this, ctrls: controls}, //Pass the 'controls' collection to the event handler in the data object.
+					function(evt){
+						var appletName = PM.Get("GetName");
+					    var paymentBC = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetBusComp();
+						PM = evt.data.ctx.GetPM();		
+						//Set the property values by reading from controls.
+						PM.SetProperty("PaymentMethod",
+						 $("[name="+evt.data.ctrls[ "PaymentMethod" ].GetInputName()+"]").val());	
+						
+						PM.SetProperty("GiftCardType",
+						 $("[name="+evt.data.ctrls[ "SCPaymentTypeCode" ].GetInputName()+"]").val());	
+
+						PM.SetProperty("CalcGiftCardNumber",
+						 $("[name="+evt.data.ctrls[ "SC Credit Card Number" ].GetInputName()+"]").val());				
+
+						PM.SetProperty("CalcPIN",
+						 $("[name="+evt.data.ctrls[ "VerificationNumber" ].GetInputName()+"]").val());
+
+						PM.SetProperty("PaymentAmount",
+						 $("[name="+evt.data.ctrls[ "TransactionAmount" ].GetInputName()+"]").val());
+
+						//PM.SetProperty("PaymentsRowID",$("[name="+evt.data.ctrls[ "Payment Id" ].GetInputName()+"]").val());
+						PM.SetProperty("PaymentsRowID",  paymentBC.GetFieldValue("Id"));
+
+						//PM.SetProperty("AccountNumber", $("[name="+evt.data.ctrls[ "AccountNumber" ].GetInputName()+"]").val());
+						PM.SetProperty("AccountNumber",  paymentBC.GetFieldValue("Account Number"));
+						PM.SetProperty("GetGCBalanceFlag", "Y");					
+         																
+						//Validate user inputs in PR
+					
+						if(validateInputGC(PM)){
+							//Handle the click event in the PM
+							console.log("clicked INQUIRY BALANCE button from GC PR");				
+							PM.OnControlEvent ("GETGCBALANCE_BUTTON_CLICK");
+						}
+					
+					});
+
+				
+				$("#s_" + this.GetPM().Get("GetFullId") + "_div").parent().delegate("#" + authorizeButton.GetInputName() + "_Ctrl",
+					"click",
+					{ctx:this, ctrls: controls}, //Pass the 'controls' collection to the event handler in the data object.
+					function(evt){
+						var appletName = PM.Get("GetName");
+					    var paymentBC = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetBusComp();
+						PM = evt.data.ctx.GetPM();
+						//Set the property values by reading from controls.
+						PM.SetProperty("PaymentMethod",
+						 $("[name="+evt.data.ctrls[ "PaymentMethod" ].GetInputName()+"]").val());	
+
+						PM.SetProperty("GiftCardType",
+						 $("[name="+evt.data.ctrls[ "SCPaymentTypeCode" ].GetInputName()+"]").val());	
+
+						PM.SetProperty("CalcGiftCardNumber",
+						 $("[name="+evt.data.ctrls[ "SC Credit Card Number" ].GetInputName()+"]").val());				
+
+						PM.SetProperty("CalcPIN",
+						 $("[name="+evt.data.ctrls[ "VerificationNumber" ].GetInputName()+"]").val());				
+
+						PM.SetProperty("PaymentAmount",
+						 $("[name="+evt.data.ctrls[ "TransactionAmount" ].GetInputName()+"]").val());
+
+						//PM.SetProperty("PaymentsRowID", $("[name="+evt.data.ctrls[ "Payment Id" ].GetInputName()+"]").val());
+						PM.SetProperty("PaymentsRowID",  paymentBC.GetFieldValue("Id"));
+         																         																
+						PM.SetProperty("AccountNumber",
+						 $("[name="+evt.data.ctrls[ "AccountNumber" ].GetInputName()+"]").val());
+						
+						//Capture SC Order Total for defect #3287
+						//PM.SetProperty("SCOrderTotal", $("[name="+evt.data.ctrls[ "SC Order Total" ].GetInputName()+"]").val());	
+						if (sChatUser != "Y" &&  sVoiceUser!="Y")
+						{
+							PM.SetProperty("GetGCBalanceFlag", "N");
+						}
+						//Validate user inputs in PR
+						if(!validateInputGC(PM)){
+							console.log("Failed UI validations for GC Authorize");
+						}
+						
+						
+					}); 
+
+				//Start.. Venkat R for Chat User Gift Card Secure Payment
+				if (sChatUser == "Y")
+				{
+					var appletName = this.GetPM().Get("GetName");
+					//$("[name="+controls["Payment Type"].GetInputName()+"]").prop("disabled",true).css({"color":"#727780","background-color":"#dddddd"});
+					//$("#" + controls["Payment Type"].GetInputName() + "_icon").prop("disabled",true).css({"color":"#727780","background-color":"#dddddd"});
+					
+					setTimeout(function() {
+						
+						var paymentBC = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetBusComp();
+						var sPaymentLink = paymentBC.GetFieldValue("SC Payment Link");
+						var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+						console.log("Account Number: " + sAccountNumber);
+						
+						if (sAccountNumber.length == 0){
+							var canWrite = PM.ExecuteMethod("CanInvokeMethod", "WriteRecord"),write=false;
+							if(canWrite)
+							write = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("WriteRecord");
+							if(write){	
+								if(sPaymentLink == ""){
+									var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+									var orderId = orderBC.GetFieldValue("Id");
+									var Bservice = '', inPS = '', outPS = '';
+									inPS = SiebelApp.S_App.NewPropertySet();
+									outPS = SiebelApp.S_App.NewPropertySet();
+									inPS.SetProperty("Object Id", orderId);
+									inPS.SetProperty("Payment Id", sPaymentRecordId);
+									inPS.SetProperty("ProcessName", "SC Get Payment Link WF");
+									Bservice = SiebelApp.S_App.GetService("Workflow Process Manager");
+									outPS = Bservice.InvokeMethod("RunProcess", inPS);
+									var Refreshservice = '', RefreshinPS = '', RefreshoutPS = '';
+									RefreshinPS = SiebelApp.S_App.NewPropertySet();
+									RefreshoutPS = SiebelApp.S_App.NewPropertySet();
+									RefreshinPS.SetProperty("Refresh All", "Y");
+									//Refreshservice = SiebelApp.S_App.GetService("FINS Teller UI Navigation");
+									//RefreshoutPS = Refreshservice.InvokeMethod("RefreshCurrentApplet", RefreshinPS);
+									SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+								}
+							}
+							
+							sPaymentLink = paymentBC.GetFieldValue("SC Payment Link");
+							if(sPaymentLink != ""){
+								var maxTimeLimit = 0;
+								var getAccount = setInterval(function(){
+									var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+									if(sAccountNumber != ""){
+										$("#" + controls[ "Authorize" ].GetInputName() + "_Ctrl").prop('disabled',false).css("opacity",1);
+										SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+										clearInterval(getAccount);
+									}else{
+										if(maxTimeLimit >= 30){
+											clearInterval(getAccount);
+										}
+										SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+										maxTimeLimit += 1;
+									}
+									
+								}, 10000);
+							}
+						}
+					},10);
+				}
+				// End ..Venkat R for Chat User Gift Card Secure Payment
+				//Venkat 12/28/2020 Voice User for Secure Payment
+				if (sVoiceUser == "Y")
+				{
+					var sPage = "";
+					var appletName = this.GetPM().Get("GetName");
+					var paymentBC = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].GetBusComp();
+					var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+					var sAccountNumber = paymentBC.GetFieldValue("Account Number");
+					console.log("Account Number: " + sAccountNumber);
+					var cardPM=this.GetPM();
+					if (sAccountNumber.length == 0 && paymentBC.GetFieldValue("SC Payment Status")=="Entered"){
+						var canWrite = PM.ExecuteMethod("CanInvokeMethod", "WriteRecord"),write=false;
+						//var write = SiebelApp.S_App.GetActiveView().GetActiveApplet().InvokeMethod("WriteRecord");
+						if(canWrite)
+						write = SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("WriteRecord");
+						if(write){
+							var sPaymentRecordId = paymentBC.GetFieldValue("Id");
+							var Input = SiebelApp.S_App.NewPropertySet();
+							var Output = SiebelApp.S_App.NewPropertySet();
+							Input.SetProperty("BO", "Order Entry (Sales)");
+							Input.SetProperty("BC", "Payments");
+							Input.SetProperty("SortSpecification", "");
+							Input.SetProperty("ReqNoOfRecords", "");
+							Input.SetProperty("SearchSpecification", "Id ='" + sPaymentRecordId + "'");
+							var fieldsArray_new = "Id,SC Voice IFrame URL";
+							Input.SetProperty("FieldsArray", fieldsArray_new);
+							var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
+							Output = Custom_Service.InvokeMethod("Query", Input);
+							var Child = Output.GetChild(0);
+							var BS_Data = Child.GetProperty("OutputRecordSet");
+							if(BS_Data != "}"){
+								BS_Data = JSON.parse(BS_Data);
+								sPage = BS_Data["SC Voice IFrame URL"];
+							}
+							console.log("Semaphone url: " + sPage);
+							if(sPage.length>0){
+								var wmainMarkup = "";
+							wmainMarkup += '<iframe id="SC-manual-payment-Modal-frame"  src="'+sPage+'"></iframe>';
+							$("#SC-SRO-manual-gc-voice-payment").html(wmainMarkup);
+							$("#SC-SRO-manual-gc-voice-payment").modal({backdrop: 'static'});
+							$.ajax({
+								type: 'GET',
+								url: sPage,
+								dataType: 'jsonp',
+								mode: 'cors',
+								statusCode: {
+									404: function(responseObject, textStatus, jqXHR) {
+										alert("We have encountered an issue processing the payment. Please contact a Supervisor/Supervisor on Duty.");
+										$("#SC-SRO-manual-gc-voice-payment").modal('hide');
+										cardPM.ExecuteMethod("GCINVOKEDELETERCD",null,false);
+										window.removeEventListener("message",  gclistner, false);
+										setTimeout(function () {
+											cardPM.ExecuteMethod ("InvokeMethod", "ExecuteQuery", null,false);
+										},300);
+									},
+								 }
+							});
+							var gclistner = function(event){
+							//window.addEventListener('message', (event) => {
+									event.stopImmediatePropagation();
+									console.log(event); 
+									var data = {}
+									try{
+										data = JSON.parse(event.data);
+										console.log(data);
+										if  (data.isSubmitted) {
+											if(data["token"]!="" && data["semafoneErrorCode"]==0){
+												$("#SC-SRO-manual-gc-voice-payment").modal('hide');
+												cardPM.SetProperty("SemaPhoneGCAccNum",data["token"]);
+												cardPM.SetProperty("SemaPhoneGCpayType",data["cardType"]);
+												cardPM.SetProperty("SemaPhonepayCR",data["semafoneCR"]);
+												//cardPM.SetProperty("SemaPhonepayCard",data["lastFour"]);
+												cardPM.SetProperty("SemaPayGCId",sPaymentRecordId);
+												cardPM.ExecuteMethod("UPDAESEMAPHONEGCTOKEN",null,false);
+												window.removeEventListener("message",  gclistner, false);
+												SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+												controls = cardPM.Get("GetControls");
+												$("#" + controls[ "Authorize" ].GetInputName() + "_Ctrl").prop('disabled',false).css("opacity",1);
+											}
+											else{
+												$("#SC-SRO-manual-gc-voice-payment").modal('hide');
+												window.removeEventListener("message",  gclistner, false);
+												alert("We have encountered an issue processing the payment. Please contact a Supervisor/Supervisor on Duty.");
+												SiebelApp.S_App.GetActiveView().GetAppletMap()[appletName].InvokeMethod("RefreshRecord");
+											}
+										}
+										// Check if the form was cancelled
+										if (data.cancel){
+											
+											//if(confirm("Are you Sure you want to delete the Selected Record")){
+												cardPM.ExecuteMethod("GCINVOKEDELETERCD",null,false);
+												$("#SC-SRO-manual-gc-voice-payment").modal('hide');
+													window.removeEventListener("message", gclistner, false);
+												setTimeout(function () {
+														cardPM.ExecuteMethod ("InvokeMethod", "ExecuteQuery", null,false);
+													},500);
+											//}
+											
+										}									
+									}
+									catch(e){
+											console.log(e);
+									}
+									// Check if the form was submitted
+								//});
+							}
+							window.addEventListener("message", gclistner);
+								
+							}
+						}
+					}
+				}//Venkat 12/28/2020 end of Voice User logic for Secure Payment					
+			}
+			
+			GiftCardDetailPR.prototype.EndLife = function() {
+				SiebelAppFacade.GiftCardDetailPR.superclass.EndLife.apply(this, arguments);
+				/*if(getAccount != undefined){
+					clearInterval(getAccount);
+				}*/
+				if($("#SC-SRO-manual-gc-voice-payment").hasClass("in")){
+
+					$("#SC-SRO-manual-gc-voice-payment").modal('hide');
+					$(".modal-backdrop").remove();
+					if(GiftCardPM.ExecuteMethod("CanInvokeMethod", "DeleteRecord"))
+					GiftCardPM.ExecuteMethod("GCINVOKEDELETERCD",null,false);
+
+				}
+				$(".sc-sro-giftcardsemaphone").remove();
+			}
+
+			return GiftCardDetailPR;
+		}
+			());
+		return "SiebelAppFacade.GiftCardDetailPR";
+	});
+}

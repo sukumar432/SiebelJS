@@ -1,9 +1,9 @@
-if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
+if (typeof (SiebelAppFacade.SCProductsPR) === "undefined") {
 
-	SiebelJS.Namespace("SiebelAppFacade.SCiPadProductsPR");
-	define("siebel/custom/SelectComfort/SCiPadProductsPR", ["siebel/jqgridrenderer", "siebel/custom/SelectComfort/SC_OUI_Methods", "siebel/custom/SelectComfort/SC_OUI_Markups"],
+	SiebelJS.Namespace("SiebelAppFacade.SCProductsPR");
+	define("siebel/custom/SelectComfort/SCProductsPR", ["siebel/jqgridrenderer", "siebel/custom/SelectComfort/SC_OUI_Methods", "siebel/custom/SelectComfort/SC_OUI_Markups"],
 		function () {
-			SiebelAppFacade.SCiPadProductsPR = (function () {
+			SiebelAppFacade.SCProductsPR = (function () {
 				var SiebelConstant = SiebelJS.Dependency("SiebelApp.Constants");
 				var SC_OUI_Methods = SiebelJS.Dependency("SiebelApp.SC_OUI_Methods");
 				var SC_OUI_Markups = SiebelJS.Dependency("SiebelApp.SC_OUI_Markups");
@@ -33,18 +33,18 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 					Lov_Perc = "";
 				var RootOrderItemId = "",
 					RecordSeti, BS_Data1, lineRowID, isLinePick = false,
-					LineItemId = "";
+					LineItemId = "",ControlBoxSku,ClickedShowOkbtn;
 					
-				function SCiPadProductsPR(pm) {
-					SiebelAppFacade.SCiPadProductsPR.superclass.constructor.apply(this, arguments);
+				function SCProductsPR(pm) {
+					SiebelAppFacade.SCProductsPR.superclass.constructor.apply(this, arguments);
 				}
 
-				SiebelJS.Extend(SCiPadProductsPR, SiebelAppFacade.JQGridRenderer);
+				SiebelJS.Extend(SCProductsPR, SiebelAppFacade.JQGridRenderer);
 
-				SCiPadProductsPR.prototype.Init = function () {
+				SCProductsPR.prototype.Init = function () {
 					localStorage.setItem('whitescreen', 0);
-					SiebelAppFacade.SCiPadProductsPR.superclass.Init.apply(this, arguments);
-
+					SiebelAppFacade.SCProductsPR.superclass.Init.apply(this, arguments);
+					ClickedShowOkbtn="N";
 					pm = this.GetPM();
 					pm.AddProperty("AddReferral", false);
 					Appletid = pm.Get("GetFullId");
@@ -81,8 +81,8 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 					});
 				}
 
-				SCiPadProductsPR.prototype.ShowUI = function () {
-					SiebelAppFacade.SCiPadProductsPR.superclass.ShowUI.apply(this, arguments);
+				SCProductsPR.prototype.ShowUI = function () {
+					SiebelAppFacade.SCProductsPR.superclass.ShowUI.apply(this, arguments);
 					SiebelJS.Log(" In Show UI of Products");
 					poleDisplayFlag = "N";
 					ProductDesc = "";
@@ -116,13 +116,11 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 						Input_BS.SetProperty("ReqNoOfRecords", "");
 						Input_BS.SetProperty("FieldsArray", searchfields);
 						Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
-						setTimeout(function(){
 						var Child_BS = Out_BS.GetChild(0);
 						var BS_Data = Child_BS.GetProperty("OutputRecordSet");
 						if (BS_Data == "}") {
 							allowNewLine = "N";
 						}
-						},10);
 					}
 					//Vamsi 28-07-2018 Get All Lovs
 					/*var scorderSrchSpec = [],scorderSortSpec = [];
@@ -163,6 +161,8 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 					SiebelJS.Log("jsonSK"+jsonRes["Pole Display"]);
 				}
 	}*/
+					//SPATIBAN:May 2019 release : added below code to get the control box SKus
+					ControlBoxSku=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'X_SC_CONTROLBOX_SKU' and [Active] = 'Y'");
 					poleDisplayFlag = SC_OUI_Methods.SCGetProfileAttrValue("PoleDisplayOUI");
 					// VAMSI:08-OCT-18: Modified the below condtions to Support P2PE pole Display.
 					sP2PEFlag = SiebelApp.S_App.GetProfileAttr('P2PEFlag');
@@ -204,6 +204,10 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 							ProductDesc = document.getElementById('long_' + ID).innerHTML;
 							ProductPrice = document.getElementById('price_' + ID).innerHTML;
 							SiebelJS.Log("After add to cart clicked" + OrderId + " " + Quantity + " " + SKU);
+							//SPATIBAN:May 2019 release : added below code to get the control box SKus
+							if (ControlBoxSku.indexOf(SKU)!=-1) {
+								alert("Read this disclaimer to the customer:\n We no longer manufacture products with Obstruction Sense technology. The replacement component you receive will not have this feature. As a reminder, before adjusting your FlexFit™ base, always confirm there are no people or pets near the moving parts of the bed.");
+							}
 							if (SKU == "106683" && isStoreUser != "Y") {
 								alert("Only Store User is allowed to Add Gift Cards");
 							} else {
@@ -219,8 +223,8 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 				} //show ui
 
 
-				SCiPadProductsPR.prototype.BindData = function (bRefresh) {
-					SiebelAppFacade.SCiPadProductsPR.superclass.BindData.apply(this, arguments);
+				SCProductsPR.prototype.BindData = function (bRefresh) {
+					SiebelAppFacade.SCProductsPR.superclass.BindData.apply(this, arguments);
 					SiebelJS.Log("In products bind data");
 					if (localStorage.getItem('flowfrom') != "proceed" && localStorage.getItem('addcart') != "addcart") { //it should neither run after proceed is clicked nor afer addtocart is clicked
 						pm = this.GetPM();
@@ -421,8 +425,8 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 				} //bdata
 
 
-				SCiPadProductsPR.prototype.BindEvents = function () {
-					SiebelAppFacade.SCiPadProductsPR.superclass.BindEvents.apply(this, arguments);
+				SCProductsPR.prototype.BindEvents = function () {
+					SiebelAppFacade.SCProductsPR.superclass.BindEvents.apply(this, arguments);
 					//var storeuser=SiebelApp.S_App.GetProfileAttr("SC Store User");
 					var storeuser = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Store User");
 					//SNARRA:29-10-2018 Start: show CTI Toolbar
@@ -459,6 +463,10 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 							CFG = document.getElementById('cfg_' + ID).innerHTML;
 							ProductDesc = document.getElementById('long_' + ID).innerHTML;
 							ProductPrice = document.getElementById('price_' + ID).innerHTML;
+							//SPATIBAN:May 2019 release : added below code to get the control box SKus
+							if (ControlBoxSku.indexOf(SKU)!=-1) {
+								alert("Read this disclaimer to the customer:\n We no longer manufacture products with Obstruction Sense technology. The replacement component you receive will not have this feature. As a reminder, before adjusting your FlexFit™ base, always confirm there are no people or pets near the moving parts of the bed.");
+							}
 							if (SKU == "106683" && isStoreUser != "Y") {
 								alert("Only Store User is allowed to Add Gift Cards");
 							} else {
@@ -507,25 +515,7 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 						SiebelJS.Log("tableid" + tableid);
 						//SNARRA:27-09-2018 Added Control for NewRecord
 						$("#" + CustomsizeControl + "_Ctrl").trigger("click");
-						//$("#s_" + appletseqlineitem + "_1_30_0_Ctrl").trigger('click');
-						var inPropSet = CCFMiscUtil_CreatePropSet();
-						//Define the inPropSet property set with the information that InvokeMethod sends as input to the method that it calls.
-						/*var ai= {};
-						ai.async = false;
-						ai.selfbusy = true;
-						ai.scope = this;
-						ai.mask = true;
-						ai.opdecode = true;
-						ai.errcb = function(){
-						  //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
-						  SiebelJS.Log("Error while invoking Product Configurator")
-						};
-						ai.cb = function(){
-						  //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
-						  SiebelJS.Log("Invoked Product Configurator Succesfully")
-						};
-						var lineItemsPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM();
-						lineItemsPM.ExecuteMethod("InvokeMethod", "ReconfigureCxProd", inPropSet, ai);*/
+						$("#s_" + appletseqlineitem + "_1_30_0_Ctrl").trigger('click');
 					});
 
 
@@ -550,14 +540,28 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 							$("#SC-shownum-icon").trigger("click");
 					});
 					$(document).on("click", "#SC-shownum-icon", function () {
-						var Field_Name = "";
+						//var Field_Name = "";
+						//ClickedShowOkbtn="Y";
 						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"), SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["Show#"]);
-						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().AttachNotificationHandler("g", function (o) {
+						/*SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().AttachNotificationHandler("g", function (o) {
 							Field_Name = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["Show#"]);
 							$('#SC-show-num').val(Field_Name);
 							if (Field_Name != "")
 								RefreshLineItems();
-						});
+						});*/
+					});
+					$(document).on('click', 'button[title="Show:OK"]', function () {
+						ClickedShowOkbtn="Y";
+					});
+					SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().AttachPMBinding("FieldChange", function(control,field_value ){
+						if(control.GetName()=="Show#"){
+							$('#SC-show-num').val(field_value);
+							if (field_value != "")
+								if(ClickedShowOkbtn=="Y"){
+									ClickedShowOkbtn="N";
+									RefreshLineItems();
+								}
+						}
 					});
 					//for deleting the line item
 					$(document).unbind(".deletelineitem").on("click", ".deletelineitem", function () {
@@ -579,6 +583,13 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 							Service = SiebelApp.S_App.GetService("SC Cart OUI");
 							EnrollOutPS = Service.InvokeMethod("RemoveOrderLine", EnrollInPS);
 							EnrollOutPS = Service.InvokeMethod("UpdateMattressFlag", EnrollInPS);
+							//VALLA:23-APR-2021:
+							SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].InvokeMethod("RefreshBusComp");
+							//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "CalculatePriceAll", null, false);
+							var caninvoke = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "CalculatePriceAll");
+							if (caninvoke) {
+								SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "CalculatePriceAll", null, false);
+							}
 							//to get refreshed line items data
 							RefreshLineItems();
 
@@ -768,7 +779,6 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 						}, 1000);
 					});
 					//END:SPATIBAN:4/2/22: Added below code for #SFSTRY0001722
-
 					//on click of search again button
 					$("#SC-noresults-ok").click(function () {
 						$("#SC-SO-No-Results-found").modal("hide");
@@ -862,36 +872,39 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 									$("#" + LineItemId).show();
 								}
 							}
-							RefreshLineItems();
 							//VAMSI:19-MAR-19::Added code for Production NFL Coupon Issue.
-                                var couponcodereq = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("SC Coupon Code Req");
-								//SBOORLA:Added code for PoleDisplay
-								if (poleDisplayFlag == "Y" && sP2PEFlag != "Y" && couponcodereq == "N") {
-									FieldQueryPair = {
-										"SKU #": "Id='" + LineId + "'"
-									};
-									SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Order Entry Line Item List Applet");
-									var NRCSubtotal = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("NRC CxTotal in Header Currency");
-									Quantitys = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Quantity Requested");
-									ProductDesc = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("SC Calc Long Description");
-									SiebelJS.Log("NRCSubtotal" + NRCSubtotal);
-									poleDisplay(ProductDesc, Quantitys, NRCSubtotal);
-								}
-								// VAMSI:08-OCT-18: Added the below condtions to Support P2PE pole Display.
-								if (poleDisplayFlag == "Y" && sP2PEFlag == "Y" && couponcodereq == "N") {
-									FieldQueryPair = {
-										"SKU #": "Id='" + LineId + "'"
-									};
-									SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Order Entry Line Item List Applet");
-									var NRCSubtotal = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("NRC CxTotal in Header Currency");
-									Quantitys = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Quantity Requested");
-									ProductDesc = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("SC Calc Long Description");
-									OrderId = localStorage.getItem('OrderId');
-									//var lineDetails = SC_OUI_Methods.lineDetailFormat(ProductDesc,Quantitys,NRCSubtotal);
-									var lineItems = [ProductDesc, "QTY: " + Quantitys + "  " + "PRICE: $" + parseFloat(NRCSubtotal).toFixed(2)]
-									//SC_OUI_Methods.P2PEDispalyLineItem(OrderId,lineItems);
-									SC_OUI_Methods.P2PEDispalyMultiLineItems(OrderId, lineItems);
-								}
+							var couponcodereq = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("SC Coupon Code Req");
+							//SBOORLA:Added code for PoleDisplay
+							if (poleDisplayFlag == "Y" && sP2PEFlag != "Y" && couponcodereq == "N") {
+								FieldQueryPair = {
+									"SKU #": "Id='" + LineId + "'"
+								};
+								SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Order Entry Line Item List Applet");
+								var NRCSubtotal = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("NRC CxTotal in Header Currency");
+								Quantitys = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Quantity Requested");
+								ProductDesc = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("SC Calc Long Description");
+								SiebelJS.Log("NRCSubtotal" + NRCSubtotal);
+								poleDisplay(ProductDesc, Quantitys, NRCSubtotal);
+							}
+							// VAMSI:08-OCT-18: Added the below condtions to Support P2PE pole Display.
+							if (poleDisplayFlag == "Y" && sP2PEFlag == "Y" && couponcodereq == "N") {
+								FieldQueryPair = {
+									"SKU #": "Id='" + LineId + "'"
+								};
+								SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Order Entry Line Item List Applet");
+								var NRCSubtotal = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("NRC CxTotal in Header Currency");
+								Quantitys = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Quantity Requested");
+								ProductDesc = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("SC Calc Long Description");
+								OrderId = localStorage.getItem('OrderId');
+								//var lineDetails = SC_OUI_Methods.lineDetailFormat(ProductDesc,Quantitys,NRCSubtotal);
+								var lineItems = [ProductDesc, "QTY: " + Quantitys + "  " + "PRICE: $" + parseFloat(NRCSubtotal).toFixed(2)]
+								//SC_OUI_Methods.P2PEDispalyLineItem(OrderId,lineItems);
+								SC_OUI_Methods.P2PEDispalyMultiLineItems(OrderId, lineItems);
+							}
+							if(couponcodereq != "Y"){
+								SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "CalculatePriceAll", null, false);
+							}
+							RefreshLineItems();	
 							//if line details section is closed open it
 							if ($('.lineitemsopen').hasClass('iconClosed')) {
 								$('.lineitemsopen').click();
@@ -908,6 +921,7 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 						};
 						SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Order Entry Line Item List Applet");
 						setTimeout(function () {
+							$('#1_Prod_Prom_Name').click();
 							SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"), SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetControls()["Prod Prom Name"]);
 							isLinePick = true;
 						}, 500);
@@ -926,6 +940,7 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 								};
 								SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Order Entry Line Item List Applet");
 								setTimeout(function () {
+									$('#1_Prod_Prom_Name').click();
 									SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"), SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetControls()["Prod Prom Name"]);
 									isLinePick = true;
 								}, 500);
@@ -1012,7 +1027,30 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 						LineId = LineId.split('_');
 						LineId = LineId[0];
 						$("#" + LineId + "_editaddonblock").show();
+						//NTHARRE:01-Sep-2021: Added for SFSTRY0001317
+						var divtype = SC_OUI_Methods.SCGetProfileAttrValue('SC Primary Division Type');
+						var divsubtype = SC_OUI_Methods.SCGetProfileAttrValue('SC Primary Division Sub Type');
+						if((divtype == "STORE" && divsubtype == "STORE") || (divtype == "DIRECT" && divsubtype =="CSC"))
+							$(".addon-manual-discounts").hide();
 					});
+					//on change of discount amount
+					/*$(document).on('focusout', '.SC-manual-addon-per', function (event) {
+						var LineItemId = $(this).attr('id');
+						LineItemId = LineItemId.split("addd");
+						//make discount amt zero
+						manualdiscamt = "";
+						$('.Manualaddonamt').val("");
+						$("#"+LineItemId[0]+"addondiscamount").text(manualdiscamt);
+					});
+					//on change of discount amount
+					$(document).on('focusout', '.Manualaddonamt', function (event) {
+						var LineItemId = $(this).attr('id');
+						LineItemId = LineItemId.split("addon");
+						//make discount pecentage zero
+						manualdiscperc = "";
+						$('#discount-percentage').val("");
+						$("#"+ LineItemId[0]+"adddisper").text(manualdiscperc);
+					});*/
 					$(document).unbind('.addonsdel').on('click', '.addonsdel', function () {
 						var addonDisreason = "",
 							sdisamount = "",
@@ -1093,8 +1131,8 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 								addonDisreason = "";
 								sdisper = "";
 								sdisamount = "";
-								fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper;
-								fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent";
+								fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper + ', N';
+								fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent,SC Manual Discount Update Flag";
 								inPS = SiebelApp.S_App.NewPropertySet();
 								outPS = SiebelApp.S_App.NewPropertySet();
 								inPS.SetProperty("BO", "Order Entry (Sales)");
@@ -1111,7 +1149,7 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 									var prodSku = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Product");
 									var prodClass = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("SC Product Class");
 									var prodLine = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Product Line");
-									//Get LOV exists or not
+									//Get L OV exists or not
 									var Custom_Service = "",
 											Input_BS = "",
 											Out_BS = "",
@@ -1137,8 +1175,8 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 									var scmanualadminflag = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Manual Disc Admin");
 									if (scmanualadminflag == "Y"&& LOVValue == "") { //STRY0207171 Updated condition
 										//Updated BC Name for #STRY0037337
-										fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper;
-										fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent"
+										fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper + ', Y';
+										fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent,SC Manual Discount Update Flag";
 										inPS = SiebelApp.S_App.NewPropertySet();
 										outPS = SiebelApp.S_App.NewPropertySet();
 										inPS.SetProperty("BO", "Order Entry (Sales)");
@@ -1200,12 +1238,12 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 
 											if (sdisper != null && sdisper != "") {
 												if (parseFloat(sdisper) <= DisPer) {
-													fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper;
-													fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent"
+													fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper + ', Y';
+													fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent,SC Manual Discount Update Flag"
 													inPS = SiebelApp.S_App.NewPropertySet();
 													outPS = SiebelApp.S_App.NewPropertySet();
 													inPS.SetProperty("BO", "Order Entry (Sales)");
-													inPS.SetProperty("BC", "PDS Simplified Order Entry - Line Items");
+													inPS.SetProperty("BC", "Order Entry - Line Items");
 													inPS.SetProperty("FieldsArray", fieldnames);
 													inPS.SetProperty("ValuesArray", fieldvalues);
 													inPS.SetProperty("SearchSpecification", "[Order Header Id] = '" + OrderId + "' AND [Id]='" + LineId + "' AND [Root Order Item Id]='" + parentlineId + "'");
@@ -1225,12 +1263,12 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 
 											} else if (sdisamount != null && sdisamount != "") {
 												if (parseInt(sdisamount) <= Disamount) {
-													fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper;
-													fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent"
+													fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper + ', Y';
+													fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent,SC Manual Discount Update Flag"
 													inPS = SiebelApp.S_App.NewPropertySet();
 													outPS = SiebelApp.S_App.NewPropertySet();
 													inPS.SetProperty("BO", "Order Entry (Sales)");
-													inPS.SetProperty("BC", "PDS Simplified Order Entry - Line Items");
+													inPS.SetProperty("BC", "Order Entry - Line Items");
 													inPS.SetProperty("FieldsArray", fieldnames);
 													inPS.SetProperty("ValuesArray", fieldvalues);
 													inPS.SetProperty("SearchSpecification", "[Order Header Id] = '" + OrderId + "' AND [Id]='" + LineId + "' AND [Root Order Item Id]='" + parentlineId + "'");
@@ -1250,13 +1288,12 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 												addonDisreason = "";
 												sdisper = "";
 												sdisamount = "";
-												fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper;
-												fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper;
-												fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent"
+												fieldvalues = addonDisreason + ',' + sdisamount + ',' + sdisper+ ', N';
+												fieldnames = "SC Manual Discount Reason,Discount Amount,Discount Percent,SC Manual Discount Update Flag"
 												inPS = SiebelApp.S_App.NewPropertySet();
 												outPS = SiebelApp.S_App.NewPropertySet();
 												inPS.SetProperty("BO", "Order Entry (Sales)");
-												inPS.SetProperty("BC", "PDS Simplified Order Entry - Line Items");
+												inPS.SetProperty("BC", "Order Entry - Line Items");
 												inPS.SetProperty("FieldsArray", fieldnames);
 												inPS.SetProperty("ValuesArray", fieldvalues);
 												inPS.SetProperty("SearchSpecification", "[Order Header Id] = '" + OrderId + "' AND [Id]='" + LineId + "' AND [Root Order Item Id]='" + parentlineId + "'");
@@ -1392,6 +1429,20 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 								SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("Discount Percent", "");
 								SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("Discount Amount - Display", "");
 								SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].InvokeMethod("WriteRecord");
+								//VALLA: 21-Nov-2019: Code to set the Manual Discount flag to N.
+								var InPS = SiebelApp.S_App.NewPropertySet();
+								var OutPS = SiebelApp.S_App.NewPropertySet(); 
+								var fieldnames = "SC Manual Discount Update Flag";
+								var fieldvalues = "N";
+								inPS = SiebelApp.S_App.NewPropertySet();
+								outPS = SiebelApp.S_App.NewPropertySet();
+								inPS.SetProperty("BO", "Order Entry (Sales)");
+								inPS.SetProperty("BC", "Order Entry - Line Items");
+								inPS.SetProperty("FieldsArray", fieldnames);
+								inPS.SetProperty("ValuesArray", fieldvalues);
+								inPS.SetProperty("SearchSpecification", "[Id] = '" + LineId + "'");
+								Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+								outPS = Bservice.InvokeMethod("Insert", inPS);
 								$("#scmanualordervalue_" + LineId).hide();
 								$("#manualblock" + LineId).hide();
 								$("#ManualDiscountamt_" + LineId).val("");
@@ -1427,7 +1478,7 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 											var jsonRes = JSON.parse(BS_Data.split(";")[0]);
 											LOVValue = jsonRes["Value"];
 										}
-									//STRY0207171  ends
+									//STRY0207171 ends
 								var scmanualadminflag = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Manual Disc Admin");
 								var startprice = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetFieldValue("Adjusted List Price - Display");
 								if (scmanualadminflag == "Y"&& LOVValue == "") { //STRY0207171 Updated condition
@@ -1442,6 +1493,20 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 										SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("Discount Amount - Display", manualdiscamou);
 									}
 									SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].InvokeMethod("WriteRecord");
+									//VALLA: 21-Nov-2019: Code to set the Manual Discount flag to N.
+									var InPS = SiebelApp.S_App.NewPropertySet();
+									var OutPS = SiebelApp.S_App.NewPropertySet(); 
+									var fieldnames = "SC Manual Discount Update Flag";
+									var fieldvalues = "Y";
+									inPS = SiebelApp.S_App.NewPropertySet();
+									outPS = SiebelApp.S_App.NewPropertySet();
+									inPS.SetProperty("BO", "Order Entry (Sales)");
+									inPS.SetProperty("BC", "Order Entry - Line Items");
+									inPS.SetProperty("FieldsArray", fieldnames);
+									inPS.SetProperty("ValuesArray", fieldvalues);
+									inPS.SetProperty("SearchSpecification", "[Id] = '" + LineId + "'");
+									Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+									outPS = Bservice.InvokeMethod("Insert", inPS);
 								} else {
 									if ((manualdiscamou => 0) || (manualdiscperc => 0)) {
 
@@ -1503,6 +1568,20 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 													}
 													SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("Discount Percent", manualdiscperc);
 													SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].InvokeMethod("WriteRecord");
+													//VALLA: 21-Nov-2019: Code to set the Manual Discount flag to N.
+													var InPS = SiebelApp.S_App.NewPropertySet();
+													var OutPS = SiebelApp.S_App.NewPropertySet(); 
+													var fieldnames = "SC Manual Discount Update Flag";
+													var fieldvalues = "Y";
+													inPS = SiebelApp.S_App.NewPropertySet();
+													outPS = SiebelApp.S_App.NewPropertySet();
+													inPS.SetProperty("BO", "Order Entry (Sales)");
+													inPS.SetProperty("BC", "Order Entry - Line Items");
+													inPS.SetProperty("FieldsArray", fieldnames);
+													inPS.SetProperty("ValuesArray", fieldvalues);
+													inPS.SetProperty("SearchSpecification", "[Id] = '" + LineId + "'");
+													Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+													outPS = Bservice.InvokeMethod("Insert", inPS);
 													$("#scmanualordervalue_" + LineId).text(manualdiscperc + '% -' + manualdiscreason);
 													$("#scmanualordervalue_" + LineId).show();
 													$("#scmanualcouponval_" + LineId).text(manualdiscperc + '% -' + manualdiscreason);
@@ -1530,6 +1609,20 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 													}
 													SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("Discount Amount - Display", manualdiscamou);
 													SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].InvokeMethod("WriteRecord");
+													//VALLA: 21-Nov-2019: Code to set the Manual Discount flag to N.
+													var InPS = SiebelApp.S_App.NewPropertySet();
+													var OutPS = SiebelApp.S_App.NewPropertySet(); 
+													var fieldnames = "SC Manual Discount Update Flag";
+													var fieldvalues = "Y";
+													inPS = SiebelApp.S_App.NewPropertySet();
+													outPS = SiebelApp.S_App.NewPropertySet();
+													inPS.SetProperty("BO", "Order Entry (Sales)");
+													inPS.SetProperty("BC", "Order Entry - Line Items");
+													inPS.SetProperty("FieldsArray", fieldnames);
+													inPS.SetProperty("ValuesArray", fieldvalues);
+													inPS.SetProperty("SearchSpecification", "[Id] = '" + LineId + "'");
+													Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+													outPS = Bservice.InvokeMethod("Insert", inPS);
 													$("#scmanualordervalue_" + LineId).text('$' + manualdiscamou + '-' + manualdiscreason);
 													$("#scmanualordervalue_" + LineId).show();
 													$("#scmanualcouponval_" + LineId).text('$' + manualdiscamou + '-' + manualdiscreason);
@@ -1555,6 +1648,20 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 												SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].InvokeMethod("WriteRecord");
 												SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("Discount Amount - Display", manualdiscamou);
 												SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].InvokeMethod("WriteRecord");
+												//VALLA: 21-Nov-2019: Code to set the Manual Discount flag to N.
+												var InPS = SiebelApp.S_App.NewPropertySet();
+												var OutPS = SiebelApp.S_App.NewPropertySet(); 
+												var fieldnames = "SC Manual Discount Update Flag";
+												var fieldvalues = "N";
+												inPS = SiebelApp.S_App.NewPropertySet();
+												outPS = SiebelApp.S_App.NewPropertySet();
+												inPS.SetProperty("BO", "Order Entry (Sales)");
+												inPS.SetProperty("BC", "Order Entry - Line Items");
+												inPS.SetProperty("FieldsArray", fieldnames);
+												inPS.SetProperty("ValuesArray", fieldvalues);
+												inPS.SetProperty("SearchSpecification", "[Id] = '" + LineId + "'");
+												Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+												outPS = Bservice.InvokeMethod("Insert", inPS);
 											}
 
 										} else {
@@ -1578,8 +1685,7 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 										});
 									}
 								}
-
-
+								
 							}
 							manualdiscperc = manualdiscamou = manualdiscreason = "";
 							RefreshLineItems();
@@ -1862,17 +1968,26 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 						localStorage.setItem("flowfrom", "proceed");
 						localStorage.setItem('ProceedToShipping', 'Y');
 						localStorage.setItem("isNewSalesOrder", "N");
+						
+						//VALLA: Added below code to get the GOP dates of line item.
+						var inpPS = "",outPS = "",oBS = "";
+						inpPS = SiebelApp.S_App.NewPropertySet();
+						outPS = SiebelApp.S_App.NewPropertySet();
+						oBS = SiebelApp.S_App.GetService("Workflow Process Manager");
+						inpPS.SetProperty("ProcessName", "SC Order Get ATP Scheduled Date From GOP");
+						inpPS.SetProperty("Object Id", OrderId);
+						outPS = oBS.InvokeMethod("RunProcess", inpPS);
 
 						//if order details section is open closed it
 						if ($('.OrderDetailsclose').hasClass('iconOpen')) {
 							$(".OrderDetailsclose").click();
 						}
-
+						
 						//if line details section is open close it
 						if ($('.lineitemsopen').hasClass('iconOpen')) {
 							$('.lineitemsopen').click();
 						}
-						if ($("#Ship-Defalut-RequestShipDate-Val").text() != "select" && $("#Ship-Defalut-RequestShipDate-Val").text() != "") {
+						if ($("#Ship-Defalut-RequestShipDate-Val").text() != "select") {
 							var Bservice = '',
 								inPS = '',
 								outPS = '';
@@ -1889,7 +2004,18 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 							inPS.SetProperty("SearchSpecification", "[Order Header Id] = '" + OrderId + "' AND [Due Date] IS NULL AND [Ship Method]<>'Recd At Store'AND [Fulfillment Status Code]= 'In Progress'");
 							Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
 							outPS = Bservice.InvokeMethod("Insert", inPS);
+							
+							//VALLA: Added below code to get the GOP dates of line item.
+							var inpPS = "",outPS = "",oBS = "";
+							inpPS = SiebelApp.S_App.NewPropertySet();
+							outPS = SiebelApp.S_App.NewPropertySet();
+							oBS = SiebelApp.S_App.GetService("Workflow Process Manager");
+							inpPS.SetProperty("ProcessName", "SC Order Get ATP Scheduled Date From GOP");
+							inpPS.SetProperty("Object Id", OrderId);
+							outPS = oBS.InvokeMethod("RunProcess", inpPS);
 						}
+						
+						
 						FieldQueryPair = {
 							"SKU #": ""
 						};
@@ -2229,8 +2355,8 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 
 				} //bind events
 
-				SCiPadProductsPR.prototype.EndLife = function () {
-					SiebelAppFacade.SCiPadProductsPR.superclass.EndLife.apply(this, arguments);
+				SCProductsPR.prototype.EndLife = function () {
+					SiebelAppFacade.SCProductsPR.superclass.EndLife.apply(this, arguments);
 					localStorage.setItem('comingfrom', "");
 					localStorage.setItem('flowfrom', "");
 					$(document).unbind();
@@ -2328,17 +2454,6 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 					localStorage.setItem("addcart", "addcart");
 					//$("body").trigger('Custom.Start');
 					//$("body").trigger('Custom.timer.Start');
-					var Bservice = '', inPS = '', outPS = '';
-					inPS = SiebelApp.S_App.NewPropertySet();
-					outPS = SiebelApp.S_App.NewPropertySet();
-					Bservice = SiebelApp.S_App.GetService("SessionAccessService");
-					inPS.SetProperty("Name", "sProductName");
-					inPS.SetProperty("Value", SKU);
-					outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
-					inPS.SetProperty("Name", "sQuantity");
-					inPS.SetProperty("Value", Quantity);
-                    outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);
-					
 					FieldQueryPair = {
 						"SKU #": ""
 					};
@@ -2346,64 +2461,65 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 					setTimeout(function () {
 						var Rec = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().Get("GetRecordSet").length;
 						if (Rec == 0) {
+							//$("body").trigger('Custom.Start');
+							//$("#s_"+appletseqorderentry+"_1_42_0_Ctrl").trigger("click");//hardcoded
+							//Start loader 
+							//$("body").trigger('Custom.Start');
 							//SNARRA:27-09-2018 Added Control for NewRecord
 							$("#" + NewControl + "_Ctrl").trigger("click");
 							setTimeout(function () {
-								var partControl = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetControls()["Part Number"];
-								var inPropSet = CCFMiscUtil_CreatePropSet();
-								//Define the inPropSet property set with the information that InvokeMethod sends as input to the method that it calls.
-								var ai5= {};
-								ai5.async = true;
-								ai5.selfbusy = true;
-								ai5.scope = this;
-								ai5.mask = true;
-								ai5.opdecode = true;
-								ai5.errcb = function(){
-									//Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
-									SiebelJS.Log('Error while setting sku# ')
-								};
-								ai5.cb = function(){
-									SiebelJS.Log('SKU# filed setted successfully in call back function');
-									$('#_sweview').show();
-									//SBOORLA:Added code for defect 656
-									var NRCSubtotal = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("NRC CxTotal in Header Currency");
-									lineRowID = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Id");
-									var giftcradPL = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Product Line");
-									SiebelJS.Log("NRCSubtotal" + NRCSubtotal);
-									setTimeout(function(){
-										var canCustomize = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().ExecuteMethod('CanInvokeMethod','ReconfigureCxProd')
-										if (!($("#" + CustomsizeControl + "_Ctrl").attr("disabled") == "disabled")) {
-											localStorage.setItem("Configfromsales", "Y");
-											//$("#s_"+appletseqorderentry+"_1_30_0_Ctrl").trigger('click');
-											$("#" + CustomsizeControl + "_Ctrl").trigger('click');
-										} else {
-											$("#SC-SO-Add-Product").modal('hide');
-											$("#SC-SO-Add-Product").css({'display':'none'});
-											setTimeout(function(){
-												RefreshLineItems();	
-											},10);
-										}
-										//hiding the Loader
-										//$("body").trigger('Custom.timer.End');
-										$('#custommaskoverlay').hide();
-										//SBOORLA:Added code for Gift Card Amount
-										if (giftcradPL == "GIFT CARD" && isStoreUser == "Y") {
-											$(".SC-SO-input-GC").val("");
-											$("#SC-SO-GiftCard").modal({
-												backdrop: 'static'
-											});
-											$("#SC-SO-GiftCard").css({
-												"display": "flex",
-												"justify-content": "center",
-												"align-items": "center"
-											});
-										}
-									},1500);
-								};
-								SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().ExecuteMethod("InvokeMethod", "AddLineItem", inPropSet, ai5);
-								SiebelJS.Log('SKU# filed setted successfully');
-								//this.GetPM().ExecuteMethod("InvokeMethod", input arguments, ai);
-								//$("#1_s_" + appletseqorderentry + "_l_Part_Number input:text").val(SKU);
+								$("#1_s_" + appletseqorderentry + "_l_Part_Number").trigger("click");
+								$("#1_Part_Number").trigger("click");
+								$("#1_s_" + appletseqorderentry + "_l_Part_Number").focus();
+								$("#1_s_" + appletseqorderentry + "_l_Part_Number input:text").val(SKU);
+								$("#1_s_" + appletseqorderentry + "_l_SC_Product").trigger("click");
+								$("#1_s_" + appletseqorderentry + "_l_Quantity_Requested").trigger("click");
+								$("#1_s_" + appletseqorderentry + "_l_Quantity_Requested").focus();
+								$("#1_s_" + appletseqorderentry + "_l_Quantity_Requested input:text").val(Quantity);
+								$("#1_s_" + appletseqorderentry + "_l_SC_Product").trigger("click");
+								$('#_sweview').show();
+								//SBOORLA:Added code for defect 656
+								var NRCSubtotal = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("NRC CxTotal in Header Currency");
+								lineRowID = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Id");
+								var giftcradPL = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Product Line");
+								SiebelJS.Log("NRCSubtotal" + NRCSubtotal);
+								if (poleDisplayFlag == "Y" && sP2PEFlag != "Y") {
+									localStorage.setItem("InvokepoleDisplay", "Y");
+									poleDisplay(ProductDesc, Quantity, NRCSubtotal);
+								} else if (poleDisplayFlag == "Y" && sP2PEFlag == "Y") {
+									localStorage.setItem("InvokepoleDisplay", "Y");
+									OrderId = localStorage.getItem('OrderId');
+									//var lineDetails = SC_OUI_Methods.lineDetailFormat(ProductDesc,Quantitys,NRCSubtotal);
+									var lineItems = [ProductDesc, "QTY: " + Quantity + "  " + "PRICE: $" + parseFloat(NRCSubtotal).toFixed(2)]
+									//SC_OUI_Methods.P2PEDispalyLineItem(OrderId,lineItems);
+									SC_OUI_Methods.P2PEDispalyMultiLineItems(OrderId, lineItems);
+								} else {
+									localStorage.setItem("InvokepoleDisplay", "N");
+								}
+								//795 SADDALA
+								//if(!($("#s_"+appletseqorderentry+"_1_30_0_Ctrl").attr("disabled")=="disabled")){
+								if (!($("#" + CustomsizeControl + "_Ctrl").attr("disabled") == "disabled")) {
+									localStorage.setItem("Configfromsales", "Y");
+									//$("#s_"+appletseqorderentry+"_1_30_0_Ctrl").trigger('click');
+									$("#" + CustomsizeControl + "_Ctrl").trigger('click');
+								} else {
+									RefreshLineItems();
+								}
+								//hiding the Loader
+								//$("body").trigger('Custom.timer.End');
+								$('#custommaskoverlay').hide();
+								//SBOORLA:Added code for Gift Card Amount
+								if (giftcradPL == "GIFT CARD" && isStoreUser == "Y") {
+									$(".SC-SO-input-GC").val("");
+									$("#SC-SO-GiftCard").modal({
+										backdrop: 'static'
+									});
+									$("#SC-SO-GiftCard").css({
+										"display": "flex",
+										"justify-content": "center",
+										"align-items": "center"
+									});
+								}
 							}, 1500);
 						} else if (Rec >= 1) {
 							Rec = Rec + 1;
@@ -2414,71 +2530,64 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 							//SNARRA:27-09-2018 Added Control for NewRecord
 							$("#" + NewControl + "_Ctrl").trigger("click");
 							setTimeout(function () {
-								//$("#2_s_" + appletseqorderentry + "_l_Part_Number").trigger("click");
-								//$("#2_Part_Number").trigger("click");
-								//$("#2_s_" + appletseqorderentry + "_l_Part_Number").focus();
-								//$("#2_s_" + appletseqorderentry + "_l_Part_Number input:text").val(SKU);
-								//var partControl = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetControls()["Part Number"];
-								//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().ExecuteMethod("SetFormattedValue", partControl,SKU);
-								var partControl = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetControls()["Part Number"];
-								var inPropSet = CCFMiscUtil_CreatePropSet();
-								//Define the inPropSet property set with the information that InvokeMethod sends as input to the method that it calls.
-								var ai5= {};
-								ai5.async = true;
-								ai5.selfbusy = true;
-								ai5.scope = this;
-								ai5.mask = true;
-								ai5.opdecode = true;
-								ai5.errcb = function(){
-									//Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
-									SiebelJS.Log('Error while setting sku# ')
-								};
-								ai5.cb = function(){
-									SiebelJS.Log('SKU# filed setted successfully in call back function');
-									$('#_sweview').show();
-									//SBOORLA:Added code for defect 656
-									var NRCSubtotal = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("NRC CxTotal in Header Currency");
-									lineRowID = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Id");
-									var giftcradPL = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Product Line");
-									SiebelJS.Log("NRCSubtotal" + NRCSubtotal);
-									//795 SADDALA
-									//if(!($("#s_"+appletseqorderentry+"_1_30_0_Ctrl").attr("disabled")=="disabled")){
-									setTimeout(function(){
-										var canCustomize = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().ExecuteMethod('CanInvokeMethod','ReconfigureCxProd');
-										if (!($("#" + CustomsizeControl + "_Ctrl").attr("disabled") == "disabled")) {
-											localStorage.setItem("Configfromsales", "Y");
-											//$("#s_"+appletseqorderentry+"_1_30_0_Ctrl").trigger('click');
-											$("#" + CustomsizeControl + "_Ctrl").trigger('click');
-										} else {
-											$("#SC-SO-Add-Product").modal('hide');
-											$("#SC-SO-Add-Product").css({'display':'none'});
-											setTimeout(function(){
-												RefreshLineItems();
-											},10);
-										}
-										//$("body").trigger('Custom.timer.End');
-										$('#custommaskoverlay').hide();
-										//SBOORLA:Added code for Gift Card Amount
-										if (giftcradPL == "GIFT CARD" && isStoreUser == "Y") {
-											$(".SC-SO-input-GC").val("");
-											$("#SC-SO-GiftCard").modal({
-												backdrop: 'static'
-											});
-											$("#SC-SO-GiftCard").css({
-												"display": "flex",
-												"justify-content": "center",
-												"align-items": "center"
-											});
-										}
-									},1500)
-							};
-							SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().ExecuteMethod("InvokeMethod", "AddLineItem", inPropSet, ai5);	
-						},1500)
-					  }
+								$("#2_s_" + appletseqorderentry + "_l_Part_Number").trigger("click");
+								$("#2_Part_Number").trigger("click");
+								$("#2_s_" + appletseqorderentry + "_l_Part_Number").focus();
+								$("#2_s_" + appletseqorderentry + "_l_Part_Number input:text").val(SKU);
+								$("#2_s_" + appletseqorderentry + "_l_SC_Product").trigger("click");
+								Rec = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().Get("GetRecordSet").length;
+								$("#" + Rec + "_s_" + appletseqorderentry + "_l_SC_Product").trigger("click");
+								$("#" + Rec + "_s_" + appletseqorderentry + "_l_Quantity_Requested").trigger("click");
+								$("#" + Rec + "_s_" + appletseqorderentry + "_l_Quantity_Requested").focus();
+								$("#" + Rec + "_s_" + appletseqorderentry + "_l_Quantity_Requested input:text").val(Quantity);
+								$("#" + Rec + "_s_" + appletseqorderentry + "_l_SC_Product").trigger("click");
+								$('#_sweview').show();
+								//SBOORLA:Added code for defect 656
+								var NRCSubtotal = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("NRC CxTotal in Header Currency");
+								lineRowID = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Id");
+								var giftcradPL = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Product Line");
+								SiebelJS.Log("NRCSubtotal" + NRCSubtotal);
+								// VAMSI:08-OCT-18: Modified the below condtions to Support P2PE pole Display.
+								if (poleDisplayFlag == "Y" && sP2PEFlag != "Y") {
+									localStorage.setItem("InvokepoleDisplay", "Y");
+									poleDisplay(ProductDesc, Quantity, NRCSubtotal);
+								} else if (poleDisplayFlag == "Y" && sP2PEFlag == "Y") {
+									localStorage.setItem("InvokepoleDisplay", "Y");
+									OrderId = localStorage.getItem('OrderId');
+									//var lineDetails = SC_OUI_Methods.lineDetailFormat(ProductDesc,Quantitys,NRCSubtotal);
+									var lineItems = [ProductDesc, "QTY: " + Quantity + "  " + "PRICE: $" + parseFloat(NRCSubtotal).toFixed(2)]
+									//SC_OUI_Methods.P2PEDispalyLineItem(OrderId,lineItems);
+									SC_OUI_Methods.P2PEDispalyMultiLineItems(OrderId, lineItems);
+								} else
+									localStorage.setItem("InvokepoleDisplay", "N"); 
+								//795 SADDALA
+								//if(!($("#s_"+appletseqorderentry+"_1_30_0_Ctrl").attr("disabled")=="disabled")){
+								if (!($("#" + CustomsizeControl + "_Ctrl").attr("disabled") == "disabled")) {
+									localStorage.setItem("Configfromsales", "Y");
+									//$("#s_"+appletseqorderentry+"_1_30_0_Ctrl").trigger('click');
+									$("#" + CustomsizeControl + "_Ctrl").trigger('click');
+								} else {
+									RefreshLineItems();
+								}
+								//$("body").trigger('Custom.timer.End');
+								$('#custommaskoverlay').hide();
+								//SBOORLA:Added code for Gift Card Amount
+								if (giftcradPL == "GIFT CARD" && isStoreUser == "Y") {
+									$(".SC-SO-input-GC").val("");
+									$("#SC-SO-GiftCard").modal({
+										backdrop: 'static'
+									});
+									$("#SC-SO-GiftCard").css({
+										"display": "flex",
+										"justify-content": "center",
+										"align-items": "center"
+									});
+								}
+							}, 1500);
+						}
 					}, 100);
 					$("body").unbind('Custom.End');
 				}
-
 				//SBOORLA:pole display
 				function poleDisplay(ProductDesc, ProQuantity, ProductPrice) {
 					var DISA_POLEDISPLAY = "plugin_poledisplay";
@@ -2659,85 +2768,24 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 				function RefreshLineItems() {
 					OrderId = localStorage.getItem('OrderId');
 					if (OrderId != null && OrderId != "") {
-						 SiebelJS.Log("Invoking Business Service");
-						var service = SiebelApp.S_App.GetService("SC Get Line Items");
-						var inPropSet = CCFMiscUtil_CreatePropSet();
-						var OutPS = CCFMiscUtil_CreatePropSet();
-						var outPropSet = CCFMiscUtil_CreatePropSet();
-						if (service) {
-						  //Code occurs here that sets the inPropSet property set with all information that Siebel Open UI must send as input to the method that it calls.
-						  inPropSet.SetProperty("OrderId", OrderId);
-						   var ai = {};
-							ai.async = false;
-							ai.selfbusy = true;
-							ai.scope = this;
-							ai.mask = true;
-							ai.opdecode = true;
-						  ai.errcb = function(){
-							  SiebelJS.Log("Error while executing 'SC Get Line Items' Business Service");
-						  };
-						  ai.cb = function(){
-							  //Code occurs here for the method that Siebel Open UI runs if the AJAX call is 
-							 // OutPS = outPropSet.GetChildByType('ResultSet');
-							  outPropSet = arguments[2];
-							  if(outPropSet!=null){
-                             //OutPS = outPropSet.GetChildByType('ResultSet').GetProperty("Records");
-							 var  OutPS1 = outPropSet.GetChildByType('ResultSet');
-                             OutPS.AddChild(OutPS1);
-							 producttree(OutPS);
+						InPS.SetProperty("OrderId", OrderId);
+						SiebelJS.Log("Invoking Business Service");
+						Bservice = SiebelApp.S_App.GetService("SC Get Line Items");
+						OutPS = Bservice.InvokeMethod("Query", InPS);
+						SiebelJS.Log("exiting Business Service");
+						producttree(OutPS);
 						//to show refreshed line items
 						var Lov1 = SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_MANUAL_DISCOUNT_REASON' and [Active] = 'Y'");
 						var Lov2 = SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'DISCNT_PERCENT' and [Active] = 'Y'");
 						isStoreUser = SC_OUI_Methods.SCGetProfileAttrValue("SC Store User");
-						//setTimeout(function(){
 						SC_OUI_Markups.prodmarkup(OutPS, Lov1, Lov2, isStoreUser);
-						
 						//to get order total and discounts 
 						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
 						document.getElementById('bottotal').innerHTML = "$" + (parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")).toFixed(2)) - parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")).toFixed(2))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 						document.getElementById('toptotal').innerHTML = "$" + ((Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total"))) - (Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 						document.getElementById('topdisc').innerHTML = "$" + Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Item Discount")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 						document.getElementById('topstart').innerHTML = "$" + Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Base Price")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
-							 //}
-							}
-						 
-						}
-						 service.InvokeMethod("Query", inPropSet, ai);
-						/* var inpPS = "",OutPS = "",oBS = "";
-							inpPS = SiebelApp.S_App.NewPropertySet();
-							OutPS = SiebelApp.S_App.NewPropertySet();
-							var ai = {};
-							ai.async = false;
-							ai.selfbusy = true;
-							ai.scope = this;
-							ai.mask = true;
-							ai.opdecode = true;
-							oBS = SiebelApp.S_App.GetService("SC Get Line Items");
-							inpPS.SetProperty("OrderId",OrderId);
-							OutPS = oBS.InvokeMethod("Query", inpPS,ai); */
-						/* InPS.SetProperty("OrderId", OrderId);
-						Bservice = SiebelApp.S_App.GetService("SC Get Line Items");
-						OutPS = Bservice.InvokeMethod("Query", InPS);
-						SiebelJS.Log("exiting Business Service"); */
-						
-						
-						/* producttree(OutPS);
-						//to show refreshed line items
-						var Lov1 = SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_MANUAL_DISCOUNT_REASON' and [Active] = 'Y'");
-						var Lov2 = SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'DISCNT_PERCENT' and [Active] = 'Y'");
-						isStoreUser = SC_OUI_Methods.SCGetProfileAttrValue("SC Store User");
-						setTimeout(function(){
-						SC_OUI_Markups.prodmarkup(OutPS, Lov1, Lov2, isStoreUser);
-						
-						//to get order total and discounts 
-						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
-						document.getElementById('bottotal').innerHTML = "$" + (parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")).toFixed(2)) - parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")).toFixed(2))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
-						document.getElementById('toptotal').innerHTML = "$" + ((Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total"))) - (Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
-						document.getElementById('topdisc').innerHTML = "$" + Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Item Discount")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
-						document.getElementById('topstart').innerHTML = "$" + Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Base Price")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'); */
-					    //},3);
 					}
-				}
 				}
 
 
@@ -2792,9 +2840,8 @@ if (typeof (SiebelAppFacade.SCiPadProductsPR) === "undefined") {
 					return ProductDesc + " " + Quantitys + " " + NRCSubtotal;
 				}
 
-				return SCiPadProductsPR;
+				return SCProductsPR;
 			}());
-			return "SiebelAppFacade.SCiPadProductsPR";
-			
+			return "SiebelAppFacade.SCProductsPR";
 		})
 }

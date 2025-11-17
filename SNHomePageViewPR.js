@@ -1,4 +1,3 @@
-//Regenerate using:https://duncanford.github.io/prpm-code-generator/?prpm=PR&object=View&name=SNHomePageView&userprops=&comments=Yes&logging=No
 if (typeof(SiebelAppFacade.SNHomePageViewPR) === "undefined") {
 
  SiebelJS.Namespace("SiebelAppFacade.SNHomePageViewPR");
@@ -24,8 +23,8 @@ if (typeof(SiebelAppFacade.SNHomePageViewPR) === "undefined") {
      // Add code here that should happen before default processing
      SiebelAppFacade.SNHomePageViewPR.superclass.ShowUI.apply(this, arguments);
      // Add code here that should happen after default processing
-	 $(document).ready(function() {
-    $('[class="siebui-salutation-title"]').html("My Homepage");
+	$( document ).ready(function() {
+    	$('[class="siebui-salutation-title"]').html("My Homepage");
 	var d = new Date();
 	var weekday = new Array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday","Saturday");
 	var n = weekday[d.getDay()];
@@ -40,9 +39,11 @@ if (typeof(SiebelAppFacade.SNHomePageViewPR) === "undefined") {
 	var firstname = SiebelApp.S_App.GetUserName(); 
 	newdate = "Welcome Back Family " + firstname +". Today is " + n +", "+ month + " " + day +", " + year+".";
 	$('[class="siebui-salutation-applet-title"]').replaceWith("<div class='Welcome'›</div>");
-	$('[class="Welcome"]').text (newdate);
+	$('[class="Welcome"]'). text (newdate);
 	$('[class="Welcome"]').css('font-weight','bold');
 	});
+
+
     }
 
     SNHomePageViewPR.prototype.BindData = function (bRefresh) {

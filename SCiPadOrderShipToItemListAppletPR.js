@@ -5,12 +5,15 @@ Purpose: Developing Order Shipping Functionality with Open UI
 Modified Date:
 **********************/
 //Applet: SC Order Entry - Line Item List Applet (Sales) - Short OUI
-if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") {
+if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined")
+{
 
   SiebelJS.Namespace("SiebelAppFacade.SCiPadOrderShipToItemListAppletPR");
   define("siebel/custom/SelectComfort/SCiPadOrderShipToItemListAppletPR", ["siebel/jqgridrenderer", "siebel/custom/SelectComfort/moment", "siebel/custom/SelectComfort/moment-timezone-with-data.min", "siebel/custom/SelectComfort/SC_OUI_Markups", "siebel/custom/SelectComfort/bootstrap.min", "siebel/custom/SelectComfort/jquery.validate.min", "siebel/custom/SelectComfort/SCiPadOrderShipToLineItemMarkup", "siebel/custom/SelectComfort/SCiPadSalesOrderMarkup", "siebel/custom/SelectComfort/SCErrorCodes", "siebel/custom/SelectComfort/SCErrorCodes", "siebel/custom/SelectComfort/SC_OUI_Methods", "siebel/custom/SelectComfort/SC_OUI_Definitions"], //"siebel/custom/SelectComfort/SCSalesOrderMarkup"],
-    function () {
-      SiebelAppFacade.SCiPadOrderShipToItemListAppletPR = (function () {
+    function ()
+    {
+      SiebelAppFacade.SCiPadOrderShipToItemListAppletPR = (function ()
+      {
 
         var pm = '',
           SiebelConstant = '',
@@ -26,11 +29,6 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           sc_rowid, conId, line_row_id, addList, ShipFieldQueryPair = {},
           ShipToContactRecordSet, FieldQueryPair;
         var searchCount = 2;
-        //LikhithaK:Start:22May2025:Terminal UI Changes
-        var NJ_Terms_TACOS = "",
-          NJ_Terms_TACOS_RowId = "",
-          NJ_POP_TACOS = "";
-        //LikhithaK:End:22May2025:Terminal UI Changes
         var sFields = ['Last Name', 'Postal Code'];
         SiebelConstant = SiebelJS.Dependency("SiebelApp.Constants");
         SCOrderShipMarkup = SiebelJS.Dependency("SiebelAppFacade.SCiPadOrderShipToLineItemMarkup");
@@ -58,7 +56,7 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
         var lovArray_ShipMethods;
         var parentJSON = {},
           poleJSON = [],
-          subpoleJSON = [];
+          subpoleJSON = [];;
         var parentAddrJSON = {};
         var orderid = "";
         var Addr_line_row_id;
@@ -71,7 +69,6 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
         var AddrServiceLevel = {};
         var sc_reffid = "";
         var sP2PEFlag = "";
-        var sIpadFeatureFlag = ""; //LikhithaK:21May2025:SFSTRY0003472:Added sIpadFeatureFlag condition for Terminal flow
         var refsearchfields = "",
           refsearchCount = 2,
           currentValue = "",
@@ -89,19 +86,20 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
         var VPersonalizedMsg = "";
         var Vqemailchngflg = "N";
         var jsonDeliveryTier = {}; //SL;Added for Tier Delivery
-        var bRefreshShipMethod; //SL;Added for Tier Delivery;DF-1975
-        var deliveryTierArray = []; //SL;Added for Tier Delivery
+		var bReloadMarkup; //SL;Added for Tier Delivery;DF-1975
         //var conSearch_RS=""
         //var bootstrapTooltip = $.fn.tooltip.noConflict();
         //	$.fn.bstooltip = bootstrapTooltip;
-        function SCiPadOrderShipToItemListAppletPR(pm) {
+        function SCiPadOrderShipToItemListAppletPR(pm)
+        {
           SiebelAppFacade.SCiPadOrderShipToItemListAppletPR.superclass.constructor.apply(this, arguments);
         }
 
         SiebelJS.Extend(SCiPadOrderShipToItemListAppletPR, SiebelAppFacade.JQGridRenderer);
 
 
-        SCiPadOrderShipToItemListAppletPR.prototype.Init = function () {
+        SCiPadOrderShipToItemListAppletPR.prototype.Init = function ()
+        {
           SiebelAppFacade.SCiPadOrderShipToItemListAppletPR.superclass.Init.apply(this, arguments);
           primaryornot = localStorage.getItem("flowfrom");
           SiebelJS.Log("Shipping - Init");
@@ -118,32 +116,25 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           backToShip = 'N';
           isShipToAcc = "N";
           accAddr = "N";
-          scRefresh = "N"; //LikhithaK:SFSTRY0003472
           ChnageContactloaded = 'N';
           sChangeContactClicked = "N";
           sTierEligbleVal = "N";
           $('#CommunicationPanelContainer').css("padding-top", "77px");
           pm.AddProperty("AddReferralFlg", false);
-          //SL;Tier Delivery - stores the sort order for tiers
-          deliveryTierArray = SiebelApp.SC_OUI_Methods.GetLOVs("[Type] = 'SN_TEIR_DELIVERY_MTRX' AND [Active] = 'Y'", "Order By");
-          for (var i = 0; i < deliveryTierArray.length; i++) {
-            jsonDeliveryTier[deliveryTierArray[i]] = i + 1;
-          }
-          bRefreshShipMethod = false; //SL;Added for Tier Delivery;DF-1975
+          jsonDeliveryTier = {
+            "Doorstep": "1",
+            "InRoom": "2",
+            "Premium": "3",
+            "Platinum": "4"
+          }; //SL;Tier Delivery - stores the sort order for tiers
+		  bReloadMarkup = false; //SL;Added for Tier Delivery;DF-1975
         }
 
-        SCiPadOrderShipToItemListAppletPR.prototype.ShowUI = function () {
+        SCiPadOrderShipToItemListAppletPR.prototype.ShowUI = function ()
+        {
           SiebelAppFacade.SCiPadOrderShipToItemListAppletPR.superclass.ShowUI.apply(this, arguments);
           SiebelJS.Log("Shipping - ShowUI");
 
-          //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-          //Added for Terminal session timeout config.
-          sIpadFeatureFlag = SiebelApp.S_App.GetProfileAttr('IpadFeatureFlag');
-          if (sIpadFeatureFlag == "Y") {
-            window.SCSessionTimeout = SC_OUI_Methods.RetrieveLOVValues('SC_12CPAYMENT_STORES', 'SCSessionTimeout');
-            window.SCSessionTimeout = (window.SCSessionTimeout / 2) * 60 * 1000;
-          }
-          //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
           $("#_swescrnbar").hide();
           $("#_swethreadbar").hide();
           $(".siebui-button-toolbar").hide();
@@ -152,9 +143,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           //SBOORLA:finding the order is B2B or B2C
           ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
           //if(ShipToContactRecordSet[0]["Bill To Account Id"]!=null&&ShipToContactRecordSet[0]["Bill To Account Id"]!=""){
-          if (ShipToContactRecordSet[0]["SC Sub-Type"] == "Wholesale" || ShipToContactRecordSet[0]["SC Sub-Type"] == "QVC" || ShipToContactRecordSet[0]["SC Sub-Type"] == "Commercial" || ShipToContactRecordSet[0]["SC Sub-Type"] == "Internal" || ShipToContactRecordSet[0]["SC Sub-Type"] == "HSN") {
+          if (ShipToContactRecordSet[0]["SC Sub-Type"] == "Wholesale" || ShipToContactRecordSet[0]["SC Sub-Type"] == "QVC" || ShipToContactRecordSet[0]["SC Sub-Type"] == "Commercial" || ShipToContactRecordSet[0]["SC Sub-Type"] == "Internal" || ShipToContactRecordSet[0]["SC Sub-Type"] == "HSN")
+          {
             scAccountOrder = true;
-          } else
+          }
+          else
             scAccountOrder = false;
 
           var shipDetails = SCOrderShipMarkup.ShipOptionsMarkup();
@@ -219,7 +212,6 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           var sc_lst_name = "";
           // VAMSI:08-OCT-18: Modified the below condtions to Support P2PE pole Display.
           sP2PEFlag = SiebelApp.S_App.GetProfileAttr('P2PEFlag');
-          sIpadFeatureFlag = SiebelApp.S_App.GetProfileAttr('IpadFeatureFlag'); //LikhithaK:27May2025:SFSTRY0003472:Terminal UI Changes
 
           sc_addr_id = "";
           sc_phnnumber = "";
@@ -227,8 +219,10 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           primarycontactid = "";
           PrContactName = "";
           //if(Accname !=""&&(conId==null||conId==""||conId=="undefined")){
-          if (scAccountOrder) {
-            if (localStorage.getItem("isAccNewSalesOrder") == "Y") {
+          if (scAccountOrder)
+          {
+            if (localStorage.getItem("isAccNewSalesOrder") == "Y")
+            {
               localStorage.setItem("isAccNewSalesOrder", "N");
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Contact Id", "");
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Account Id", "");
@@ -244,13 +238,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           OrderDate = ShipToContactRecordSet[0]["Order Date"];
           conId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Ship To Contact Id");
           SiebelJS.Log("scShipToContactId" + conId);
-          if (!scAccountOrder) {
+          if (!scAccountOrder)
+          {
             var ShipToContactName = ShipToContactRecordSet[0]["Primary Ship To First Name"] + " " + ShipToContactRecordSet[0]["Primary Ship To Last Name"];
             $("#Ship-Default-Name").html(ShipToContactName);
             //}
             var mblNumb_def = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Preferred Contact");
             //PH_USFormat_Save
-            if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10) {
+            if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10)
+            {
               var USFormt_mblNum = '';
               USFormt_mblNum = "(" + mblNumb_def.substring(0, mblNumb_def.length - 7) + ") " + mblNumb_def.substring(3, mblNumb_def.length - 4) + "-" + mblNumb_def.substring(6, mblNumb_def.length);
               mblNumb_def = USFormt_mblNum;
@@ -260,46 +256,59 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           }
 
           //local storage for searchfields count
-          if (localStorage.getItem("SearchCount") == undefined || localStorage.getItem("SearchCount") == null || localStorage.getItem("SearchCount") == 0) {
+          if (localStorage.getItem("SearchCount") == undefined || localStorage.getItem("SearchCount") == null || localStorage.getItem("SearchCount") == 0)
+          {
             localStorage.setItem('SearchCount', 2);
-          } else {
+          }
+          else
+          {
             searchCount = localStorage.getItem('SearchCount');
           }
 
           // loading waiting time
-          $(document).ready(function () {
-            $("body").bind('Custom.Start', function (ev) {
+          $(document).ready(function ()
+          {
+            $("body").bind('Custom.Start', function (ev)
+            {
               $('#maskoverlay').show();
               SiebelJS.Log("Start");
             });
 
-            $("body").bind('Custom.End', function (ev) {
+            $("body").bind('Custom.End', function (ev)
+            {
               $('#maskoverlay').hide();
               SiebelJS.Log("Stop");
             });
           });
           // enabling search box
-          $(".con-search-box").each(function () {
-            if ($(this).val().length != 0 && $(this).val() != "*") {
+          $(".con-search-box").each(function ()
+          {
+            if ($(this).val().length != 0 && $(this).val() != "*")
+            {
               $("#sc-ship-con-search").removeClass('SC-disabled');
               return false;
-            } else {
+            }
+            else
+            {
               $("#sc-ship-con-search").addClass('SC-disabled');
             }
           });
 
-          if (localStorage.getItem('ComingFromPayments') == "Y") {
+          if (localStorage.getItem('ComingFromPayments') == "Y")
+          {
             localStorage.setItem("ComingFromPayments", "N");
             localStorage.setItem("flowfrom", "proceed");
             localStorage.setItem('ProceedToShipping', 'Y');
             //SCHERKU: For Defect 594
             //if order details section is open closed it
-            if ($('.OrderDetailsclose').hasClass('iconOpen')) {
+            if ($('.OrderDetailsclose').hasClass('iconOpen'))
+            {
               $(".OrderDetailsclose").click();
             }
 
             //if line details section is open close it
-            if ($('.lineitemsopen').hasClass('iconOpen')) {
+            if ($('.lineitemsopen').hasClass('iconOpen'))
+            {
               $('.lineitemsopen').click();
             }
             FieldQueryPair = {
@@ -316,7 +325,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             //$("#Shipping-Detils").show();
           }
           isOrder360 = "N";
-          if (localStorage.getItem('ComingFromOrder360') == "Y") {
+          if (localStorage.getItem('ComingFromOrder360') == "Y")
+          {
             isOrder360 = "Y";
             //localStorage.setItem("ComingFromOrder360", "N");
             $("#Ship-Option-Markup").hide();
@@ -329,24 +339,6 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $("#SC_Order_ship_markup1").show();
             $("#SC_Order_ship_markup2").show();
             $("#footerbutton").show();
-            $(".SC-Discount-button").show(); //Sukumar 12/18 to hide discount button
-            $(".maualdiscaddons").show(); //Sukumar 12/18 to hide discount button
-            $(".prodcoupon").show(); //Sukumar 03/25 to hide discount button
-            $(".coupdescdel").show(); //Sukumar 03/25 to hide discount button
-            $(".scmanualdisdelete").show(); //Sukumar 03/25 to hide discount button
-            $(".addonsdel").show();
-
-            if ($('[id^=ProductCoupon]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-              if ($('[id^=ProductCoupon]')[0].innerText === "no coupons applied") {
-                $('[id^=ProductCoupon]').prev().hide()
-              }
-            }
-            if ($('[id^=scmanualcouponval]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-              if ($('[id^=scmanualcouponval]')[0].innerText === "no coupons applied") {
-                $('[id^=scmanualcouponval]').prev().hide()
-              }
-            }
-
             if (scAccountOrder)
               $("#SC-SO-ShipSummary-DefaultAddress").html(ShipToContactRecordSet[0]["Primary Bill To Address"]);
             else
@@ -373,9 +365,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             Bservice = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
             outPS = Bservice.InvokeMethod("Query", inPS); //invoke the method
             SiebelJS.Log("childcount" + JSON.stringify(outPS.GetChild(0).GetChildCount()));
-            for (var ps = 0; ps < outPS.GetChild(0).GetChildCount(); ps++) {
+            for (var ps = 0; ps < outPS.GetChild(0).GetChildCount(); ps++)
+            {
               SiebelJS.Log(outPS.GetChild(0).GetChild(ps).GetProperty("SC Calc Long Description"));
-              for (var pr = 0; pr < outPS.GetChild(0).GetChild(ps).GetChildCount(); pr++) {
+              for (var pr = 0; pr < outPS.GetChild(0).GetChild(ps).GetChildCount(); pr++)
+              {
 
                 SiebelJS.Log("child" + outPS.GetChild(0).GetChild(ps).GetChild(pr).GetProperty("SC Calc Long Description"));
               }
@@ -395,12 +389,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             localStorage.setItem("flowfrom", "proceed");
 
             //if order details section is open closed it
-            if ($('.OrderDetailsclose').hasClass('iconOpen')) {
+            if ($('.OrderDetailsclose').hasClass('iconOpen'))
+            {
               $(".OrderDetailsclose").click();
             }
 
             //if line details section is open close it
-            if ($('.lineitemsopen').hasClass('iconOpen')) {
+            if ($('.lineitemsopen').hasClass('iconOpen'))
+            {
               $('.lineitemsopen').click();
             }
             FieldQueryPair = {
@@ -424,15 +420,10 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $(".quantitybox").addClass("input-readonly");
             $(".amount-width").addClass("input-readonly");
             $(".overflow-title").css("cssText", "margin-left:30px !important");
-            $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-            $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button
-            $(".prodcoupon").hide(); //Sukumar 03/25 to hide discount button
-            $(".coupdescdel").hide(); //Sukumar 03/25 to hide discount button
-            $(".scmanualdisdelete").hide(); //Sukumar 03/25 to hide discount button
-
           }
 
-          $("#SC_QuoteValidDt").datepicker({
+          $("#SC_QuoteValidDt").datepicker(
+          {
             dateFormat: 'mm/dd/yy',
             minDate: 0,
             changeYear: true,
@@ -441,17 +432,20 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             showOn: 'button',
             buttonText: 'Show Date',
             buttonImage: 'images/custom/Calender_blue.png',
-            onSelect: function (dateText, inst) {
+            onSelect: function (dateText, inst)
+            {
               $("#SC_QuoteValidDt").parent().addClass("is-active is-completed");
             },
             showButtonPanel: true
           });
         } //End of ShowUI
 
-        SCiPadOrderShipToItemListAppletPR.prototype.BindData = function (bRefresh) {
+        SCiPadOrderShipToItemListAppletPR.prototype.BindData = function (bRefresh)
+        {
           SiebelJS.Log("In Bind Data list");
           //SBOORlA:Added code for defect 765
-          if (scRefresh == "Y") {
+          if (scRefresh == "Y")
+          {
             scRefresh = "N";
             var CalculatefrieghtFlag = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Freight Calculated Flag");
             SiebelJS.Log("CalculatefrieghtFlag" + CalculatefrieghtFlag);
@@ -466,7 +460,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
 
             SiebelJS.Log("caninvoke" + canInvokeVerify);
-            if (canInvokeVerify) {
+            if (canInvokeVerify)
+            {
               SiebelJS.Log("Verifybutton");
               SCVerify = 'Y';
               var inPropSet = CCFMiscUtil_CreatePropSet();
@@ -477,17 +472,21 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In validate Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In Validate Call Back");
               };
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", inPropSet, ai);
               //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", null, false);
-            } else if (canInvokeValidate) {
+            }
+            else if (canInvokeValidate)
+            {
               SCfrieghtValidation = 'Y';
               SiebelJS.Log("Invoking SC Validate Freight");
               var inPropSet = CCFMiscUtil_CreatePropSet();
@@ -497,16 +496,20 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In validate Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In Validate Call Back");
               };
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "SC Validate Freight", inPropSet, ai);
-            } else {
+            }
+            else
+            {
               scRefresh = "Y"
               var inPropSet = CCFMiscUtil_CreatePropSet();
               //Define the inPropSet property set with the information that InvokeMethod sends as input to the method that it calls.
@@ -516,17 +519,21 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("Calculate Ship Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("Calculate Ship Call Back");
               };
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", inPropSet, ai);
             }
-          } else if (SCfrieghtValidation == 'Y') {
+          }
+          else if (SCfrieghtValidation == 'Y')
+          {
             //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
             SCfrieghtValidation = 'N';
             FieldQueryPair = {
@@ -535,62 +542,59 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             var OrderStatus = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue('Status')
             OrderItemDetails = SC_Order_PMinstance.GetRecordSet();
             SiebelJS.Log(OrderItemDetails[0]["Status"]);
-            if (OrderItemDetails[0]["Status"] == SC_orderStatus) {
+            if (OrderItemDetails[0]["Status"] == SC_orderStatus)
+            {
               setValidationErrors();
-              if (bRefreshShipMethod) //SL;Added for Tier Delivery;DF-1975
+			  if (bReloadMarkup) //SL;Added for Tier Delivery;DF-1975
               {
-                var oliRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet();
-                var bInvokeTierDel = false;
-                for (var i = 0; i < oliRecordSet.length; i++) {
-                  var elmVal = $('#' + (i + 1) + 'Ship-ShippingMethod').val();
-                  if (elmVal != undefined && oliRecordSet[i]['Ship Method'] != elmVal) {
-                    $('#' + (i + 1) + 'Ship-ShippingMethod').val(oliRecordSet[i]['Ship Method']);
-                    if (oliRecordSet[i]['Ship Method'] == "Home Delivery") {
-                      $('#' + (i + 1) + 'Ship-ShippingMethod').parent().next().append("<select class='shipping-dropdown' id='" + (i + 1) + "Delivery-Tier'></select>"); //enable delivery tier dropdown on current line
-                      bInvokeTierDel = true;
-                    }
-                  }
+                if (isShipToAcc == "Y")
+                {
+                  Get_OrderShipToLineItemsAccount(shippingItemsRecordSet, lineitemrcdset);
                 }
-                if (bInvokeTierDel)
-                  getDeliveryTierOptions(orderid); //evaluate delivery tiers
+                else
+                {
+                  Get_OrderShipToLineItems(shippingItemsRecordSet, lineitemrcdset);
+                }
               }
               $("#custommaskoverlay").hide();
-            } else {
+            }
+            else
+            {
               $("#custommaskoverlay").hide();
               SiebelJS.Log("Calling Delivery Type Popup");
               DeliveryTypePopup();
             }
-          } else if (SCfrieghtCalculation == 'Y') {
+          }
+          else if (SCfrieghtCalculation == 'Y')
+          {
             SCfrieghtCalculation = 'N';
             FieldQueryPair = {
               "Id": ""
             };
             OrderItemDetails = SC_Order_PMinstance.GetRecordSet();
             SiebelJS.Log(OrderItemDetails[0]["Status"]);
-            if (OrderItemDetails[0]["Status"] == SC_orderStatus) {
+            if (OrderItemDetails[0]["Status"] == SC_orderStatus)
+            {
               setValidationErrors();
-              if (bRefreshShipMethod) //SL;Added for Tier Delivery;DF-1975
+			  if (bReloadMarkup) //SL;Added for Tier Delivery;DF-1975
               {
-                var oliRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet();
-                var bInvokeTierDel = false;
-                for (var i = 0; i < oliRecordSet.length; i++) {
-                  var elmVal = $('#' + (i + 1) + 'Ship-ShippingMethod').val();
-                  if (elmVal != undefined && oliRecordSet[i]['Ship Method'] != elmVal) {
-                    $('#' + (i + 1) + 'Ship-ShippingMethod').val(oliRecordSet[i]['Ship Method']);
-                    if (oliRecordSet[i]['Ship Method'] == "Home Delivery") {
-                      $('#' + (i + 1) + 'Ship-ShippingMethod').parent().next().append("<select class='shipping-dropdown' id='" + (i + 1) + "Delivery-Tier'></select>"); //enable delivery tier dropdown on current line
-                      bInvokeTierDel = true;
-                    }
-                  }
+                if (isShipToAcc == "Y")
+                {
+                  Get_OrderShipToLineItemsAccount(shippingItemsRecordSet, lineitemrcdset);
                 }
-                if (bInvokeTierDel)
-                  getDeliveryTierOptions(orderid); //evaluate delivery tiers
+                else
+                {
+                  Get_OrderShipToLineItems(shippingItemsRecordSet, lineitemrcdset);
+                }
               }
               $("#custommaskoverlay").hide();
-            } else {
+            }
+            else
+            {
               SiebelJS.Log("clicked Verify Button");
               var canInvokeVerify = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "QuotesAndOrdersValidate");
-              if (canInvokeVerify) {
+              if (canInvokeVerify)
+              {
                 SCVerify = 'Y';
                 var inPropSet = CCFMiscUtil_CreatePropSet();
                 //Define the inPropSet property set with the information that InvokeMethod sends as input to the method that it calls.
@@ -600,18 +604,22 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
 
                   SiebelJS.Log("In validate Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("In Validate Call Back");
                 };
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", inPropSet, ai);
                 //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", null, false);
-              } else {
+              }
+              else
+              {
                 SiebelJS.Log("Not able to invoke Verify");
                 scRefresh = "Y";
                 FieldQueryPair = {
@@ -626,27 +634,33 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.Log("Calculate Ship Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("Calculate Ship Call Back");
                 };
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", inPropSet, ai);
               }
             }
-          } else if (SCVerify == 'Y') {
+          }
+          else if (SCVerify == 'Y')
+          {
             SCVerify = 'N';
             OrderItemDetails = SC_Order_PMinstance.GetRecordSet();
             SiebelJS.Log("SC_orderStatus" + SC_orderStatus);
             SiebelJS.Log(OrderItemDetails[0]["Status"]);
-            if (OrderItemDetails[0]["Status"] == SC_orderStatus) {
+            if (OrderItemDetails[0]["Status"] == SC_orderStatus)
+            {
               SCVerifyErr = 'Y';
               //SBOORLA:Added code for defect 771
               var ignoreError = verfiyErrorCodes();
-              if (ignoreError == 0) {
+              if (ignoreError == 0)
+              {
                 SiebelJS.Log("submit order error");
                 $("body").trigger('Custom.End');
                 SiebelJS.Log("entered");
@@ -664,11 +678,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.Log("In Refresh BC Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("In Refresh BC Call Back");
                 };
@@ -680,9 +696,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 $("#cstatus").text(orderHeaderStatus);
                 $('select[id^="orderstatus"] option:selected').attr("selected", null);
                 $('select[id^="orderstatus"] option[value="' + orderHeaderStatus + '"]').attr("selected", "selected");
-                if (recordrset[0]["SC Verified Flag"] == "Y" && ((recordrset[0]["SC Tax Calculated Flag"] == "Y") || (recordrset[0]["SC Tax Calculated Flag"] == "N" && recordrset[0]["SC Tax Verification Pending"] == "Y"))) {
+                if (recordrset[0]["SC Verified Flag"] == "Y" && ((recordrset[0]["SC Tax Calculated Flag"] == "Y") || (recordrset[0]["SC Tax Calculated Flag"] == "N" && recordrset[0]["SC Tax Verification Pending"] == "Y")))
+                {
                   $("#custommaskoverlay").show();
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     FieldQueryPair = {
                       "SKU #": ""
                     };
@@ -694,24 +712,6 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     $("#SC_Order_ship_markup1").show();
                     $("#SC_Order_ship_markup2").show();
                     $("#footerbutton").show();
-                    $(".SC-Discount-button").show(); //Sukumar 12/18 to hide discount button
-                    $(".maualdiscaddons").show(); //Sukumar 12/18 to hide discount button
-                    $(".prodcoupon").show(); //Sukumar 03/25 to hide discount button
-                    $(".coupdescdel").show(); //Sukumar 03/25 to hide discount button
-                    $(".scmanualdisdelete").show(); //Sukumar 03/25 to hide discount button
-                    $(".addonsdel").show();
-
-                    if ($('[id^=ProductCoupon]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-                      if ($('[id^=ProductCoupon]')[0].innerText === "no coupons applied") {
-                        $('[id^=ProductCoupon]').prev().hide()
-                      }
-                    }
-                    if ($('[id^=scmanualcouponval]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-                      if ($('[id^=scmanualcouponval]')[0].innerText === "no coupons applied") {
-                        $('[id^=scmanualcouponval]').prev().hide()
-                      }
-                    }
-
                     $("#SC-SO-ShipSummary-DefaultAddress").html($("#Ship-Default-BillToAddress").val());
                     var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
                     var InputArg = SiebelApp.S_App.NewPropertySet();
@@ -739,18 +739,23 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     ai1.scope = this;
                     ai1.mask = true;
                     ai1.opdecode = true;
-                    ai1.errcb = function () {
+                    ai1.errcb = function ()
+                    {
                       SiebelJS.Log("Error while executing 'SC Get Line Items' Business Service");
                     };
-                    ai1.cb = function () {
+                    ai1.cb = function ()
+                    {
                       var outPropSet = arguments[2];
-                      if (outPropSet != null) {
+                      if (outPropSet != null)
+                      {
                         var OutPS1 = outPropSet.GetChildByType('ResultSet');
                         outPS.AddChild(OutPS1);
                         SiebelJS.Log("childcount" + JSON.stringify(outPS.GetChild(0).GetChildCount()));
-                        for (var ps = 0; ps < outPS.GetChild(0).GetChildCount(); ps++) {
+                        for (var ps = 0; ps < outPS.GetChild(0).GetChildCount(); ps++)
+                        {
                           SiebelJS.Log(outPS.GetChild(0).GetChild(ps).GetProperty("SC Calc Long Description"));
-                          for (var pr = 0; pr < outPS.GetChild(0).GetChild(ps).GetChildCount(); pr++) {
+                          for (var pr = 0; pr < outPS.GetChild(0).GetChild(ps).GetChildCount(); pr++)
+                          {
 
                             SiebelJS.Log("child" + outPS.GetChild(0).GetChild(ps).GetChild(pr).GetProperty("SC Calc Long Description"));
                           }
@@ -775,11 +780,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                         ai.scope = this;
                         ai.mask = true;
                         ai.opdecode = true;
-                        ai.errcb = function () {
+                        ai.errcb = function ()
+                        {
                           //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                           SiebelJS.Log("In Refresh BC Error");
                         };
-                        ai.cb = function () {
+                        ai.cb = function ()
+                        {
                           //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                           SiebelJS.Log("In Refresh BC Call Back");
                         };
@@ -794,71 +801,67 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     }
                     Bservice.InvokeMethod("Query", inPS, ai1); //invoke the method
 
-                    //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-                    if (sIpadFeatureFlag == "Y") {
+                    // VAMSI:08-OCT-18: Modified the below condtions to Support P2PE pole Display.
+                    //SBOORLA:Added code for pole display
+                    if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag != "Y")
+                    {
+                      SC_OUI_Methods.PoleDisplay(poleJSON, "N");
+                    }
+                    if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag == "Y")
+                    {
+                      SC_OUI_Methods.TaxDetailsP2PEDisplay(orderid, poleJSON, subpoleJSON);
+                    }
+                    //NGOLLA for 598 defect 
+                    $(".edit-details").hide();
+                    if ($(".customline").is(":visible"))
+                      $(".customline").siblings(2).css("cssText", "padding-left: 7% !important;");
+                    $(".deleteline").hide();
+                    $(".prodcoupon").hide();
+                    $(".discount-btn").hide();
+                    $(".customline").hide();
+                    $(".displaybed").addClass("SC-readonly");
+                    $(".quantitybox").addClass("input-readonly");
+                    $(".amount-width").addClass("input-readonly");
+                    $(".overflow-title").css("cssText", "margin-left:30px !important");
+                    $("#SC-SO-CF-success").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-CF-success").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                    setTimeout(function ()
+                    {
                       $("#SC-SO-CF-verify").modal('hide');
-                      setTimeout(function () {
-                        customerInfoConformation()
-                      }, 1000);
-                    } else {
-                      //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
-                      // VAMSI:08-OCT-18: Modified the below condtions to Support P2PE pole Display.
-                      //SBOORLA:Added code for pole display
-                      if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag != "Y") {
-                        SC_OUI_Methods.PoleDisplay(poleJSON, "N");
-                      }
-                      if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag == "Y") {
-                        SC_OUI_Methods.TaxDetailsP2PEDisplay(orderid, poleJSON, subpoleJSON);
-                      }
-                      //NGOLLA for 598 defect 
-                      $(".edit-details").hide();
-                      if ($(".customline").is(":visible"))
-                        $(".customline").siblings(2).css("cssText", "padding-left: 7% !important;");
-                      $(".deleteline").hide();
-                      $(".prodcoupon").hide();
-                      $(".discount-btn").hide();
-                      $(".customline").hide();
-                      $(".displaybed").addClass("SC-readonly");
-                      $(".quantitybox").addClass("input-readonly");
-                      $(".amount-width").addClass("input-readonly");
-                      $(".overflow-title").css("cssText", "margin-left:30px !important");
-                      $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-                      $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button
-                      $(".prodcoupon").hide(); //Sukumar 03/25 to hide discount button
-                      $(".coupdescdel").hide(); //Sukumar 03/25 to hide discount button
-                      $(".scmanualdisdelete").hide(); //Sukumar 03/25 to hide discount button
-                      $(".addonsdel").hide();
-                      $("#SC-SO-CF-success").modal({
-                        backdrop: 'static'
+                      $("#SC-SO-CF-success").css(
+                      {
+                        "display": "",
+                        "justify-content": "",
+                        "align-items": ""
                       });
-                      $("#SC-SO-CF-success").css({
-                        "display": "flex",
-                        "justify-content": "center",
-                        "align-items": "center"
-                      });
-                      $(".modal-backdrop").css('background', '#ffffff');
-                      setTimeout(function () {
-                        $("#SC-SO-CF-verify").modal('hide');
-                        $("#SC-SO-CF-success").css({
-                          "display": "",
-                          "justify-content": "",
-                          "align-items": ""
-                        });
-                        $("#SC-SO-CF-success").modal('hide');
-                        $("#custommaskoverlay").hide();
-                        $("div").scrollTop(10000);
-                        if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Management Products"].GetPModel().Get("AddReferral") || $("#SC-Add-Referral").is(":visible")) {
-                          pm.SetProperty("AddReferralFlg", true);
-                        };
-                      }, 2000);
-                    } //LikhithaK:SFSTRY0003472:Added
+                      $("#SC-SO-CF-success").modal('hide');
+                      $("#custommaskoverlay").hide();
+                      $("div").scrollTop(10000);
+                      if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Management Products"].GetPModel().Get("AddReferral") || $("#SC-Add-Referral").is(":visible"))
+                      {
+                        pm.SetProperty("AddReferralFlg", true);
+                      };
+                    }, 2000);
                   }, 50);
-                } else {
+                }
+                else
+                {
                   $("#SC-SO-CF-verify").modal('hide');
                   $("#custommaskoverlay").hide();
                 }
 
-              } else {
+              }
+              else
+              {
 
                 setValidationErrors();
                 //SBOORLA:Added code for defect 765
@@ -873,7 +876,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 $("#custommaskoverlay").hide();
                 $('#CommunicationPanelContainer').css("padding-top", "77px");
               }
-            } else {
+            }
+            else
+            {
               $("body").trigger('Custom.End');
               SiebelJS.Log("entered");
               //SCfrieght = 'N';
@@ -893,11 +898,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In Refresh BC Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In Refresh BC Call Back");
                 //};
@@ -909,9 +916,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 $("#cstatus").text(orderHeaderStatus);
                 $('select[id^="orderstatus"] option:selected').attr("selected", null);
                 $('select[id^="orderstatus"] option[value="' + orderHeaderStatus + '"]').attr("selected", "selected");
-                if (recordrset[0]["SC Verified Flag"] == "Y" && ((recordrset[0]["SC Tax Calculated Flag"] == "Y") || (recordrset[0]["SC Tax Calculated Flag"] == "N" && recordrset[0]["SC Tax Verification Pending"] == "Y"))) {
+                if (recordrset[0]["SC Verified Flag"] == "Y" && ((recordrset[0]["SC Tax Calculated Flag"] == "Y") || (recordrset[0]["SC Tax Calculated Flag"] == "N" && recordrset[0]["SC Tax Verification Pending"] == "Y")))
+                {
                   $("#custommaskoverlay").show();
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     FieldQueryPair = {
                       "SKU #": ""
                     };
@@ -923,14 +932,6 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     $("#SC_Order_ship_markup1").show();
                     $("#SC_Order_ship_markup2").show();
                     $("#footerbutton").show();
-                    $(".SC-Discount-button").show(); //Sukumar 12/18 to hide discount button
-                    $(".maualdiscaddons").show(); //Sukumar 12/18 to hide discount button
-                    $(".prodcoupon").show(); //Sukumar 03/25 to hide discount button
-                    $(".coupdescdel").show(); //Sukumar 03/25 to hide discount button
-                    $(".scmanualdisdelete").show(); //Sukumar 03/25 to hide discount button
-                    $(".addonsdel").show();
-                    //if($('[id^=ProductCoupon]')[0].innerText === "no coupons applied"){$('[id^=ProductCoupon]').prev().hide()}
-                    //if($('[id^=scmanualcouponval]')[0].innerText === "no coupons applied"){$('[id^=scmanualcouponval]').prev().hide()}
                     $("#SC-SO-ShipSummary-DefaultAddress").html($("#Ship-Default-BillToAddress").val());
                     var Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
                     var InputArg = SiebelApp.S_App.NewPropertySet();
@@ -958,18 +959,23 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     ai2.scope = this;
                     ai2.mask = true;
                     ai2.opdecode = true;
-                    ai2.errcb = function () {
+                    ai2.errcb = function ()
+                    {
                       SiebelJS.Log("Error while executing 'SC Get Line Items' Business Service");
                     };
-                    ai2.cb = function () {
+                    ai2.cb = function ()
+                    {
                       var outPropSet = arguments[2];
-                      if (outPropSet != null) {
+                      if (outPropSet != null)
+                      {
                         var OutPS1 = outPropSet.GetChildByType('ResultSet');
                         outPS.AddChild(OutPS1);
                         SiebelJS.Log("childcount" + JSON.stringify(outPS.GetChild(0).GetChildCount()));
-                        for (var ps = 0; ps < outPS.GetChild(0).GetChildCount(); ps++) {
+                        for (var ps = 0; ps < outPS.GetChild(0).GetChildCount(); ps++)
+                        {
                           SiebelJS.Log(outPS.GetChild(0).GetChild(ps).GetProperty("SC Calc Long Description"));
-                          for (var pr = 0; pr < outPS.GetChild(0).GetChild(ps).GetChildCount(); pr++) {
+                          for (var pr = 0; pr < outPS.GetChild(0).GetChild(ps).GetChildCount(); pr++)
+                          {
 
                             SiebelJS.Log("child" + outPS.GetChild(0).GetChild(ps).GetChild(pr).GetProperty("SC Calc Long Description"));
                           }
@@ -994,11 +1000,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                         ai.scope = this;
                         ai.mask = true;
                         ai.opdecode = true;
-                        ai.errcb = function () {
+                        ai.errcb = function ()
+                        {
                           //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                           SiebelJS.Log("In Refresh BC Error");
                         };
-                        ai.cb = function () {
+                        ai.cb = function ()
+                        {
                           //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                           SiebelJS.Log("In Refresh BC Call Back");
                         };
@@ -1012,66 +1020,60 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       }
                     }
                     Bservice.InvokeMethod("Query", inPS, ai2);
-                    //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-                    if (sIpadFeatureFlag == "Y") {
+                    //SBOORLA:Added code for pole display
+                    // VAMSI:08-OCT-18: Modified the below condtions to Support P2PE pole Display.
+                    if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag != "Y")
+                    {
+                      SC_OUI_Methods.PoleDisplay(poleJSON, "N");
+                    }
+                    if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag == "Y")
+                    {
+                      SC_OUI_Methods.TaxDetailsP2PEDisplay(orderid, poleJSON, subpoleJSON);
+                    }
+                    //NGOLLA for 598 defect 
+                    $(".edit-details").hide();
+                    if ($(".customline").is(":visible"))
+                      $(".customline").siblings(2).css("cssText", "padding-left: 7% !important;");
+                    $(".deleteline").hide();
+                    $(".prodcoupon").hide();
+                    $(".discount-btn").hide();
+                    $(".customline").hide();
+                    $(".displaybed").addClass("SC-readonly");
+                    $(".quantitybox").addClass("input-readonly");
+                    $(".amount-width").addClass("input-readonly");
+                    $(".overflow-title").css("cssText", "margin-left:30px !important");
+                    $("#SC-SO-CF-success").modal(
+                    {
+                      backdrop: 'static'
+                    });
+                    $("#SC-SO-CF-success").css(
+                    {
+                      "display": "flex",
+                      "justify-content": "center",
+                      "align-items": "center"
+                    });
+                    $(".modal-backdrop").css('background', '#ffffff');
+                    setTimeout(function ()
+                    {
                       $("#SC-SO-CF-verify").modal('hide');
-                      setTimeout(function () {
-                        customerInfoConformation()
-                      }, 1000);
-                    } else {
-                      //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
-                      //SBOORLA:Added code for pole display
-                      // VAMSI:08-OCT-18: Modified the below condtions to Support P2PE pole Display.
-                      if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag != "Y") {
-                        SC_OUI_Methods.PoleDisplay(poleJSON, "N");
-                      }
-                      if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag == "Y") {
-                        SC_OUI_Methods.TaxDetailsP2PEDisplay(orderid, poleJSON, subpoleJSON);
-                      }
-                      //NGOLLA for 598 defect 
-                      $(".edit-details").hide();
-                      if ($(".customline").is(":visible"))
-                        $(".customline").siblings(2).css("cssText", "padding-left: 7% !important;");
-                      $(".deleteline").hide();
-                      $(".prodcoupon").hide();
-                      $(".discount-btn").hide();
-                      $(".customline").hide();
-                      $(".displaybed").addClass("SC-readonly");
-                      $(".quantitybox").addClass("input-readonly");
-                      $(".amount-width").addClass("input-readonly");
-                      $(".overflow-title").css("cssText", "margin-left:30px !important");
-                      $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-                      $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button
-                      $(".prodcoupon").hide(); //Sukumar 03/25 to hide discount button
-                      $(".coupdescdel").hide(); //Sukumar 03/25 to hide discount button
-                      $(".scmanualdisdelete").hide(); //Sukumar 03/25 to hide discount button
-                      $(".addonsdel").hide();
-                      $("#SC-SO-CF-success").modal({
-                        backdrop: 'static'
+                      $("#SC-SO-CF-success").css(
+                      {
+                        "display": "",
+                        "justify-content": "",
+                        "align-items": ""
                       });
-                      $("#SC-SO-CF-success").css({
-                        "display": "flex",
-                        "justify-content": "center",
-                        "align-items": "center"
-                      });
-                      $(".modal-backdrop").css('background', '#ffffff');
-                      setTimeout(function () {
-                        $("#SC-SO-CF-verify").modal('hide');
-                        $("#SC-SO-CF-success").css({
-                          "display": "",
-                          "justify-content": "",
-                          "align-items": ""
-                        });
-                        $("#SC-SO-CF-success").modal('hide');
-                        $("#custommaskoverlay").hide();
-                        $("div").scrollTop(10000);
-                        if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Management Products"].GetPModel().Get("AddReferral") || $("#SC-Add-Referral").is(":visible")) {
-                          pm.SetProperty("AddReferralFlg", true);
-                        };
-                      }, 2000);
-                    } //LikhithaK:SFSTRY0003472:Added
+                      $("#SC-SO-CF-success").modal('hide');
+                      $("#custommaskoverlay").hide();
+                      $("div").scrollTop(10000);
+                      if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Management Products"].GetPModel().Get("AddReferral") || $("#SC-Add-Referral").is(":visible"))
+                      {
+                        pm.SetProperty("AddReferralFlg", true);
+                      };
+                    }, 2000);
                   }, 50);
-                } else {
+                }
+                else
+                {
                   $("#SC-SO-CF-verify").modal('hide');
                   $("#custommaskoverlay").hide();
                 }
@@ -1080,9 +1082,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             }
             //End code for on click of calculate frieght button invoking calculate freight and verify button
             //Start:on click of ok button on error  popup
-            $("#SC-CF-failure-button").click(function () {
+            $("#SC-CF-failure-button").click(function ()
+            {
               $("#SC-SO-CF-failure").modal('hide');
-              $("#SC-SO-CF-failure").css({
+              $("#SC-SO-CF-failure").css(
+              {
                 "display": "",
                 "justify-content": "",
                 "align-items": ""
@@ -1093,9 +1097,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           SiebelAppFacade.SCiPadOrderShipToItemListAppletPR.superclass.BindData.apply(this, arguments);
           SiebelJS.Log("Shipping - BindData");
           //Start:on click of choose shipping button
-          if (localStorage.getItem('ProceedToShipping') == 'Y') {
+          if (localStorage.getItem('ProceedToShipping') == 'Y')
+          {
             $("#custommaskoverlay").show();
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               ShipToContactRecordSet = SC_Order_PMinstance.GetRecordSet();
               $("#product-info").removeClass("in");
               localStorage.setItem('ProceedToShipping', 'N');
@@ -1116,14 +1122,16 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               SiebelJS.Log("lineitem::" + JSON.stringify(lineitemrcdset));
               ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
               var sOrderRevisionNum = parseInt(ShipToContactRecordSet[0]["Revision"]);
-              if (scAccountOrder) {
+              if (scAccountOrder)
+              {
 
                 var shiptoAccId = "",
                   shiptoContcatId = "";
                 shiptoAccId = ShipToContactRecordSet[0]["Ship To Account Id"];
                 shiptoContcatId = ShipToContactRecordSet[0]["Ship To Contact Id"];
                 shiptoAccId = ShipToContactRecordSet[0]["Ship To Account Id"];
-                if (shiptoAccId == "" && shiptoContcatId == "") {
+                if (shiptoAccId == "" && shiptoContcatId == "")
+                {
                   /*SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Contact Id","");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Account Id",ShipToContactRecordSet[0]["Bill To Account Id"]);
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Address Id",ShipToContactRecordSet[0]["Bill To Address Id"]);
@@ -1137,19 +1145,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   $("#Ship-to-Account-button").removeClass("p-item-active");
                   $("#Shipping-Detils").show();
                   $("#sc-line-contact").text("Contact");
-                  $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-                  $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button
-                  $(".prodcoupon").hide(); //Sukumar 03/25 to hide discount button
-                  $(".coupdescdel").hide(); //Sukumar 03/25 to hide discount button
-                  $(".scmanualdisdelete").hide(); //Sukumar 03/25 to hide discount button
-                  $(".addonsdel").hide();
                   Get_OrderShipToLineItems(shippingItemsRecordSet, lineitemrcdset);
                   //addressLine=AttachAddresses(ShipToContactRecordSet[0]["Ship To Address Id"]);
                   $("#Ship-Default-BillToAddress").html('<option></option>');
                   var ShipToContactName = ShipToContactRecordSet[0]["Primary Ship To First Name"] + " " + ShipToContactRecordSet[0]["Primary Ship To Last Name"];
                   $("#Ship-Default-Name").html(ShipToContactName);
                   conId = ShipToContactRecordSet[0]["Ship To Contact Id"];
-                } else if (shiptoAccId == "" || shiptoAccId == null || shiptoAccId == "undefined" || shiptoAccId == "") {
+                }
+                else if (shiptoAccId == "" || shiptoAccId == null || shiptoAccId == "undefined" || shiptoAccId == "")
+                {
                   isShipToAcc = "N";
                   $("#SC-Ship-to-Account-info").addClass("inactive-tab");
                   $("#SC-Ship-to-Contact-info").removeClass("inactive-tab");
@@ -1163,7 +1167,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   var ShipToContactName = ShipToContactRecordSet[0]["Primary Ship To First Name"] + " " + ShipToContactRecordSet[0]["Primary Ship To Last Name"];
                   $("#Ship-Default-Name").html(ShipToContactName);
                   conId = ShipToContactRecordSet[0]["Ship To Contact Id"];
-                } else {
+                }
+                else
+                {
                   isShipToAcc = "Y";
                   Get_OrderShipToLineItemsAccount(shippingItemsRecordSet, lineitemrcdset);
                   $("#sc-line-contact").text("Account");
@@ -1171,7 +1177,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   $("#scship-Acc-adr").html(addressLine);
                 }
                 var mblNumb_def = ShipToContactRecordSet[0]["SC Preferred Contact"];
-                if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10) {
+                if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10)
+                {
                   var USFormt_mblNum = '';
                   USFormt_mblNum = "(" + mblNumb_def.substring(0, mblNumb_def.length - 7) + ") " + mblNumb_def.substring(3, mblNumb_def.length - 4) + "-" + mblNumb_def.substring(6, mblNumb_def.length);
                   mblNumb_def = USFormt_mblNum;
@@ -1189,7 +1196,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 else
                   $("#SC-RepriceAll-shipping").addClass("SC-readonly");
                 //if (sOrderRevisionNum > 1) {
-                if (ShipToContactRecordSet[0]["SC Con Bill To Address Readonly"] == "Y") {
+                if (ShipToContactRecordSet[0]["SC Con Bill To Address Readonly"] == "Y")
+                {
                   var shipaddrId = ShipToContactRecordSet[0]["Ship To Address Id"];
                   var addrMarkup = "";
                   addrMarkup = '<p>Address:</p>';
@@ -1205,7 +1213,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   $("#scship-Acc-adr").addClass("SC-readonly");
                   $("#scship-Acc-phone-number").addClass("SC-readonly");
                 }
-              } else {
+              }
+              else
+              {
                 Get_OrderShipToLineItems(shippingItemsRecordSet, lineitemrcdset);
                 /*var ShipToAddress="";
 				ShipToAddress +=ShipToContactRecordSet[0]["SC Con Ship To Address"];
@@ -1219,14 +1229,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 addressLine = AttachAddresses(ShipToContactRecordSet[0]["Ship To Address Id"]);
                 $("#Ship-Default-BillToAddress").html(addressLine);
                 $("#Shipping-Detils").show();
-                $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-                $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button
-                $(".prodcoupon").hide(); //Sukumar 03/25 to hide discount button
-                $(".coupdescdel").hide(); //Sukumar 03/25 to hide discount button
-                $(".scmanualdisdelete").hide(); //Sukumar 03/25 to hide discount button
-                $(".addonsdel").hide();
                 //if (sOrderRevisionNum > 1) {
-                if (ShipToContactRecordSet[0]["SC Con Bill To Address Readonly"] == "Y") {
+                if (ShipToContactRecordSet[0]["SC Con Bill To Address Readonly"] == "Y")
+                {
                   var shipaddrId = ShipToContactRecordSet[0]["Ship To Address Id"];
                   var addrMarkup = "";
                   addrMarkup = '<p>Address:</p>';
@@ -1248,7 +1253,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           //End:on click of choose shipping button
         } //End of BindData
 
-        SCiPadOrderShipToItemListAppletPR.prototype.BindEvents = function () {
+        SCiPadOrderShipToItemListAppletPR.prototype.BindEvents = function ()
+        {
           SiebelAppFacade.SCiPadOrderShipToItemListAppletPR.superclass.BindEvents.apply(this, arguments);
           SiebelJS.Log("Shipping - BindEvents");
           var selected_SearchConId = '',
@@ -1258,20 +1264,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           $(".attachmentitem").hide();
           $("#SC-add-new-Attach").hide();
           //sushma 19-07-2018:Added for Resizing CTI Toolbar
-          $(document).on('click', '#commPanelDockToShowUnpin', function () {
+          $(document).on('click', '#commPanelDockToShowUnpin', function ()
+          {
             $("#CommunicationPanelContainer").css("cssText", "padding-top: 0px !important;");
           })
-          $(document).on('click', '#commPanelDockToShowPin', function () {
+          $(document).on('click', '#commPanelDockToShowPin', function ()
+          {
             $("#CommunicationPanelContainer").css("cssText", "padding-top: 77px !important;");
           })
-          //LikhithaK:Start:22May2025:SFSTRY0003472:Terminal UI Changes
-          $(document).on('click', '#SC-SO-P2PE-Custom-ok', function () {
-            $("#SC-SO-P2PE-Cust-change").modal('hide');
-          });
-          $(document).on('click', '#SC-SO-P2PE-Note-ok', function () {
-            $("#SC-SO-P2PE-Note").modal('hide');
-          }); //Kolasani:27May2025
-          //LikhithaK:End:22May2025:SFSTRY0003472:Terminal UI Changes
           //Start:code for on click of Ship to Account tab and Ship to Contact Tab for B2B order
           /*$(document).on('click',"#Ship-Default-BillToAddress",function(){
           		if(!scAccountOrder){
@@ -1295,14 +1295,17 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           		}
           });*/
           //Start: Selecting a record in select Contact popup
-          $(document).on('click', "#SC-table-search-Acc-contact tbody tr", function () {
+          $(document).on('click', "#SC-table-search-Acc-contact tbody tr", function ()
+          {
             scAccConid = $(this).attr('id');
             $('#' + scAccConid).addClass('highlate-row').siblings().removeClass('highlate-row');
             $("#SC-AccSelect-contact").removeClass('SC-disabled');
           });
-          $("#Acc-close-details").click(function () {
+          $("#Acc-close-details").click(function ()
+          {
             $("#SC-Accsearch-contacts").modal('hide');
-            $("#SC-Accsearch-contacts").css({
+            $("#SC-Accsearch-contacts").css(
+            {
               "display": "",
               "justify-content": "",
               "align-items": ""
@@ -1310,7 +1313,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End: Selecting a record in select Contact popup
           //Start:on click of change contact button in ShiptoContact Section
-          $("#SC-AccChange-contact").click(function () {
+          $("#SC-AccChange-contact").click(function ()
+          {
             sChangeContactClicked = "Y";
             //if(ChnageContactloaded == "N"){
             //ChnageContactloaded="Y";
@@ -1322,16 +1326,20 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             contactSearchMarkup();
             ContactAccountSearch_GetRecordSearch();
 
-            $("#SC-search-contacts").modal({
+            $("#SC-search-contacts").modal(
+            {
               backdrop: 'static'
             });
           });
           //End:on click of change contact button in ShiptoContact Section
           //Start:code for On click of Select Contact button in ShiptoContact Section
-          $("#SC-AccSelect-contact").click(function () {
-            if (scAccConid != "") {
+          $("#SC-AccSelect-contact").click(function ()
+          {
+            if (scAccConid != "")
+            {
               $("#custommaskoverlay").show();
-              setTimeout(function () {
+              setTimeout(function ()
+              {
                 scAccConid = scAccConid.split("_");
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Contact Id", scAccConid[0]);
                 if (scAccConid[1] != "null" && scAccConid[1] != "" && scAccConid[1] != "No Match Row Id" && scAccConid[1] != "undefined")
@@ -1365,11 +1373,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.Log("In Refresh BC Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("In Refresh BC Call Back");
                 };
@@ -1382,7 +1392,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 addressLine = AttachAddresses(ShipToContactRecordSet[0]["Ship To Address Id"]);
                 $("#Ship-Default-BillToAddress").html(addressLine);
                 var mblNumb_def = ShipToContactRecordSet[0]["SC Preferred Contact"];
-                if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10) {
+                if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10)
+                {
                   var USFormt_mblNum = '';
                   USFormt_mblNum = "(" + mblNumb_def.substring(0, mblNumb_def.length - 7) + ") " + mblNumb_def.substring(3, mblNumb_def.length - 4) + "-" + mblNumb_def.substring(6, mblNumb_def.length);
                   mblNumb_def = USFormt_mblNum;
@@ -1394,7 +1405,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 $("#custommaskoverlay").hide();
               }, 50);
               $("#SC-Accsearch-contacts").modal('hide');
-              $("#SC-Accsearch-contacts").css({
+              $("#SC-Accsearch-contacts").css(
+              {
                 "display": "",
                 "justify-content": "",
                 "align-items": ""
@@ -1404,21 +1416,17 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //Start:code for On click of Select Contact button in ShiptoContact Section
           //Start:code for on click of ShipToAccount Tab
-          $("#Ship-to-Account-button").click(function () {
+          $("#Ship-to-Account-button").click(function ()
+          {
             $("#custommaskoverlay").show();
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               isShipToAcc = "Y";
               $("#SC-Ship-to-Account-info").removeClass("inactive-tab");
               $("#SC-Ship-to-Contact-info").addClass("inactive-tab");
               $("#Ship-to-Account-button").addClass("p-item-active");
               $("#Ship-to-contact-button").removeClass("p-item-active");
               $("#Shipping-Detils").show();
-              $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-              $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button
-              $(".prodcoupon").hide(); //Sukumar 03/25 to hide discount button
-              $(".coupdescdel").hide(); //Sukumar 03/25 to hide discount button
-              $(".scmanualdisdelete").hide(); //Sukumar 03/25 to hide discount button
-              $(".addonsdel").hide();
               $("#sc-line-contact").text("Account");
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Contact Id", "");
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Account Id", ShipToContactRecordSet[0]["Bill To Account Id"]);
@@ -1448,11 +1456,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In Refresh BC Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In Refresh BC Call Back");
               };
@@ -1469,21 +1479,17 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:code for on click of ShipToAccount Tab
           //Start:code for on click of ShipToContact Tab
-          $("#Ship-to-contact-button").click(function () {
+          $("#Ship-to-contact-button").click(function ()
+          {
             $("#custommaskoverlay").show();
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               isShipToAcc = "N";
               $("#SC-Ship-to-Account-info").addClass("inactive-tab");
               $("#SC-Ship-to-Contact-info").removeClass("inactive-tab");
               $("#Ship-to-contact-button").addClass("p-item-active");
               $("#Ship-to-Account-button").removeClass("p-item-active");
               $("#Shipping-Detils").show();
-              $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-              $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button
-              $(".prodcoupon").hide(); //Sukumar 03/25 to hide discount button
-              $(".coupdescdel").hide(); //Sukumar 03/25 to hide discount button
-              $(".scmanualdisdelete").hide(); //Sukumar 03/25 to hide discount button
-              $(".addonsdel").hide();
               $("#sc-line-contact").text("Contact");
               var fieldnames = "Ship To Contact Id,Ship To Account Id,Ship To Address Id,SC Preferred Contact";
               var fieldvalues = "";
@@ -1522,11 +1528,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In Refresh BC Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In Refresh BC Call Back");
               };
@@ -1539,7 +1547,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               //addressLine=AttachAddresses(ShipToContactRecordSet[0]["Ship To Address Id"]);
               $("#Ship-Default-BillToAddress").html('<option></option>');
               var mblNumb_def = ShipToContactRecordSet[0]["SC Preferred Contact"];
-              if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10) {
+              if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10)
+              {
                 var USFormt_mblNum = '';
                 USFormt_mblNum = "(" + mblNumb_def.substring(0, mblNumb_def.length - 7) + ") " + mblNumb_def.substring(3, mblNumb_def.length - 4) + "-" + mblNumb_def.substring(6, mblNumb_def.length);
                 mblNumb_def = USFormt_mblNum;
@@ -1552,9 +1561,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           //End:code for on click of ShipToContact Tab
           //End:code for on click of Ship to Account tab and Ship to Contact Tab for B2B order
           //Start:on click of ok button in location not match popup
-          $(document).on("click", "#SC-loc-ok", function () {
+          $(document).on("click", "#SC-loc-ok", function ()
+          {
             $("#SC-SO-my-store").modal('hide');
-            $("#SC-SO-my-store").css({
+            $("#SC-SO-my-store").css(
+            {
               "display": "",
               "justify-content": "",
               "align-items": ""
@@ -1562,9 +1573,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:on click of ok button in location not match popup
           //Start:on click of shipping method pop up
-          $(document).on("click", "#SC-shipmethod-ok", function () {
+          $(document).on("click", "#SC-shipmethod-ok", function ()
+          {
             $("#SC-Shipmethod-popup").modal('hide');
-            $("#SC-Shipmethod-popup").css({
+            $("#SC-Shipmethod-popup").css(
+            {
               "display": "",
               "justify-content": "",
               "align-items": ""
@@ -1574,16 +1587,19 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           $(document).on("click", "#SC-deliverytier-ok", function () //30Oct24;SL;Added for tier delivery
             {
               $("#SC-deliverytier-popup").modal('hide');
-              $("#SC-deliverytier-popup").css({
+              $("#SC-deliverytier-popup").css(
+              {
                 "display": "",
                 "justify-content": "",
                 "align-items": ""
               });
             });
           //start:on click of No button in change store popup
-          $(document).on("click", "#Store-no-ship", function () {
+          $(document).on("click", "#Store-no-ship", function ()
+          {
             $("#SC-SO-store-location").modal('hide');
-            $("#SC-SO-store-location").css({
+            $("#SC-SO-store-location").css(
+            {
               "display": "",
               "justify-content": "",
               "align-items": ""
@@ -1591,7 +1607,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:on click of No button in change store popup
           //start:on click of yes button in change store popup
-          $(document).on("click", "#store-yes-ship", function () {
+          $(document).on("click", "#store-yes-ship", function ()
+          {
             var storeinfo = $("#storename").attr('title');
             SiebelJS.Log("storeinfo" + storeinfo);
             SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Sale Location", storeinfo);
@@ -1603,11 +1620,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             ai.scope = this;
             ai.mask = true;
             ai.opdecode = true;
-            ai.errcb = function () {
+            ai.errcb = function ()
+            {
               //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
               SiebelJS.Log("In Refresh BC Error");
             };
-            ai.cb = function () {
+            ai.cb = function ()
+            {
               //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
               SiebelJS.Log("In Refresh BC Call Back");
             };
@@ -1623,7 +1642,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $("#SC-order-subchannel").text(scOrderSubChannel);
             $("#csubchan").text($("#SC-order-subchannel").text());
             //SPATIBAN:Added code for Updating the Show Number if Order Sub Channnel iS SHOW
-            if (scOrderSubChannel == "SHOW") {
+            if (scOrderSubChannel == "SHOW")
+            {
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("UpdateShowNumber");
               $("#SC-show-num").val(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sale Show#"));
             }
@@ -1634,7 +1654,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             inpPS.SetProperty("Refresh All","Y");
             outPS=oBS.InvokeMethod("RefreshCurrentApplet", inpPS);*/
             $("#SC-SO-store-location").modal('hide');
-            $("#SC-SO-store-location").css({
+            $("#SC-SO-store-location").css(
+            {
               "display": "",
               "justify-content": "",
               "align-items": ""
@@ -1642,7 +1663,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:on click of yes button in change store popup
           //start:onclick linedetails error messages
-          $(document).on("click", "#linedetailserrors", function () {
+          $(document).on("click", "#linedetailserrors", function ()
+          {
             if (!$("product-info").hasClass("in"))
               $("#prod-expand-collapse").trigger("click");
             $("#SC-line-item").hide();
@@ -1651,7 +1673,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //end:onclick linedetails error messages
           //start:onclick ordedetails error messages
-          $(document).on("click", "#orderdetailserrors", function () {
+          $(document).on("click", "#orderdetailserrors", function ()
+          {
             if (!$("	sales-info").hasClass("in"))
               $("#expand-collapse").trigger("click");
             $("#SC-order-item").hide();
@@ -1660,26 +1683,32 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //end:onclick orderdetails error messages
           //Start:on click of shipping error message
-          $("#shippingserros").click(function () {
+          $("#shippingserros").click(function ()
+          {
             $("#SC-ship-item").hide();
             $("#SC-ship-arrow").addClass('arrow-down');
             $("#SC-ship-arrow").removeClass('arrow-up');
           });
           //End:on click of shipping error message
           //start:onclick contact error messages
-          $(document).on("click", "#contacterrors", function () {
-            $("#SC-SO-contact-error").modal({
+          $(document).on("click", "#contacterrors", function ()
+          {
+            $("#SC-SO-contact-error").modal(
+            {
               backdrop: 'static'
             });
-            $("#SC-SO-contact-error").css({
+            $("#SC-SO-contact-error").css(
+            {
               "display": "flex",
               "justify-content": "center",
               "align-items": "center"
             });
             $(".modal-backdrop").css('background', '#ffffff');
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               $("#SC-SO-contact-error").modal('hide');
-              $("#SC-SO-contact-error").css({
+              $("#SC-SO-contact-error").css(
+              {
                 "display": "",
                 "justify-content": "",
                 "align-items": ""
@@ -1690,101 +1719,128 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           //end:onclick contact error messages
 
           //start:on click of order label in error header
-          $(document).on("click", "#SC-select-oder-item", function () {
+          $(document).on("click", "#SC-select-oder-item", function ()
+          {
             //$("#SC-select-oder-item").on("touchend",function(){
             $("#SC-order-item").css("left:5%");
             $("#SC-order-item").toggle();
-            if ($("#SC-order-item").is(":visible")) {
+            if ($("#SC-order-item").is(":visible"))
+            {
               $("#SC-arrow").addClass('arrow-up');
               $("#SC-arrow").removeClass('arrow-down');
-            } else {
+            }
+            else
+            {
               $("#SC-arrow").addClass('arrow-down');
               $("#SC-arrow").removeClass('arrow-up');
             }
           });
           //end:on click of order label in error header
-          $(document).on('click', '#SC-close-referredby', function () {
+          $(document).on('click', '#SC-close-referredby', function ()
+          {
             $("#SC-Referral-search-contacts").modal('hide');
           });
           //Start:on click of line deatils label in error header
-          $(document).on("click", "#SC-select-line-item", function () {
+          $(document).on("click", "#SC-select-line-item", function ()
+          {
             // $("#SC-select-line-item").on("touchend",function(){
             $("#SC-line-item").css("left:26%");
             $("#SC-line-item").toggle();
-            if ($("#SC-line-item").is(":visible")) {
+            if ($("#SC-line-item").is(":visible"))
+            {
               $("#SC-line-arrow").addClass('arrow-up');
               $("#SC-line-arrow").removeClass('arrow-down');
-            } else {
+            }
+            else
+            {
               $("#SC-line-arrow").addClass('arrow-down');
               $("#SC-line-arrow").removeClass('arrow-up');
             }
           });
           //end:on click of line deatils label in error header
           //start:on click of ship details label in error header
-          $(document).on("click", "#SC-select-ship-item", function () {
+          $(document).on("click", "#SC-select-ship-item", function ()
+          {
             //$("#SC-select-ship-item").on("touchend",function(){
             $("#SC-ship-item").css("left:55%");
             $("#SC-ship-item").toggle();
-            if ($("#SC-ship-item").is(":visible")) {
+            if ($("#SC-ship-item").is(":visible"))
+            {
               $("#SC-ship-arrow").addClass('arrow-up');
               $("#SC-ship-arrow").removeClass('arrow-down');
 
-            } else {
+            }
+            else
+            {
               $("#SC-ship-arrow").addClass('arrow-down');
               $("#SC-ship-arrow").removeClass('arrow-up');
             }
           });
           //end:on click of ship details label in error header
           //start:on click of contact label in error header
-          $(document).on("click", "#SC-select-contact-item", function () {
+          $(document).on("click", "#SC-select-contact-item", function ()
+          {
             // $("#SC-select-contact-item").on("touchend",function(){
             $("#SC-contact-item").css("left:82%");
             $("#SC-contact-item").toggle();
-            if ($("#SC-contact-item").is(":visible")) {
+            if ($("#SC-contact-item").is(":visible"))
+            {
               $("#SC-contact-arrow").addClass('arrow-up');
               $("#SC-contact-arrow").removeClass('arrow-down');
 
-            } else {
+            }
+            else
+            {
               $("#SC-contact-arrow").addClass('arrow-down');
               $("#SC-contact-arrow").removeClass('arrow-up');
             }
           });
           //END:on click of contact label in error header
-          $(document).on("click", "#Ship_NewContact", function () {
+          $(document).on("click", "#Ship_NewContact", function ()
+          {
             addnewcontact_lineitem = "Y";
-            $("#SC-add-contact").modal({
+            $("#SC-add-contact").modal(
+            {
               backdrop: 'static'
             });
           });
-          $(document).on("click", "#ship_ChangeContact", function () {
+          $(document).on("click", "#ship_ChangeContact", function ()
+          {
             contactSearchMarkup();
             searchcontact_lineitem = "Y"
-            $("#SC-search-contacts").modal({
+            $("#SC-search-contacts").modal(
+            {
               backdrop: 'static'
             });
           });
           //Start: Showing - Hiding Pop over for Change/Add Contact
-          $(".SC-shipping-table .table-row .contact-popover Img").popover({
+          $(".SC-shipping-table .table-row .contact-popover Img").popover(
+          {
             trigger: "click",
             placement: "bottom",
           });
-          $(document).on('click', ".SC-shipping-table .table-row .contact-popover Img", function (e) {
+          $(document).on('click', ".SC-shipping-table .table-row .contact-popover Img", function (e)
+          {
             $(".SC-shipping-table .table-row .contact-popover img").not(this).popover('hide');
             $(this).addClass("credit-active");
           });
           //End: Showing - Hiding Pop over for Change/Add Contact
 
           //Start:On focus of Request Ship Date at default Account 
-          $(document).on('click', '#ShipAcc-Defalut-RequestShipDate', function () {
-            $("#ui-datepicker-div").css({
+          $(document).on('click', '#ShipAcc-Defalut-RequestShipDate', function ()
+          {
+            $("#ui-datepicker-div").css(
+            {
               "left": "287.922px",
               "margin-top": "2px"
             });
-            $("#sc-Accreq-shipdate").datepicker({
+            $("#sc-Accreq-shipdate").datepicker(
+            {
               minDate: 0,
               changeMonth: true,
               changeYear: true,
-              onSelect: function (dateText, inst) {
+              onSelect: function (dateText, inst)
+              {
                 var fieldnames = "Due Date";
                 var fieldvalues = "";
                 fieldvalues = dateText;
@@ -1808,11 +1864,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.Log("In Refresh BC Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("In 1673 Refresh BC Call Back");
                 };
@@ -1826,7 +1884,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:On focus of Request Ship Date at default Account
 
-          function getOrderAPTDate() {
+          function getOrderAPTDate()
+          {
             var inpPS = "",
               outPS = "",
               oBS = "";
@@ -1840,13 +1899,16 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
 
           //Start:On focus of Request Ship Date 
-          $(document).on('click', '#Ship-Defalut-RequestShipDate', function () {
-            $("#ui-datepicker-div").css({
+          $(document).on('click', '#Ship-Defalut-RequestShipDate', function ()
+          {
+            $("#ui-datepicker-div").css(
+            {
               "left": "287.922px",
               "margin-top": "2px"
             });
             //added for  iPad
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               var datevalue = moment($(this).val(), "YYYY-MM-DD").format("MM/DD/YYYY HH:mm:ss");
               var fieldnames = "Due Date";
               var fieldvalues = "";
@@ -1872,11 +1934,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In Refresh BC Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In 1759 Refresh BC Call Back");
               };
@@ -1887,7 +1951,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:On focus of Request Ship Date 
           //Start:On focus of Request Ship Date on line items 
-          $(document).on('focus', '.defaultRequestShipDate,.Ship-Details-Calander', function () {
+          $(document).on('focus', '.defaultRequestShipDate,.Ship-Details-Calander', function ()
+          {
             var respectiveId = $(this).attr('id');
             var linedivid = respectiveId;
             linedivid = linedivid.split("Ship");
@@ -1895,11 +1960,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             //line_date_row_id=respectiveId.charAt(0);
             SiebelJS.Log(line_date_row_id);
             line_date_row_id = parseInt(line_date_row_id) - 1;
-            $("#" + respectiveId).datepicker({
+            $("#" + respectiveId).datepicker(
+            {
               minDate: 0,
               changeMonth: true,
               changeYear: true,
-              onSelect: function (dateText, inst) {
+              onSelect: function (dateText, inst)
+              {
                 SiebelJS.Log("Selected");
                 var Bservice = '',
                   inPS = '',
@@ -1931,11 +1998,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.Log("In Refresh BC Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("In 1759 Refresh BC Call Back");
                 };
@@ -1947,7 +2016,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:On focus of Request Ship Date on line items  
           //Start:On focus out of request Ship date in line items
-          $(document).on('focusout', '.defaultRequestShipDate,.Ship-Details-Calander', function () {
+          $(document).on('focusout', '.defaultRequestShipDate,.Ship-Details-Calander', function ()
+          {
             var respectiveId = $(this).attr('id');
             $("#" + respectiveId + " ~ .ui-datepicker").hide();
             var reslineId = respectiveId;
@@ -1956,7 +2026,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             //line_date_row_id=respectiveId.charAt(0);
             SiebelJS.Log(line_date_row_id);
             line_date_row_id = parseInt(line_date_row_id) - 1;
-            if ($("#" + respectiveId).val() == "" || $("#" + respectiveId).val() == '') {
+            if ($("#" + respectiveId).val() == "" || $("#" + respectiveId).val() == '')
+            {
               var Bservice = '',
                 inPS = '',
                 outPS = '';
@@ -1977,11 +2048,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In 1805 Refresh BC Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In 1805 Refresh BC Call Back");
               };
@@ -1991,7 +2064,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:On focus out of request Ship date in line items
           //Start:on scroll hiding the datepicker
-          $("html, body").on("DOMMouseScroll MouseScrollEvent MozMousePixelScroll wheel scroll", function () {
+          $("html, body").on("DOMMouseScroll MouseScrollEvent MozMousePixelScroll wheel scroll", function ()
+          {
             $('#Ship-Default-Calander').datepicker("hide");
             $('.defaultRequestShipDate').datepicker("hide");
             $('.Ship-Details-Calander').datepicker("hide");
@@ -2001,15 +2075,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
 
           // Start:adding search fields onclick of +
-          $(document).on("click", ".ship-icon-img", function (e) {
-            if (searchCount <= csearchfields.length - 1) {
+          $(document).on("click", ".ship-icon-img", function (e)
+          {
+            if (searchCount <= csearchfields.length - 1)
+            {
               e.preventDefault();
               next = parseInt(next);
               var addto = "#ifield" + next;
               var addRemove = "#ifield" + (next);
               next = parseInt(next) + 1;
               var newIn = '<select class="select-box sc-contact-select-box margin-top" autocomplete="off" id="field' + next + '" name="field' + next + '">';
-              for (i = 0; i < csearchfields.length; i++) {
+              for (i = 0; i < csearchfields.length; i++)
+              {
                 newIn += '<option value="' + csearchfields[i] + '">' + csearchfields[i] + '</option>';
               }
               newIn += '</select><input type="text" id="ifield' + next + '" class="search-box con-search-box margin-top text-color" autocomplete="off">';
@@ -2018,15 +2095,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               var removeButton = $(removeBtn);
               $(addto).after(newInput);
               $(addRemove).after(removeButton);
-              for (var j = 0; j < sFields.length; j++) {
+              for (var j = 0; j < sFields.length; j++)
+              {
                 $("#field" + next + " option[value='" + sFields[j] + "']").wrap("<span>");
               }
               var e = document.getElementById("field" + next);
               var seletedvalue = e.options[e.selectedIndex].value;
               $("#field" + next + " option[value='" + seletedvalue + "']").attr('selected', 'selected');
-              $(".sc-contact-select-box").each(function () {
+              $(".sc-contact-select-box").each(function ()
+              {
                 $(this).attr("id"); //this.id
-                if ($(this).attr("id") != "field" + next) {
+                if ($(this).attr("id") != "field" + next)
+                {
                   $("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").wrap("<span>");
                 }
               });
@@ -2039,7 +2119,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
 
           //Start:Removing the search fields onclik of - icon
-          $(document).unbind('.ship-remove-me').on('click', '.ship-remove-me', function (e) {
+          $(document).unbind('.ship-remove-me').on('click', '.ship-remove-me', function (e)
+          {
             e.preventDefault();
             var idString = this.id.toString();
             var fieldNum = idString.substring(6, idString.length);
@@ -2047,9 +2128,12 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             var ifieldID = "#ifield" + fieldNum;
             var e = document.getElementById("field" + fieldNum);
             var seletedvalue = e.options[e.selectedIndex].value;
-            $(".sc-contact-select-box").each(function () {
-              if ($(this).attr("id") != "field" + parseInt(fieldNum)) {
-                if ($("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").parent().is("span")) {
+            $(".sc-contact-select-box").each(function ()
+            {
+              if ($(this).attr("id") != "field" + parseInt(fieldNum))
+              {
+                if ($("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").parent().is("span"))
+                {
                   $("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").unwrap();
                 }
               }
@@ -2062,32 +2146,46 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             searchCount--;
           });
           //End:Removing the search fields onclik of - icon	
-          $(document).on("click", "#sc-ship-con-search", function (event) {
+          $(document).on("click", "#sc-ship-con-search", function (event)
+          {
             sChangeContactClicked = "N";
             searchContact();
           });
           //search contanier
-          $("#ifield0,#ifield1").change(function () {
+          $("#ifield0,#ifield1").change(function ()
+          {
             //"+" icon disabled
-            if (($("#ifield0").val() != "") && ($("#ifield1").val() != "")) {
+            if (($("#ifield0").val() != "") && ($("#ifield1").val() != ""))
+            {
               $(".ship-icon-img").show();
-            } else {
+            }
+            else
+            {
               $(".ship-icon-img").hide();
             }
             //Search button disabled
-            if (($("#ifield0").val() != "") || ($("#ifield1").val() != "")) {
+            if (($("#ifield0").val() != "") || ($("#ifield1").val() != ""))
+            {
               $(".SC-search-button").removeClass('SC-disabled');
-            } else {
+            }
+            else
+            {
               $(".SC-search-button").addClass('SC-disabled');
             }
           });
 
-          $(".SC-search-container").on('change', 'input', function (event) {
-            $(".con-search-box").each(function () {
-              if (event.target.id !== "ifield0" && event.target.id !== "ifield1") {
-                if ($(this).val() !== "") {
+          $(".SC-search-container").on('change', 'input', function (event)
+          {
+            $(".con-search-box").each(function ()
+            {
+              if (event.target.id !== "ifield0" && event.target.id !== "ifield1")
+              {
+                if ($(this).val() !== "")
+                {
                   $(".add-item").show();
-                } else {
+                }
+                else
+                {
                   $(".add-item").hide();
                 }
               }
@@ -2096,63 +2194,87 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
           //This code is adding from SCCOntactListAppletPR
           //Start:on paste of search fields
-          $(document).on('paste', '.con-search-box', function (event) {
-            setTimeout(function () {
+          $(document).on('paste', '.con-search-box', function (event)
+          {
+            setTimeout(function ()
+            {
               $(".con-search-box").trigger("keyup");
             }, 100);
           });
           //End:on paste of search fields
           //Start:search fields and search box code
-          $(document).on('keyup', '.con-search-box', function () {
+          $(document).on('keyup', '.con-search-box', function ()
+          {
             var selectedFieldId = $(this).attr("id").substr(1);
             SiebelJS.Log("selectedFieldId" + selectedFieldId);
             var e = document.getElementById(selectedFieldId);
             var selectedvalue = e.options[e.selectedIndex].value;
-            if (selectedvalue == "Phone Number" || selectedvalue == "Customer Number" || selectedvalue == "Employee Number") {
+            if (selectedvalue == "Phone Number" || selectedvalue == "Customer Number" || selectedvalue == "Employee Number")
+            {
               this.value = this.value.replace(/[^0-9\.]/g, '');
             }
-            if ($(this).attr("id") != "ifield0" && $("#ifield0").val().length != 0 && $("#ifield0").val() != "*" && $(this).val().length != 0 && $(this).val() != "*") {
-              if (searchCount != csearchfields.length) {
+            if ($(this).attr("id") != "ifield0" && $("#ifield0").val().length != 0 && $("#ifield0").val() != "*" && $(this).val().length != 0 && $(this).val() != "*")
+            {
+              if (searchCount != csearchfields.length)
+              {
                 $(".add-item").show();
-              } else {
+              }
+              else
+              {
                 $("#removeicon").show();
               }
-            } else if ($(this).attr("id") == "ifield0" && $("#ifield0").val().length != 0) {
-              $(".con-search-box").each(function () {
-                if ($(this).attr("id") != "ifield0") {
-                  if ($(this).val().length != 0 && $(this).val() != "*") {
+            }
+            else if ($(this).attr("id") == "ifield0" && $("#ifield0").val().length != 0)
+            {
+              $(".con-search-box").each(function ()
+              {
+                if ($(this).attr("id") != "ifield0")
+                {
+                  if ($(this).val().length != 0 && $(this).val() != "*")
+                  {
                     $(".add-item").show();
                   }
                 }
               });
-            } else {
+            }
+            else
+            {
               $(".add-item").hide();
             }
-            $(".con-search-box").each(function () {
-              if ($(this).val().length != 0 && $(this).val() != "*") {
+            $(".con-search-box").each(function ()
+            {
+              if ($(this).val().length != 0 && $(this).val() != "*")
+              {
                 $("#sc-ship-con-search").removeClass('SC-disabled');
                 return false;
-              } else {
+              }
+              else
+              {
                 $("#sc-ship-con-search").addClass('SC-disabled');
               }
             });
           });
           //End:search fields and search box code			
           //Start: dynamic values change for dropdowns
-          $(document).on('click', '.sc-contact-select-box', function () {
+          $(document).on('click', '.sc-contact-select-box', function ()
+          {
             var currentid = this.id;
             var e = document.getElementById(currentid);
             currentValue = e.options[e.selectedIndex].value;
           });
-          $(document).on('change', '.sc-contact-select-box', function () {
+          $(document).on('change', '.sc-contact-select-box', function ()
+          {
             var currentid = this.id;
             var e = document.getElementById(currentid);
             var seletedvalue = e.options[e.selectedIndex].value;
-            $(".sc-contact-select-box").each(function () {
+            $(".sc-contact-select-box").each(function ()
+            {
               $(this).attr("id"); //this.id
-              if ($(this).attr("id") != currentid) {
+              if ($(this).attr("id") != currentid)
+              {
                 $("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").wrap("<span>");
-                if ($("#" + $(this).attr("id") + " option[value='" + currentValue + "']").parent().is("span")) {
+                if ($("#" + $(this).attr("id") + " option[value='" + currentValue + "']").parent().is("span"))
+                {
                   $("#" + $(this).attr("id") + " option[value='" + currentValue + "']").unwrap();
                 }
               }
@@ -2164,168 +2286,58 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End: dynamic values change for dropdown
           //Start: Add New Contact Pop up modal
-          $("#SC-add-new-contact").click(function () {
+          $("#SC-add-new-contact").click(function ()
+          {
             addnewcontact_lineitem = "N";
-            $("#SC-add-contact").modal({
+            $("#SC-add-contact").modal(
+            {
               backdrop: 'static'
             });
           });
           //End: Add New Contact Pop up modal
-
-          //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-          $(document).on('click', '#SC-save-terminal-bypass', function () {
-
-            var terminalSelected = $('#terminal-list-bypass').val();
-            if (terminalSelected == "Select Terminal") {
-              $('p.sc-bg-red').text('Select a terminal to proceed.');
-              $('#terminal-list').css('border-color', 'red');
-
-            } else {
-              var termId = $('#terminal-list-bypass option:selected').attr('term-id');
-              var termName = $('#terminal-list-bypass option:selected').attr('term-name');
-              $('.profile-block #SC-terminal-tile span').text(termName);
-              $('.profile-block #SC-terminal-tile').css('display', '');
-              $("#SC-add-terminal-tile-bypass").modal('hide');
-              $("#SC-storelocation").html("");
-              var OrderResumeFlg = SiebelApp.S_App.GetProfileAttr('ResumeOrder');
-              if (OrderResumeFlg == "Y") {
-                var vinPS = SiebelApp.S_App.NewPropertySet();
-                var voutPS = SiebelApp.S_App.NewPropertySet();
-                var vBservice = SiebelApp.S_App.GetService("SessionAccessService");
-
-                vinPS.SetProperty('Name', 'ResumeOrder');
-                vinPS.SetProperty('Value', 'N');
-
-                if (vBservice) {
-                  voutPS = vBservice.InvokeMethod("SetProfileAttr", vinPS);
-
-                }
-              }
-              var sBservice = SiebelApp.S_App.GetService("SessionAccessService");
-              var sinPS = SiebelApp.S_App.NewPropertySet();
-              var soutPS = SiebelApp.S_App.NewPropertySet();
-              sinPS.SetProperty('Name', 'TerminalSelected');
-              sinPS.SetProperty('Value', termId);
-              if (sBservice) {
-                soutPS = sBservice.InvokeMethod("SetProfileAttr", sinPS);
-              }
-
-              var vBservice = SiebelApp.S_App.GetService("SessionAccessService");
-              var vinPS = SiebelApp.S_App.NewPropertySet();
-              var voutPS = SiebelApp.S_App.NewPropertySet();
-              vinPS.SetProperty('Name', 'TerminalSelectedName');
-              vinPS.SetProperty('Value', termName);
-              if (vBservice) {
-                voutPS = vBservice.InvokeMethod("SetProfileAttr", vinPS);
-              }
-
-              var inPS = SiebelApp.S_App.NewPropertySet();
-              var outPS = SiebelApp.S_App.NewPropertySet();
-              var Bservice = SiebelApp.S_App.GetService("SC Adyen Payment Service");
-              var OrderNum = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Order Number');
-              inPS.SetProperty('Order Number', OrderNum);
-              inPS.SetProperty('Terminal Id', termId);
-              inPS.SetProperty('Terminal Name', termName);
-
-              if (Bservice) {
-                outPS = Bservice.InvokeMethod("UpdateTerminalId", inPS, outPS);
-              }
-
-              var inPS = SiebelApp.S_App.NewPropertySet();
-              var outPS = SiebelApp.S_App.NewPropertySet();
-              var Bservice = SiebelApp.S_App.GetService("FINS Teller UI Navigation");
-
-              inPS.SetProperty('RefreshAll', 'Y');
-
-              if (Bservice) {
-                outPS = Bservice.InvokeMethod("RefreshCurrentApplet", inPS);
-
-              }
-
-              //Start SetInterval to check if terminal is active.
-              if (window.terminalcheck != undefined && window.terminalcheck != "undefined") {
-                clearInterval(window.terminalcheck);
-                clearTimeout(window.time);
-                //SC_OUI_Methods.ResetTerminalProfileAttrib();
-                SiebelJS.Log('Terminal Interval Cleared!!');
-              }
-              //Added function call to track inactivity.
-              SCInactivityTime();
-              window.terminalcheck = setInterval(function () {
-                var inPS = SiebelApp.S_App.NewPropertySet();
-                var outPS = SiebelApp.S_App.NewPropertySet();
-                var Bservice = SiebelApp.S_App.GetService("SC Adyen Payment Service");
-
-                inPS.SetProperty('Order Number', OrderNum);
-
-                if (Bservice) {
-                  outPS = Bservice.InvokeMethod("GetTerminalId", inPS);
-                  var termId = outPS.GetChild(0).GetProperty('TerminalId');
-                  SiebelJS.Log("termId: " + termId);
-                  if (termId == "") {
-                    clearInterval(terminalcheck);
-                    clearTimeout(window.time);
-                    $('.profile-block #SC-terminal-tile').css('display', 'none');
-                    $("#SC-terminal-offline-popup").modal({
-                      backdrop: 'static'
-                    });
-                    $("#SC-terminal-offline-popup").css({
-                      "display": "flex",
-                      "justify-content": "center",
-                      "align-items": "center"
-                    });
-                    $(".modal-backdrop").css('background', '#ffffff');
-
-                    SC_OUI_Methods.ResetTerminalProfileAttrib();
-
-                  }
-                }
-              }, 300000);
-
-              if (localStorage.getItem('PoleDisplayConfBypass') == "Y") {
-                localStorage.setItem('PoleDisplayConfBypass', 'N');
-                localStorage.setItem('BypassTerminalSave', 'Y');
-                customerInfoConformation();
-              }
-
-            }
-
-
-          });
-          //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
           //Start: Search existing Contacts:: Pop-up modal
-          $("#SC-search-contact").click(function () {
+          $("#SC-search-contact").click(function ()
+          {
             contactSearchMarkup();
             searchcontact_lineitem = "N";
-            $("#SC-search-contacts").modal({
+            $("#SC-search-contacts").modal(
+            {
               backdrop: 'static'
             });
           });
           //End: Search existing Contacts:: Pop-up modal
           //Start: Selecting a record in Contact Search Result
-          $(document).on('click', "#SC-table-search-contact tbody tr", function () {
+          $(document).on('click', "#SC-table-search-contact tbody tr", function ()
+          {
             sc_rowid = $(this).attr('id');
             selected_SearchConId = sc_rowid;
             selected_SearchConIndex = selected_SearchConId.replace("SC-Conta-Search-Rcd", "");
             $('#' + sc_rowid).addClass('highlate-row').siblings().removeClass('highlate-row');
-            if (refByFlag == "Y") {
+            if (refByFlag == "Y")
+            {
               $("#SC-select-con-referredby").removeClass('SC-disabled');
-            } else if (scAccountOrder) {
+            }
+            else if (scAccountOrder)
+            {
               $("#SC-select-Accountcontact-shipping").removeClass('SC-disabled');
-            } else {
+            }
+            else
+            {
               $("#SC-select-contact-shipping").removeClass('SC-disabled');
             }
 
           });
           //End: Selecting a record in Contact Search Result
           //Start:Contact Search Functionality
-          $(document).on('click', '#SC-SO-SearchForContact', function () {
+          $(document).on('click', '#SC-SO-SearchForContact', function ()
+          {
             SiebelJS.Log("Clicked on Search");
             searchContact();
           });
           //End: Contact Search Functionality
           //start:onclick on back to ship line items
-          $(document).on("click", "#backtoship", function () {
+          $(document).on("click", "#backtoship", function ()
+          {
             localStorage.setItem("flowfrom", "proceed");
             localStorage.setItem('ProceedToShipping', 'Y');
             $("#Ship-Option-Markup").show();
@@ -2348,12 +2360,6 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $(".quantitybox").removeClass("input-readonly");
             $(".amount-width").removeClass("input-readonly");
             $(".overflow-title").css("cssText", "margin-left:0px !important");
-            $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-            $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button
-            $(".prodcoupon").hide(); //Sukumar 03/25 to hide discount button
-            $(".coupdescdel").hide(); //Sukumar 03/25 to hide discount button
-            $(".scmanualdisdelete").hide(); //Sukumar 03/25 to hide discount button
-            $(".addonsdel").hide();
             if (isOrder360 == "Y")
               backToShip = 'N';
             else
@@ -2366,7 +2372,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           //End:onclick on back to ship line items
 
           //start:onclick on proceed payments
-          $(document).on("click", "#SC-proced-payments", function () {
+          $(document).on("click", "#SC-proced-payments", function ()
+          {
             //SNARRA:Added for IPad
             /*$("#SC-SO-Ipad-popup").modal({
                 backdrop: 'static'
@@ -2385,121 +2392,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             if(localStorage.getItem("InvokepoleDisplay")=='Y' && sP2PEFlag == "Y"){
             	SC_OUI_Methods.OrderTotalP2PEPoleDisplay(orderid);
             }*/
-            //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-            if (sIpadFeatureFlag == "Y") {
-              if (sIpadFeatureFlag == "Y" && localStorage.getItem('PoleDisplayConfBypass') == "Y") {
-                $("#SC-SO-Phone-Order").modal({
-                  backdrop: 'static'
-                });
-                $("#SC-SO-Phone-Order").css({
-                  "display": "flex",
-                  "justify-content": "center",
-                  "align-items": "center"
-                });
-                $(".modal-backdrop").css('background', '#ffffff');
-
-              } else {
-                if (sP2PEFlag == "Y") {
-                  $("#SC-SO-Phone-Order").modal({
-                    backdrop: 'static'
-                  });
-                  $("#SC-SO-Phone-Order").css({
-                    "display": "flex",
-                    "justify-content": "center",
-                    "align-items": "center"
-                  });
-                  $(".modal-backdrop").css('background', '#ffffff');
-                } else {
-                  fNJConfirmFunction();
-                }
-              }
-            } else {
-              //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
-              SiebelApp.S_App.GotoView("SC Order Entry - Payment View Sales OUI", "", "", "");
-            } //LikhithaK:SFSTRY0003472:Added
+            SiebelApp.S_App.GotoView("SC Order Entry - Payment View Sales OUI", "", "", "");
           });
           //End:onclick on proceed payments
-
-          //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-          //start:onclick on yes Phone Order
-          $(document).on("click", "#SC-phoneorder-yes", function () {
-            //Added below line for MKE.
-            localStorage.setItem("isPhoneOrder", "Y");
-            $("#SC-SO-Phone-Order").modal('hide');
-            localStorage.setItem("OverlayRemoval", "Y");
-            setTimeout(function () {
-              var sOrderId = ShipToContactRecordSet[0]["Id"];
-              var fieldnames = 'SC Phone Order Flag';
-              var fieldvalues = 'Y';
-              var Bservice = '',
-                inPS = '',
-                outPS = '';
-              inPS = SiebelApp.S_App.NewPropertySet();
-              outPS = SiebelApp.S_App.NewPropertySet();
-              inPS.SetProperty("BO", "Order Entry (Sales)");
-              inPS.SetProperty("BC", "Order Entry - Orders");
-              inPS.SetProperty("FieldsArray", fieldnames);
-              inPS.SetProperty("ValuesArray", fieldvalues);
-              inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
-              Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
-              outPS = Bservice.InvokeMethod("Insert", inPS);
-              //Start:Added below if case for Terminal popup incase of Phone Order "Y", Pole display "N" and MKE "Y".
-              var sMKESwitch = SiebelApp.S_App.GetProfileAttr("MKESwitchFlag");
-              if (sIpadFeatureFlag == "Y" && localStorage.getItem('PoleDisplayConfBypass') == "Y" && sMKESwitch == "Y") {
-                SC_OUI_Methods.SCnGetDisplayTerminals(); //End:Added above if case for Terminal popup incase of Phone Order "Y", Pole display "N" and MKE "Y".
-              } else
-                //LikhithaK:Start:SFSTRY0003472
-               /* if (sIpadFeatureFlag == "Y" && sMKESwitch != "Y") {
-                  alert("Please proceed with the Credit card payments in the Register.");
-                  fNJConfirmFunction();
-                } else */
-                //LikhithaK:End:SFSTRY0003472
-              {
-                fNJConfirmFunction();
-              }
-            }, 1000)
-          });
-          //End:onclick on yes Phone Order
-
-          //start:onclick on No Phone Order
-          $(document).on("click", "#SC-phoneorder-no", function () {
-            //Added below line for MKE.
-            localStorage.setItem("isPhoneOrder", "N");
-            $("#SC-SO-Phone-Order").modal('hide');
-            localStorage.setItem("OverlayRemoval", "Y");
-            setTimeout(function () {
-              var sOrderId = ShipToContactRecordSet[0]["Id"];
-              var fieldnames = 'SC Phone Order Flag';
-              var fieldvalues = 'N';
-              var Bservice = '',
-                inPS = '',
-                outPS = '';
-              inPS = SiebelApp.S_App.NewPropertySet();
-              outPS = SiebelApp.S_App.NewPropertySet();
-              inPS.SetProperty("BO", "Order Entry (Sales)");
-              inPS.SetProperty("BC", "Order Entry - Orders");
-              inPS.SetProperty("FieldsArray", fieldnames);
-              inPS.SetProperty("ValuesArray", fieldvalues);
-              inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
-              Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
-              outPS = Bservice.InvokeMethod("Insert", inPS);
-              //Added below if case for Terminal popup incase of Phone Order "N", Pole display "N".
-              if (sIpadFeatureFlag == "Y" && localStorage.getItem('PoleDisplayConfBypass') == "Y") {
-                SC_OUI_Methods.SCnGetDisplayTerminals();
-              } else {
-                fNJConfirmFunction();
-              }
-            }, 1000)
-          });
-          //End:onclick on No Phone Order
-
-          //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
-          $(document).on("click", "#SC-SO-IPad-ok", function () {
+          $(document).on("click", "#SC-SO-IPad-ok", function ()
+          {
             $("#SC-SO-Ipad-popup").modal('hide');
           });
           //Start:On click of Reprice All Button
-          $(document).on("click", "#SC-RepriceAll-shipping", function () {
-            if (scAccountOrder) {
+          $(document).on("click", "#SC-RepriceAll-shipping", function ()
+          {
+            if (scAccountOrder)
+            {
               this.blur();
               if (document.getElementById("SC-ship-item").style.display == "block" || document.getElementById("SC-ship-item").style.display == "")
                 $("#shippingserrno").trigger("click")
@@ -2513,14 +2417,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               if (!$("#SC-error-block").is(":visible"))
                 $('#CommunicationPanelContainer').css("padding-top", "77px");
               var scnullshipMethod = "N";
-              $('.Ship-ShippingMethod-lineitem').each(function () {
-                if ($(this).val() == "") {
+              $('.Ship-ShippingMethod-lineitem').each(function ()
+              {
+                if ($(this).val() == "")
+                {
                   scnullshipMethod = "Y";
                 }
               });
-              if (scnullshipMethod == "N") {
+              if (scnullshipMethod == "N")
+              {
                 $("#custommaskoverlay").show();
-                setTimeout(function () {
+                setTimeout(function ()
+                {
                   SiebelJS.Log("Frieghtcharges");
                   var inPropSet = CCFMiscUtil_CreatePropSet();
                   //Define the inPropSet property set with the information that InvokeMethod sends as input to the method that it calls.
@@ -2530,11 +2438,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   ai.scope = this;
                   ai.mask = true;
                   ai.opdecode = true;
-                  ai.errcb = function () {
+                  ai.errcb = function ()
+                  {
                     //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                     SiebelJS.Log("Calculate Ship Error");
                   };
-                  ai.cb = function () {
+                  ai.cb = function ()
+                  {
                     //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                     SiebelJS.Log("Calculate Ship Call Back");
                   };
@@ -2542,13 +2452,17 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   OrderItemDetails = SC_Order_PMinstance.GetRecordSet();
                   SiebelJS.Log("SC_orderStatus" + SC_orderStatus);
                   SiebelJS.Log(OrderItemDetails[0]["Status"]);
-                  if (OrderItemDetails[0]["Status"] == SC_orderStatus) {
+                  if (OrderItemDetails[0]["Status"] == SC_orderStatus)
+                  {
                     var ignoreError = verfiyErrorCodes();
-                    if (ignoreError == 0) {
+                    if (ignoreError == 0)
+                    {
                       if (!$("#SC-error-block").is(":visible"))
                         $('#CommunicationPanelContainer').css("padding-top", "77px");
                       $("#custommaskoverlay").hide();
-                    } else {
+                    }
+                    else
+                    {
                       setValidationErrors();
                       var inPS = SiebelApp.S_App.NewPropertySet();
                       var outPS = SiebelApp.S_App.NewPropertySet();
@@ -2561,7 +2475,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       $("#custommaskoverlay").hide();
                       $('#CommunicationPanelContainer').css("padding-top", "77px");
                     }
-                  } else {
+                  }
+                  else
+                  {
                     var inPS = SiebelApp.S_App.NewPropertySet();
                     var outPS = SiebelApp.S_App.NewPropertySet();
                     var Bservice = "";
@@ -2573,19 +2489,26 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     $("#custommaskoverlay").hide();
                   }
                 }, 50);
-              } else {
-                $("#SC-Shipmethod-popup").modal({
+              }
+              else
+              {
+                $("#SC-Shipmethod-popup").modal(
+                {
                   backdrop: 'static'
                 });
-                $("#SC-Shipmethod-popup").css({
+                $("#SC-Shipmethod-popup").css(
+                {
                   "display": "flex",
                   "justify-content": "center",
                   "align-items": "center"
                 });
               }
-            } else {
+            }
+            else
+            {
               $("#custommaskoverlay").show();
-              setTimeout(function () {
+              setTimeout(function ()
+              {
                 //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].InvokeMethod("CalculatePriceAll");
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "CalculatePriceAll", null, false);
                 var inPS = SiebelApp.S_App.NewPropertySet();
@@ -2603,17 +2526,21 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:On click of Reprice All Button
           //Start:On Click of Referred Insider Button
-          $(document).on("click", "#SC-Add-Referral", function () {
+          $(document).on("click", "#SC-Add-Referral", function ()
+          {
             referralcontactSearchMarkup();
-            $("#SC-Referral-search-contacts").modal({
+            $("#SC-Referral-search-contacts").modal(
+            {
               backdrop: 'static'
             });
             refBy = "searchbutton";
           });
           //End:On Click of Referred Insider Button
           //Start:On Click of Referral Requested Yes Button
-          $(document).on("click", "#SC-SO-RR-popup .SC-SO-RR-buttons #referral-yes-button", function () {
-            $("#SC-SO-RR-popup").css({
+          $(document).on("click", "#SC-SO-RR-popup .SC-SO-RR-buttons #referral-yes-button", function ()
+          {
+            $("#SC-SO-RR-popup").css(
+            {
               "display": "",
               "justify-content": "",
               "align-items": ""
@@ -2621,15 +2548,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $("#SC-SO-RR-popup").modal('hide');
             $("#custommaskoverlay").hide();
             referralcontactSearchMarkup();
-            $("#SC-Referral-search-contacts").modal({
+            $("#SC-Referral-search-contacts").modal(
+            {
               backdrop: 'static'
             });
             //refBy = "searchbutton";
           });
           //End:On Click of Referral Requested Yes Button
           //Start:On Click of Referral Requested No Button
-          $(document).on("click", "#SC-SO-RR-popup .SC-SO-RR-buttons #referral-no-button", function () {
-            $("#SC-SO-RR-popup").css({
+          $(document).on("click", "#SC-SO-RR-popup .SC-SO-RR-buttons #referral-no-button", function ()
+          {
+            $("#SC-SO-RR-popup").css(
+            {
               "display": "",
               "justify-content": "",
               "align-items": ""
@@ -2638,15 +2568,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $("#custommaskoverlay").hide();
           });
           //End:On Click of Referral Requested No Button
-          $(document).on("click", "#SC-search-icon-referreby", function () {
+          $(document).on("click", "#SC-search-icon-referreby", function ()
+          {
             referralcontactSearchMarkup();
-            $("#SC-Referral-search-contacts").modal({
+            $("#SC-Referral-search-contacts").modal(
+            {
               backdrop: 'static'
             });
             refBy = "searchicon";
           });
           //Start: on click of Calculate Frieght Chagres button
-          $("#SC-ship-validate-order").click(function () {
+          $("#SC-ship-validate-order").click(function ()
+          {
             this.blur();
             if (document.getElementById("SC-ship-item").style.display == "block" || document.getElementById("SC-ship-item").style.display == "")
               $("#shippingserrno").trigger("click")
@@ -2661,40 +2594,53 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               $('#CommunicationPanelContainer').css("padding-top", "77px");
             SiebelJS.Log("SCVerifyErr" + SCVerifyErr);
             var scnullshipMethod = "N";
-            $('.Ship-ShippingMethod-lineitem').each(function () {
-              if ($(this).val() == "") {
+            $('.Ship-ShippingMethod-lineitem').each(function ()
+            {
+              if ($(this).val() == "")
+              {
                 scnullshipMethod = "Y";
               }
             });
-            if (scnullshipMethod == "N") {
+            if (scnullshipMethod == "N")
+            {
               //DeliveryTypePopup()
               var verUL = 2;
               if (!validateDeliveryTiers()) //30Oct24;SL;Added for tier delivery
               {
                 //show popup
-                $("#SC-deliverytier-popup").modal({
+                $("#SC-deliverytier-popup").modal(
+                {
                   backdrop: 'static'
                 });
-                $("#SC-deliverytier-popup").css({
+                $("#SC-deliverytier-popup").css(
+                {
                   "display": "flex",
                   "justify-content": "center",
                   "align-items": "center"
                 });
-              } else {
-                if (parseInt(ShipToContactRecordSet[0]["Revision"]) == 1) {
+              }
+              else
+              {
+                if (parseInt(ShipToContactRecordSet[0]["Revision"]) == 1)
+                {
                   verUL = SC_OUI_Methods.verifyUserLocation(disaflag, POSRegArray);
                 }
-                if (verUL == 2) {
+                if (verUL == 2)
+                {
                   //DeliveryTypePopup();
                   updateShipping("Upd_NonShip_Lines", false, ""); //update the delivery tier on the non-shippable lines
                   SCCalcualteFrieghtandTax();
                 }
               }
-            } else {
-              $("#SC-Shipmethod-popup").modal({
+            }
+            else
+            {
+              $("#SC-Shipmethod-popup").modal(
+              {
                 backdrop: 'static'
               });
-              $("#SC-Shipmethod-popup").css({
+              $("#SC-Shipmethod-popup").css(
+              {
                 "display": "flex",
                 "justify-content": "center",
                 "align-items": "center"
@@ -2705,15 +2651,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           //End: on click of Calculate Frieght Chagres button
           next = 1;
           //Start:referredBy logic for new Contact
-          $(document).on('click', '.reff-icon-img', function (e) {
-            if (refsearchCount <= refsearchfields.length - 1) {
+          $(document).on('click', '.reff-icon-img', function (e)
+          {
+            if (refsearchCount <= refsearchfields.length - 1)
+            {
               e.preventDefault();
               next = parseInt(next);
               var addto = "#rcfield" + next;
               var addRemove = "#rcfield" + (next);
               next = parseInt(next) + 1;
               var newIn = '<select class="select-box margin-top sc-ref-select-box" id="cfield' + next + '" name="field' + next + '">';
-              for (i = 0; i < refsearchfields.length; i++) {
+              for (i = 0; i < refsearchfields.length; i++)
+              {
                 newIn += '<option value="' + refsearchfields[i] + '">' + refsearchfields[i] + '</option>';
               }
 
@@ -2725,7 +2674,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               $(addto).after(newInput);
               $(addRemove).after(removeButton);
 
-              for (var j = 0; j < sFields.length; j++) {
+              for (var j = 0; j < sFields.length; j++)
+              {
                 $("#cfield" + next + " option[value='" + sFields[j] + "']").wrap("<span>");
               }
 
@@ -2733,9 +2683,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               var seletedvalue = e.options[e.selectedIndex].value;
               $("#cfield" + next + " option[value='" + seletedvalue + "']").attr('selected', 'selected');
 
-              $(".sc-ref-select-box").each(function () {
+              $(".sc-ref-select-box").each(function ()
+              {
                 $(this).attr("id"); //this.id
-                if ($(this).attr("id") != "cfield" + next) {
+                if ($(this).attr("id") != "cfield" + next)
+                {
                   $("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").wrap("<span>");
                 }
               });
@@ -2751,7 +2703,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
 
           // Removing the search fields onclik of - icon
-          $(document).on('click', '.reff-remove-me', function (e) {
+          $(document).on('click', '.reff-remove-me', function (e)
+          {
             e.preventDefault();
             var idString = this.id.toString();
 
@@ -2761,9 +2714,12 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
             var e = document.getElementById("cfield" + fieldNum);
             var seletedvalue = e.options[e.selectedIndex].value;
-            $(".sc-ref-select-box").each(function () {
-              if ($(this).attr("id") != "cfield" + parseInt(fieldNum)) {
-                if ($("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").parent().is("span")) {
+            $(".sc-ref-select-box").each(function ()
+            {
+              if ($(this).attr("id") != "cfield" + parseInt(fieldNum))
+              {
+                if ($("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").parent().is("span"))
+                {
                   $("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").unwrap();
                 }
               }
@@ -2780,22 +2736,27 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
 
 
-          $(document).on('click', '#sc-referredby-con-search', function (e) {
+          $(document).on('click', '#sc-referredby-con-search', function (e)
+          {
             e.stopImmediatePropagation();
             refSearchContact();
           });
 
           // on click of the enter in referred contact search
-          $(document).on('keyup', '.sc-referral-search-box', function () {
-            if (event.keyCode === 13) {
-              if (!$("#sc-referredby-con-search").hasClass("SC-disabled")) {
+          $(document).on('keyup', '.sc-referral-search-box', function ()
+          {
+            if (event.keyCode === 13)
+            {
+              if (!$("#sc-referredby-con-search").hasClass("SC-disabled"))
+              {
                 refSearchContact();
               }
             }
           });
 
           // search fields and search box code
-          $(document).on('keyup', '.sc-referral-search-box', function () {
+          $(document).on('keyup', '.sc-referral-search-box', function ()
+          {
             selectedFieldId = $(this).attr("id").substring(2, $(this).attr("id").length);
             var e = document.getElementById("c" + selectedFieldId);
             var selectedvalue = e.options[e.selectedIndex].value;
@@ -2806,29 +2767,44 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             	this.value = this.value.replace(/[^0-9\.]/g,'');
             }
             */
-            if ($(this).attr("id") != "rcfield0" && $("#rcfield0").val().length != 0 && $("#rcfield0").val() != "*" && $(this).val().length != 0 && $(this).val() != "*") {
-              if (refsearchCount != refsearchfields.length) {
+            if ($(this).attr("id") != "rcfield0" && $("#rcfield0").val().length != 0 && $("#rcfield0").val() != "*" && $(this).val().length != 0 && $(this).val() != "*")
+            {
+              if (refsearchCount != refsearchfields.length)
+              {
                 $(".reff-icon-img").show();
-              } else {
+              }
+              else
+              {
                 $("#referredremoveicon").show();
               }
-            } else if ($(this).attr("id") == "rcfield0" && $("#rcfield0").val().length != 0) {
-              $(".sc-referral-search-box").each(function () {
-                if ($(this).attr("id") != "rcfield0") {
-                  if ($(this).val().length != 0 && $(this).val() != "*") {
+            }
+            else if ($(this).attr("id") == "rcfield0" && $("#rcfield0").val().length != 0)
+            {
+              $(".sc-referral-search-box").each(function ()
+              {
+                if ($(this).attr("id") != "rcfield0")
+                {
+                  if ($(this).val().length != 0 && $(this).val() != "*")
+                  {
                     $(".reff-icon-img").show();
                   }
                 }
               });
-            } else {
+            }
+            else
+            {
               $(".reff-icon-img").hide();
             }
 
-            $(".sc-referral-search-box").each(function () {
-              if ($(this).val().length != 0 && $(this).val() != "*") {
+            $(".sc-referral-search-box").each(function ()
+            {
+              if ($(this).val().length != 0 && $(this).val() != "*")
+              {
                 $("#sc-referredby-con-search").removeClass('SC-disabled');
                 return false;
-              } else {
+              }
+              else
+              {
                 $("#sc-referredby-con-search").addClass('SC-disabled');
               }
             });
@@ -2836,22 +2812,27 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
 
           // dynamic values change for dropdowns
-          $(document).on('click', '.sc-ref-select-box', function () {
+          $(document).on('click', '.sc-ref-select-box', function ()
+          {
             var currentid = this.id;
             var e = document.getElementById(currentid);
             currentValue = e.options[e.selectedIndex].value;
 
           });
-          $(document).on('change', '.sc-ref-select-box', function () {
+          $(document).on('change', '.sc-ref-select-box', function ()
+          {
             var currentid = this.id;
             var e = document.getElementById(currentid);
             var seletedvalue = e.options[e.selectedIndex].value;
 
-            $(".sc-ref-select-box").each(function () {
+            $(".sc-ref-select-box").each(function ()
+            {
               $(this).attr("id"); //this.id
-              if ($(this).attr("id") != currentid) {
+              if ($(this).attr("id") != currentid)
+              {
                 $("#" + $(this).attr("id") + " option[value='" + seletedvalue + "']").wrap("<span>");
-                if ($("#" + $(this).attr("id") + " option[value='" + currentValue + "']").parent().is("span")) {
+                if ($("#" + $(this).attr("id") + " option[value='" + currentValue + "']").parent().is("span"))
+                {
                   $("#" + $(this).attr("id") + " option[value='" + currentValue + "']").unwrap();
                 }
               }
@@ -2862,7 +2843,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             sFields.splice(sIndex, 1);
           });
 
-          $(document).on('click', '#SC-table-referral-search-contact tr', function () {
+          $(document).on('click', '#SC-table-referral-search-contact tr', function ()
+          {
             sc_reffid = $(this).attr('id');
             selected_RefConId = sc_reffid;
             selected_RefConIndex = selected_RefConId.replace("ref_row", "");
@@ -2870,7 +2852,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $("#SC-select-con-referredby").removeClass('SC-disabled');
           });
 
-          $(document).on('click', '#SC-select-con-referredby', function () {
+          $(document).on('click', '#SC-select-con-referredby', function ()
+          {
             $("#SC-select-con-referredby").addClass('SC-disabled');
             $("#SC-Referral-search-contacts").modal('hide');
             var rowid = sc_reffid.slice(-1);
@@ -2886,7 +2869,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 			  document.getElementById("referreby").value= RefbyName;
 			}*/
             $("#custommaskoverlay").show();
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               SiebelApp.S_App.SetProfileAttr("RefferalInsider", RefbyName);
               // SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Referred By",RefbyName);
               var Bservice = '',
@@ -2906,26 +2890,32 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:referredBy logic for new Contact
 
-          $(document).on("click", "#sc-print", function (e) {
+          $(document).on("click", "#sc-print", function (e)
+          {
             e.preventDefault();
             printQuote();
           });
 
-          function SCCalcualteFrieghtandTax() {
+          function SCCalcualteFrieghtandTax()
+          {
             $("#SC-Delivery-Type").modal('hide');
-            $("#SC-SO-CF-verify").modal({
+            $("#SC-SO-CF-verify").modal(
+            {
               backdrop: 'static'
             });
-            $("#SC-SO-CF-verify").css({
+            $("#SC-SO-CF-verify").css(
+            {
               "display": "flex",
               "justify-content": "center",
               "align-items": "center"
             });
             $(".modal-backdrop").css('background', '#ffffff');
             $("#custommaskoverlay").show();
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               //SBOORlA:Added code for defect 765
-              if (scAccountOrder) {
+              if (scAccountOrder)
+              {
                 SCVerify = 'Y';
                 //SCfrieght = "N";
                 SCfrieghtValidation = "N";
@@ -2939,30 +2929,31 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.Log("In validate Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("In Validate Call Back");
                 };
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", inPropSet, ai);
                 //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", null, false);
-              } else {
+              }
+              else
+              {
                 SCVerify = 'N';
                 //SCfrieght = "N";
                 SCfrieghtValidation = "N";
                 SCfrieghtCalculation = "N";
-                if (sIpadFeatureFlag == "Y") { //LikhithaK:Added if case:SFSTRY0003472:Terminal UI Changes
-                  scRefresh = "N";
-                } else {
-                  scRefresh = "Y";
-                }
+                scRefresh = "Y";
                 SiebelJS.Log("Invoking");
                 var CustomerCategory = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Customer Category");
 
-                if ((!$("#SC-search-icon-referreby").hasClass("refeditable")) || (CustomerCategory == "Insider")) {
+                if ((!$("#SC-search-icon-referreby").hasClass("refeditable")) || (CustomerCategory == "Insider"))
+                {
                   $("#referreby").val("");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Referred By", "");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "WriteRecord", null, false);
@@ -2975,20 +2966,21 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   SiebelJS.Log("In Refresh BC Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   SiebelJS.Log("In Refresh BC Call Back");
                 };
                 var canInvokeVerify = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "QuotesAndOrdersValidate");
-                if (canInvokeVerify) {
+                if (canInvokeVerify)
+                {
                   DeliveryTypePopup();
-                } else {
-                  if (sIpadFeatureFlag == "Y") //LikhithaK:Added if case:SFSTRY0003472:Terminal UI Changes
-                  {
-                    scRefresh = "Y";
-                  }
+                }
+                else
+                {
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", inPropSet, ai);
                 }
                 //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
@@ -2998,7 +2990,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           }
 
 
-          function printQuote() {
+          function printQuote()
+          {
             $("body").trigger('Custom.Start');
             //e.preventDefault();
             VQuoteValidUntillDate = $("#SC_QuoteValidDt").val();
@@ -3028,9 +3021,11 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             //outPS = Bservice.InvokeMethod("Insert", inPS);
             var orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
             var orderSubType = orderBC.GetFieldValue("SC Sub-Type");
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               // VALLA : 10ARP2018 : #712 Coded for Whole Sale and Commercial
-              if (orderSubType == "Wholesale" || orderSubType == "Commercial") {
+              if (orderSubType == "Wholesale" || orderSubType == "Commercial")
+              {
                 var inPropSet = CCFMiscUtil_CreatePropSet();
                 var ai = {};
                 ai.async = true;
@@ -3038,19 +3033,23 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.log("New order invokation got timed out")
                   $('#custommaskoverlay').hide();
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("in bind datareports button click");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].InvokeMethod("RefreshAppletUI");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().ExecuteMethod("OnDrillDown", 'Report Name', 1);
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     $(".ui-dialog-buttonset button:nth-child(2)").trigger('click');
-                    setTimeout(function () {
+                    setTimeout(function ()
+                    {
                       $(".ui-dialog-buttonset button:nth-child(3)").trigger('click');
                     }, 2000);
                   }, 2000);
@@ -3058,7 +3057,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 };
                 SC_OrderHeader_PMinstance.ExecuteMethod("InvokeMethod", "SCWCCreateQuote", inPropSet, ai);
                 //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("SCWCCreateQuote");
-              } else {
+              }
+              else
+              {
                 var inPropSet = CCFMiscUtil_CreatePropSet();
                 var ai = {};
                 ai.async = true;
@@ -3066,20 +3067,24 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.log("New order invokation got timed out")
                   $('#custommaskoverlay').hide();
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   SiebelJS.Log("in bind datareports button click");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].InvokeMethod("RefreshAppletUI");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().ExecuteMethod("OnDrillDown", 'Report Name', 1);
 
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     $("#SC-salesorderquote").modal("hide");
                     $(".ui-dialog-buttonset button:nth-child(2)").trigger('click');
-                    setTimeout(function () {
+                    setTimeout(function ()
+                    {
                       $(".ui-dialog-buttonset button:nth-child(3)").trigger('click');
                     }, 2000);
                   }, 2000);
@@ -3091,7 +3096,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             }, 1000);
           }
 
-          $(document).on("click", "#createsalesquote", function () {
+          $(document).on("click", "#createsalesquote", function ()
+          {
             var sStoreNum = '',
               sDivSubType = '',
               bIsStorePresent = '',
@@ -3131,24 +3137,30 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             var child = OutPS.GetChild(0);
             sDivSubTyp = child.GetProperty("ISRecordFlag");
 
-            if (bIsStorePresent == "Y" || sDivSubTyp == "Y") {
+            if (bIsStorePresent == "Y" || sDivSubTyp == "Y")
+            {
               $("#SC-Sendemail").removeClass("SC-disabled");
-              $("#SC-salesorderquote").modal({
+              $("#SC-salesorderquote").modal(
+              {
                 backdrop: 'static'
               });
-            } else {
+            }
+            else
+            {
               printQuote();
             }
           });
 
-          $(document).on("click", "#SC-salesOrderquote-close", function () {
+          $(document).on("click", "#SC-salesOrderquote-close", function ()
+          {
             // 23032020 - For SalesQuote PopUp
             VQuoteValidUntillDate = "";
             $("#SC_QuoteValidDt").val("");
             $("#SC-salesorderquote").modal("hide");
           });
 
-          function emailQuote() {
+          function emailQuote()
+          {
             var emailInPS = '',
               emailOutPS = '',
               sOrderId = '',
@@ -3162,10 +3174,12 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             emailInPS.SetProperty("Object Id", sOrderId);
             emailInPS.SetProperty("ReportType", "Sales Order Quote");
             // 24032020 - For SalesQuote PopUp
-            if (VQuoteValidUntillDate != "" && VQuoteValidUntillDate != undefined) {
+            if (VQuoteValidUntillDate != "" && VQuoteValidUntillDate != undefined)
+            {
               emailInPS.SetProperty("ValidUntilDate", VQuoteValidUntillDate);
             }
-            if (VPersonalizedMsg != "" && VPersonalizedMsg != undefined) {
+            if (VPersonalizedMsg != "" && VPersonalizedMsg != undefined)
+            {
               emailInPS.SetProperty("Comment", VPersonalizedMsg);
             }
             var ai = {};
@@ -3174,11 +3188,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             ai.scope = this;
             ai.mask = true;
             ai.opdecode = true;
-            ai.errcb = function () {
+            ai.errcb = function ()
+            {
               SiebelJS.log("New order invokation got timed out")
               $('#custommaskoverlay').hide();
             };
-            ai.cb = function () {
+            ai.cb = function ()
+            {
               $("#SC-salesorderquote").modal("hide");
               $("#SC-send-message-popup").modal("hide");
             }
@@ -3188,7 +3204,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $("#SC-send-message-popup").modal("hide");
           }
 
-          $(document).on("click", "#SC-Sendemail", function (e) {
+          $(document).on("click", "#SC-Sendemail", function (e)
+          {
             e.preventDefault();
             // 23032020 - For SalesQuote PopUp
             VPersonalizedMsg = $("#SC_personlizedtxt").val();
@@ -3201,21 +3218,30 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             var reg = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 
-            if (VquoteEmailaddr == null || VquoteEmailaddr == "") {
+            if (VquoteEmailaddr == null || VquoteEmailaddr == "")
+            {
               $(".email-id-contact").css('display', 'none');
               $(".emial-id-validate").css('display', 'none');
               $(".email-error").css('display', 'inline-block');
               $(".emial-id-valid").css('display', 'block');
               //$("#SC-qemailaddr").select();
-            } else if (!(reg.test(VquoteEmailaddr))) {
+            }
+
+            else if (!(reg.test(VquoteEmailaddr)))
+            {
               $(".email-id-contact").css('display', 'none');
               $(".emial-id-valid").css('display', 'none');
               $(".email-error").css('display', 'inline-block');
               $(".emial-id-validate").css('display', 'block');
-            } else {
+            }
+
+            else
+            {
               $("#custommaskoverlay").show();
-              setTimeout(function () {
-                if (Vqemailchngflg == "Y") {
+              setTimeout(function ()
+              {
+                if (Vqemailchngflg == "Y")
+                {
                   emailaddrupdate(contactId, VquoteEmailaddr);
                 }
                 Vqemailchngflg == "N"
@@ -3229,7 +3255,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             }
           });
 
-          $(document).on("click", "#SC-sales-sendemailquote-close", function () {
+          $(document).on("click", "#SC-sales-sendemailquote-close", function ()
+          {
             VPersonalizedMsg = "";
             $("#SC_personlizedtxt").val("");
             Vqemailchngflg = "N";
@@ -3240,7 +3267,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $(".emial-id-validate").css('display', 'none');
           });
 
-          $(document).on("click", "#sc-Cancelsend-button", function () {
+          $(document).on("click", "#sc-Cancelsend-button", function ()
+          {
             // 23032020 - For SalesQuote PopUp
             VPersonalizedMsg = "";
             $("#SC_personlizedtxt").val("");
@@ -3252,17 +3280,20 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $(".emial-id-validate").css('display', 'none');
           });
 
-          $(document).on("click", "#sc-email", function () {
+          $(document).on("click", "#sc-email", function ()
+          {
             // 23032020 - For SalesQuote PopUp
             VQuoteValidUntillDate = $("#SC_QuoteValidDt").val();
             var contactAddr = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Primary Bill To Email Address");
             $("#SC-qemailaddr").val(contactAddr);
             $("#SC-salesorderquote").modal("hide");
-            $("#SC-send-message-popup").modal({
+            $("#SC-send-message-popup").modal(
+            {
               backdrop: 'static'
             });
           });
-          $(document).on("click", "#SC-qeditemailadress", function (e) {
+          $(document).on("click", "#SC-qeditemailadress", function (e)
+          {
             Vqemailchngflg = "Y";
             $("#SC-qemailaddr").select();
             $(".emial-id-valid").css('display', 'none');
@@ -3271,7 +3302,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $(".email-id-contact").css('display', 'block');
           });
 
-          $(document).on("click", "#SC-qemailaddr", function (e) {
+          $(document).on("click", "#SC-qemailaddr", function (e)
+          {
             Vqemailchngflg = "Y";
             $(".emial-id-valid").css('display', 'none');
             $(".emial-id-validate").css('display', 'none');
@@ -3279,16 +3311,19 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $(".email-id-contact").css('display', 'block');
           });
 
-          $(document).on("keyup", "#SC_personlizedtxt", function (event) {
+          $(document).on("keyup", "#SC_personlizedtxt", function (event)
+          {
             $("#SC_personlizedtxtCnt").text($(this).val().length + "/500");
           });
 
 
-          $(document).on("change", "#SC-qemailaddr", function (event) {
+          $(document).on("change", "#SC-qemailaddr", function (event)
+          {
             Vqemailchngflg = "Y";
           });
 
-          function emailaddrupdate(contactId, VquoteEmailaddr) {
+          function emailaddrupdate(contactId, VquoteEmailaddr)
+          {
             var fieldnames = "Email Address";
             var fieldvalues = VquoteEmailaddr;
             var Bservice = '',
@@ -3307,21 +3342,24 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             //$("#SC-salesorderquote").modal("hide");
           }
 
-          $(document).on("click", "#sc-both", function (e) {
+          $(document).on("click", "#sc-both", function (e)
+          {
             e.preventDefault();
             // 23032020 - For SalesQuote PopUp
             printQuote();
             VQuoteValidUntillDate = $("#SC_QuoteValidDt").val();
             $("#SC-salesorderquote").modal("hide");
 
-            $("#SC-send-message-popup").modal({
+            $("#SC-send-message-popup").modal(
+            {
               backdrop: 'static'
             });
 
           });
 
           //Start:on focus out of phone number in lineitems 
-          $(document).on("focusout", ".Ship-ShipToContactPhNum-lineitem", function () {
+          $(document).on("focusout", ".Ship-ShipToContactPhNum-lineitem", function ()
+          {
             SiebelJS.Log($(this).val());
             var lineid = $(this).attr('id');
             var resLineID = lineid;
@@ -3329,13 +3367,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             var phn_line_row_id = resLineID[0];
             //var phn_line_row_id=lineid.charAt(0);
             var mblNumb_def = $(this).val();
-            if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10) {
+            if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10)
+            {
               var USFormt_mblNum = '';
               USFormt_mblNum = "(" + mblNumb_def.substring(0, mblNumb_def.length - 7) + ") " + mblNumb_def.substring(3, mblNumb_def.length - 4) + "-" + mblNumb_def.substring(6, mblNumb_def.length);
               mblNumb_def = USFormt_mblNum;
             }
             SiebelJS.Log(mblNumb_def);
-            if (mblNumb_def.length == 14 || mblNumb_def.length == 0) {
+            if (mblNumb_def.length == 14 || mblNumb_def.length == 0)
+            {
               //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetSelection(phn_line_row_id);
               $("#s_" + appletSeq + "_l tr#" + phn_line_row_id + "").trigger("click");
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("SC Preferred Contact", mblNumb_def);
@@ -3345,7 +3385,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //End:on focus out of phone number in lineitems 
           //Start:on change of ship method 
-          $(document).on("change", ".Ship-ShippingMethod", function () {
+          $(document).on("change", ".Ship-ShippingMethod", function ()
+          {
             var strPrevShipMethod;
             var lineid = $(this).attr('id');
             var reshipMethodId = lineid;
@@ -3358,8 +3399,10 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             strPrevShipMethod = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().GetFieldValue("Ship Method");
             SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetFieldValue("Ship Method", $(this).val());
             SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].InvokeMethod("WriteRecord");
-            if ($(this).val() == "Recd At Store") {
-              if ($("#" + ship_line_row_id + "defaultRequestShipDate").val() != "" || $("#" + ship_line_row_id + "defaultRequestShipDate").val() != '') {
+            if ($(this).val() == "Recd At Store")
+            {
+              if ($("#" + ship_line_row_id + "defaultRequestShipDate").val() != "" || $("#" + ship_line_row_id + "defaultRequestShipDate").val() != '')
+              {
                 var Bservice = '',
                   inPS = '',
                   outPS = '';
@@ -3379,13 +3422,16 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               $("#" + ship_line_row_id + "defaultRequestShipDate").addClass("SC-readonly");
               $("#" + ship_line_row_id + "defaultRequestShipDate").removeClass("defaultRequestShipDate");
 
-            } else if ($("#" + ship_line_row_id + "defaultRequestShipDate").hasClass("SC-readonly")) {
+            }
+            else if ($("#" + ship_line_row_id + "defaultRequestShipDate").hasClass("SC-readonly"))
+            {
               $("#" + ship_line_row_id + "defaultRequestShipDate").val('');
               $("#" + ship_line_row_id + "defaultRequestShipDate").removeClass("SC-readonly");
               $("#" + ship_line_row_id + "defaultRequestShipDate").addClass("defaultRequestShipDate");
 
             }
-            if ($(this).val() != "Recd At Store") {
+            if ($(this).val() != "Recd At Store")
+            {
               var Bservice = '',
                 inPS = '',
                 outPS = '';
@@ -3412,7 +3458,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     this.parentElement.nextElementSibling.innerHTML = ""; //remove delivery tier dropdown
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetFieldValue("Shipping", "");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].InvokeMethod("WriteRecord");
-                } else {
+                }
+                else
+                {
                   this.parentElement.nextElementSibling.innerHTML = "<select class='shipping-dropdown' id='" + (ship_line_row_id) + "Delivery-Tier'></select>"; //enable delivery tier dropdown on current line
                 }
                 getDeliveryTierOptions(orderid); //evaluate delivery tiers
@@ -3423,15 +3471,19 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
           //Start:on change of ship method
           //Start:change phone format
-          $(document).on("keypress", "#Ship-Default-PhNumber,#scship-Acc-phone-number", function () {
+          $(document).on("keypress", "#Ship-Default-PhNumber,#scship-Acc-phone-number", function ()
+          {
             var inpId = this.id;
             if (inpId == "Ship-Default-PhNumber")
               var phonenumber = $("#Ship-Default-PhNumber").val();
             else
               var phonenumber = $("#scship-Acc-phone-number").val();
-            if (phonenumber.length === 3) {
+            if (phonenumber.length === 3)
+            {
               phonenumber = "(" + phonenumber + ") ";
-            } else if (phonenumber.length === 9) {
+            }
+            else if (phonenumber.length === 9)
+            {
               phonenumber = phonenumber + "-";
             }
             $(this).val(phonenumber);
@@ -3439,13 +3491,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
           var mblNumb_def = "";
           var inpId = "";
-          $(document).on("focusout", "#Ship-Default-PhNumber,#scship-Acc-phone-number", function () {
+          $(document).on("focusout", "#Ship-Default-PhNumber,#scship-Acc-phone-number", function ()
+          {
             mblNumb_def = $(this).val();
             inpId = this.id;
             //Start: For Phone Validation
             jQuery.validator.addMethod(
               "regex",
-              function (value, element, regexp) {
+              function (value, element, regexp)
+              {
                 if (regexp.constructor != RegExp)
                   regexp = new RegExp(regexp);
                 else if (regexp.global)
@@ -3462,35 +3516,45 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
           });
 
-          $("#SC-default-ship-container").validate({
-            rules: {
-              shipdefaultnumber: {
+          $("#SC-default-ship-container").validate(
+          {
+            rules:
+            {
+              shipdefaultnumber:
+              {
                 regex: /\(?[\d\s]{3}\)[\w\s][\d\s]{3}-[\d\s]{4}$/
               },
-              contactshipdefaultnumber: {
+              contactshipdefaultnumber:
+              {
                 regex: /\(?[\d\s]{3}\)[\w\s][\d\s]{3}-[\d\s]{4}$/
               }
             },
-            messages: {
+            messages:
+            {
               shipdefaultnumber: "Please Enter Valid Phone Number",
               contactshipdefaultnumber: "Please Enter Valid Phone Number",
             },
-            tooltip_options: {
-              shipdefaultnumber: {
+            tooltip_options:
+            {
+              shipdefaultnumber:
+              {
                 trigger: 'focus',
                 placement: 'bottom',
                 html: true
               },
-              contactshipdefaultnumber: {
+              contactshipdefaultnumber:
+              {
                 trigger: 'focus',
                 placement: 'bottom',
                 html: true
               }
             },
-            submitHandler: function (form) {
+            submitHandler: function (form)
+            {
               //Start loader 
               $("body").trigger('Custom.Start');
-              setTimeout(function () {
+              setTimeout(function ()
+              {
                 //if(mblNumb_def.length==14||mblNumb_def.length==0){
                 var fieldnames = "SC Preferred Contact";
                 var fieldvalues = "";
@@ -3510,10 +3574,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 inPS.SetProperty("SearchSpecification", "[Order Header Id] = '" + orderid + "' AND [Fulfillment Status Code]='In Progress'");
                 Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
                 outPS = Bservice.InvokeMethod("Insert", inPS);
-                if (inpId != "scship-Acc-phone-number") {
+                if (inpId != "scship-Acc-phone-number")
+                {
                   $("#Ship-Default-PhNumber").val(mblNumb_def);
                   $(".Ship-ShipToContactPhNum-lineitem").val(mblNumb_def);
-                } else {
+                }
+                else
+                {
                   $("#scship-Acc-phone-number").val(mblNumb_def);
                   $(".Ship-ShipToContactPhNum-lineitem").val(mblNumb_def);
                 }
@@ -3525,11 +3592,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.Log("In 2716 Refresh BC Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("In 2721 Refresh BC Call Back");
                 };
@@ -3543,11 +3612,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
           //End:on focus out of Default Shipping Phone number field 
 
-          $(document).on("click", "#SC-select-Accountcontact-shipping", function () {
+          $(document).on("click", "#SC-select-Accountcontact-shipping", function ()
+          {
             $("#SC-search-contacts").modal('hide');
             $("#SC-select-Accountcontact-shipping").addClass('SC-disabled');
             $("body").trigger('Custom.Start');
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               var rowid = sc_rowid.slice(-1);
               SiebelJS.Log(rowid);
               var shipcontactrcd = $("#" + rowid + "shiprcdset").text();
@@ -3558,7 +3629,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               var ShipToContactName = shippingrecords[2] + " " + shippingrecords[3];
               var shipToPhn_number = "";
               shipToPhn_number = shippingrecords[4];
-              if (shipToPhn_number != '' && shipToPhn_number.match(/^\d+$/) && shipToPhn_number.length == 10) {
+              if (shipToPhn_number != '' && shipToPhn_number.match(/^\d+$/) && shipToPhn_number.length == 10)
+              {
                 var USFormt_mblNum = '';
                 USFormt_mblNum = "(" + shipToPhn_number.substring(0, shipToPhn_number.length - 7) + ") " + shipToPhn_number.substring(3, shipToPhn_number.length - 4) + "-" + shipToPhn_number.substring(6, shipToPhn_number.length);
                 shipToPhn_number = USFormt_mblNum;
@@ -3596,11 +3668,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In 2716 Refresh BC Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In 2721 Refresh BC Call Back");
               };
@@ -3613,7 +3687,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               addressLine = AttachAddresses(ShipToContactRecordSet[0]["Ship To Address Id"]);
               $("#Ship-Default-BillToAddress").html(addressLine);
               var mblNumb_def = ShipToContactRecordSet[0]["SC Preferred Contact"];
-              if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10) {
+              if (mblNumb_def != '' && mblNumb_def.match(/^\d+$/) && mblNumb_def.length == 10)
+              {
                 var USFormt_mblNum = '';
                 USFormt_mblNum = "(" + mblNumb_def.substring(0, mblNumb_def.length - 7) + ") " + mblNumb_def.substring(3, mblNumb_def.length - 4) + "-" + mblNumb_def.substring(6, mblNumb_def.length);
                 mblNumb_def = USFormt_mblNum;
@@ -3625,11 +3700,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               $("body").trigger('Custom.End');
             }, 50);
           });
-          $(document).on("click", "#SC-select-contact-shipping", function () {
+          $(document).on("click", "#SC-select-contact-shipping", function ()
+          {
             $("#SC-search-contacts").modal('hide');
             $("#SC-select-contact-shipping").addClass('SC-disabled');
             $("body").trigger('Custom.Start');
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               var rowid = sc_rowid.slice(-1);
               SiebelJS.Log(rowid);
               var shipcontactrcd = $("#" + rowid + "shiprcdset").text();
@@ -3639,13 +3716,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               SiebelJS.Log(searchcontact_lineitem);
               var ShipToContactName = shippingrecords[2] + " " + shippingrecords[3];
               var shipToPhn_number = shippingrecords[4];
-              if (shipToPhn_number != '' && shipToPhn_number.match(/^\d+$/) && shipToPhn_number.length == 10) {
+              if (shipToPhn_number != '' && shipToPhn_number.match(/^\d+$/) && shipToPhn_number.length == 10)
+              {
                 var USFormt_mblNum = '';
                 USFormt_mblNum = "(" + shipToPhn_number.substring(0, shipToPhn_number.length - 7) + ") " + shipToPhn_number.substring(3, shipToPhn_number.length - 4) + "-" + shipToPhn_number.substring(6, shipToPhn_number.length);
                 shipToPhn_number = USFormt_mblNum;
               }
               conId = shippingrecords[1];
-              if (Accname != "") {
+              if (Accname != "")
+              {
                 var AccountBService = '',
                   Acc_inPS = '',
                   Acc_outPS = '';
@@ -3659,7 +3738,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 Acc_outPS = AccountBService.InvokeMethod("RunProcess", Acc_inPS); //invoke the method
               }
               var scShipToContactId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Ship To Contact Id")
-              if (searchcontact_lineitem == "N" || (scShipToContactId == "" || scShipToContactId == "null" || scShipToContactId == "undefined" || scShipToContactId == "No Match Row Id")) {
+              if (searchcontact_lineitem == "N" || (scShipToContactId == "" || scShipToContactId == "null" || scShipToContactId == "undefined" || scShipToContactId == "No Match Row Id"))
+              {
                 conId = shippingrecords[1];
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Contact Id", conId);
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Address Id", Addrid);
@@ -3699,7 +3779,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 //SNARRA:27-07-2018 Added for Performance POC
                 if (localStorage.getItem('isNewSalesOrder') != "Y")
                   $(".Ship-ShipToAddress").html(addressLine);
-              } else {
+              }
+              else
+              {
                 //SPATIBANDLA :changed code for defect 616
                 var Linecon_ID = shippingrecords[1];
                 SiebelJS.Log(Linecon_ID);
@@ -3720,7 +3802,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 $("#" + line_row_id + "Ship-ShipToContactImg").trigger("click");
 
               }
-              if (AddrServiceLevel[Addrid] == "") {
+              if (AddrServiceLevel[Addrid] == "")
+              {
                 var Bservice = '',
                   inPS = '',
                   outPS = '';
@@ -3734,7 +3817,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             }, 1000);
 
           })
-          $(document).on("click", ".sc-shipping-icon-con", function () {
+          $(document).on("click", ".sc-shipping-icon-con", function ()
+          {
             SiebelJS.Log("clicked");
             var lineid = $(this).attr('id');
             var resrowId = lineid;
@@ -3743,7 +3827,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             line_row_id = resrowId[0];
             SiebelJS.Log(line_row_id);
           })
-          $(document).on("click", ".Ship-ShipToAddress-lineitem", function () {
+          $(document).on("click", ".Ship-ShipToAddress-lineitem", function ()
+          {
             SiebelJS.Log("clicked");
             var lineid = $(this).attr('id');
             var resRowID = lineid;
@@ -3752,39 +3837,46 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             //Addr_line_row_id=lineid.charAt(0);
             SiebelJS.Log(Addr_line_row_id);
           })
-          $("#SC-CF-failure-button").click(function () {
+          $("#SC-CF-failure-button").click(function ()
+          {
             $("#SC-SO-CF-failure").modal('hide');
-            $("#SC-CF-failure-button").css({
+            $("#SC-CF-failure-button").css(
+            {
               "display": "",
               "justify-content": "",
               "align-items": ""
             });
           });
 
-          $(".SC-input").focus(function () {
+          $(".SC-input").focus(function ()
+          {
             $(this).parent().addClass("is-active is-completed");
           });
 
-          $(".SC-input").focusout(function () {
+          $(".SC-input").focusout(function ()
+          {
             if ($(this).val() === "")
               $(this).parent().removeClass("is-completed");
             $(this).parent().removeClass("is-active");
           });
 
 
-          $(document).on("hide.bs.collapse", "#SC-SO-ShippingSummary-Body", function () {
+          $(document).on("hide.bs.collapse", "#SC-SO-ShippingSummary-Body", function ()
+          {
             $("#ship-expand-collapse").addClass('iconClosed');
             $("#ship-expand-collapse").removeClass('iconOpen');
           });
 
-          $(document).on("show.bs.collapse", "#SC-SO-ShippingSummary-Body", function () {
+          $(document).on("show.bs.collapse", "#SC-SO-ShippingSummary-Body", function ()
+          {
             $("#ship-expand-collapse").addClass('iconOpen');
             $("#ship-expand-collapse").removeClass('iconClosed');
           });
 
 
           //after clicking on the back to line items button
-          $(document).on('click', "#SC-Ship-BackToProducts", function () {
+          $(document).on('click', "#SC-Ship-BackToProducts", function ()
+          {
             localStorage.setItem("flowfrom", "backtoline");
             $("#browsecatalogdiv").show();
             $("#sccataloguecategory").show();
@@ -3792,34 +3884,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             $("#Ship-Option-Markup").hide();
             $("#Default-Shipping").hide();
             $("#Shipping-Detils").hide();
-            $(".SC-Discount-button").show(); //Sukumar 12/18 to hide discount button
-            $(".maualdiscaddons").show(); //Sukumar 12/18 to hide discount button
-            $(".prodcoupon").show(); //Sukumar 03/25 to hide discount button
-            $(".coupdescdel").show(); //Sukumar 03/25 to hide discount button
-            $(".scmanualdisdelete").show(); //Sukumar 03/25 to hide discount button
-            $(".addonsdel").show();
-
-            if ($('[id^=ProductCoupon]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-              if ($('[id^=ProductCoupon]')[0].innerText === "no coupons applied") {
-                $('[id^=ProductCoupon]').prev().hide()
-              }
-            }
-            if ($('[id^=scmanualcouponval]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-              if ($('[id^=scmanualcouponval]')[0].innerText === "no coupons applied") {
-                $('[id^=scmanualcouponval]').prev().hide()
-              }
-            }
-
             //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
           });
 
 
           SC_OUI_Methods.PH_USFormat("SC-SO-Ship-NewCon-Ph");
-          $(document).on('click', '#SC-SO-Ship-SaveNewContact', function () {
+          $(document).on('click', '#SC-SO-Ship-SaveNewContact', function ()
+          {
 
             jQuery.validator.addMethod(
               "regex",
-              function (value, element, regexp) {
+              function (value, element, regexp)
+              {
                 if (regexp.constructor != RegExp)
                   regexp = new RegExp(regexp);
                 else if (regexp.global)
@@ -3830,45 +3906,60 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
 
             var emailVal = $('#SC-SO-Ship-EmailAddress').val();
-            if (emailVal == '') {} else {
+            if (emailVal == '')
+            {}
+            else
+            {
               $("#SC-SO-Ship-EmailAddress").attr('name', 'emailfield');
             }
 
             var errorCodes = ErrorCodesfn.errorcodes();
-            $(document).ready(function () {
+            $(document).ready(function ()
+            {
 
-              $("#SC-SO-Ship-CreateContactForm").validate({
-                rules: {
-                  firstname: {
+              $("#SC-SO-Ship-CreateContactForm").validate(
+              {
+                rules:
+                {
+                  firstname:
+                  {
                     required: true
                   },
-                  lastname: {
+                  lastname:
+                  {
                     required: true
                   },
-                  emailfield: {
+                  emailfield:
+                  {
                     email: true
                   },
                   /*emailEmpty: {
                   	required: true
                   },*/
-                  address: {
+                  address:
+                  {
                     required: true
                   },
-                  city: {
+                  city:
+                  {
                     required: true
                   },
-                  state: {
+                  state:
+                  {
                     required: true
                   },
-                  zipcode: {
+                  zipcode:
+                  {
                     required: true
                   },
-                  phone: {
+                  phone:
+                  {
                     regex: /\(?[\d\s]{3}\)[\w\s][\d\s]{3}-[\d\s]{4}$/
                   }
 
                 },
-                messages: {
+                messages:
+                {
                   firstname: errorCodes.SC_REQUIRED_FIRST_NAME,
                   lastname: errorCodes.SC_REQUIRED_LAST_NAME,
                   address: errorCodes.SC_REQUIRED_ADDRESS,
@@ -3880,23 +3971,28 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   phone: errorCodes.SC_MOBILE_NUMBER
 
                 },
-                tooltip_options: {
-                  firstname: {
+                tooltip_options:
+                {
+                  firstname:
+                  {
                     trigger: 'focus',
                     placement: 'bottom',
                     html: true
                   },
-                  lastname: {
+                  lastname:
+                  {
                     trigger: 'focus',
                     placement: 'bottom',
                     html: true
                   },
-                  address: {
+                  address:
+                  {
                     trigger: 'focus',
                     placement: 'bottom',
                     html: true
                   },
-                  emailfield: {
+                  emailfield:
+                  {
                     trigger: 'focus',
                     placement: 'bottom',
                     html: true
@@ -3906,22 +4002,26 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   	placement: 'bottom',
                   	html: true
                   },*/
-                  city: {
+                  city:
+                  {
                     trigger: 'focus',
                     placement: 'bottom',
                     html: true
                   },
-                  state: {
+                  state:
+                  {
                     trigger: 'focus',
                     placement: 'bottom',
                     html: true
                   },
-                  zipcode: {
+                  zipcode:
+                  {
                     trigger: 'focus',
                     placement: 'bottom',
                     html: true
                   },
-                  phone: {
+                  phone:
+                  {
                     trigger: 'focus',
                     placement: 'bottom',
                     html: true
@@ -3929,14 +4029,16 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
                 },
 
-                submitHandler: function (form) {
+                submitHandler: function (form)
+                {
                   event.preventDefault();
                   var Bservice = '',
                     inPS = '',
                     outPS = '';
                   $(".SC-add-table-popup").modal("hide");
                   $("body").trigger('Custom.Start');
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     inPS = SiebelApp.S_App.NewPropertySet();
                     outPS = SiebelApp.S_App.NewPropertySet();
                     inPS.SetProperty("CellularNumber", ($("#SC-SO-Ship-NewCon-Ph").val()).replace(/[^0-9]/g, ''));
@@ -3962,8 +4064,10 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     var addId = con_child.GetProperty("AddressId");
 
                     SiebelJS.Log("Contact Saved with Id" + conId + "; and Address Id: " + addId);
-                    if (newconId != "" && addId != "" && (newconId != undefined && addId != undefined)) {
-                      if (scAccountOrder) {
+                    if (newconId != "" && addId != "" && (newconId != undefined && addId != undefined))
+                    {
+                      if (scAccountOrder)
+                      {
                         var AccountBService = '',
                           Acc_inPS = '',
                           Acc_outPS = '';
@@ -3980,7 +4084,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       conId = con_child.GetProperty("ContactId");
                       SiebelJS.Log("Both are not null");
                       var scShipToContactId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Ship To Contact Id")
-                      if (addnewcontact_lineitem == 'N' || (scShipToContactId == "" || scShipToContactId == "null" || scShipToContactId == "undefined" || scShipToContactId == "No Match Row Id")) {
+                      if (addnewcontact_lineitem == 'N' || (scShipToContactId == "" || scShipToContactId == "null" || scShipToContactId == "undefined" || scShipToContactId == "No Match Row Id"))
+                      {
                         $("#Ship-Default-Name").html(ShipToContactName_New);
                         $("#Ship-Default-PhNumber").val($("#SC-SO-Ship-NewCon-Ph").val());
                         $(".Ship-ShipToContact").val(ShipToContactName_New);
@@ -4015,7 +4120,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                         inPS.SetProperty("SearchSpecification", "[Order Header Id] = '" + orderid + "'AND [Fulfillment Status Code]='In Progress'");
                         Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
                         outPS = Bservice.InvokeMethod("Insert", inPS);
-                      } else {
+                      }
+                      else
+                      {
                         //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetSelection(line_row_id);
                         $("#s_" + appletSeq + "_l tr#" + line_row_id + "").trigger("click");
                         SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("Ship To Contact Id", newconId);
@@ -4037,11 +4144,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       ai.scope = this;
                       ai.mask = true;
                       ai.opdecode = true;
-                      ai.errcb = function () {
+                      ai.errcb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                         SiebelJS.Log("In 3211 Refresh BC Error");
                       };
-                      ai.cb = function () {
+                      ai.cb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                         SiebelJS.Log("In 3215 Refresh BC Call Back");
                       };
@@ -4079,95 +4188,117 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
 
           //START:SPATIBAN:4/11/23: SFSTRY0002817:Added code for APT Number
-          $(document).on('change', "#SC-SO-Ship-NA-Address", function (event) {
+          $(document).on('change', "#SC-SO-Ship-NA-Address", function (event)
+          {
             event.preventDefault();
             if ($("#SC-SO-Ship-NA-Apt").val() == "")
               $("#SC-SO-Ship-NA-Apt").focus();
           });
-          $(document).on('focus', "#SC-SO-Ship-NA-Apt", function (event) {
+          $(document).on('focus', "#SC-SO-Ship-NA-Apt", function (event)
+          {
             event.preventDefault();
             if ($("#SC-SO-Ship-NA-Apt").val() == "")
               $("#SNAPTToolTip").show();
           });
-          $(document).on('focusout', "#SC-SO-Ship-NA-Apt", function (event) {
+          $(document).on('focusout', "#SC-SO-Ship-NA-Apt", function (event)
+          {
             event.preventDefault();
             $("#SNAPTToolTip").hide();
           });
-          $(document).on('change', "#SC-SO-Ship-Address", function (event) {
+          $(document).on('change', "#SC-SO-Ship-Address", function (event)
+          {
             event.preventDefault();
             if ($("#SC-SO-Ship-Apt").val() == "")
               $("#SC-SO-Ship-Apt").focus();
           });
-          $(document).on('focus', "#SC-SO-Ship-Apt", function (event) {
+          $(document).on('focus', "#SC-SO-Ship-Apt", function (event)
+          {
             event.preventDefault();
             if ($("#SC-SO-Ship-Apt").val() == "")
               $("#SN-new-APTToolTip").show();
           });
-          $(document).on('focusout', "#SC-SO-Ship-Apt", function (event) {
+          $(document).on('focusout', "#SC-SO-Ship-Apt", function (event)
+          {
             event.preventDefault();
             $("#SN-new-APTToolTip").hide();
           });
           //END:SPATIBAN:4/11/23: SFSTRY0002817:Added code for APT Number
 
-          $(document).on('click', "#SC-SO-Ship-SaveNewAddress", function () {
+          $(document).on('click', "#SC-SO-Ship-SaveNewAddress", function ()
+          {
             SiebelJS.Log("Saving New Address");
             var errorCodes = ErrorCodesfn.errorcodes();
-            $("#SC-SO-Ship-CreateNewAddress").validate({
-              rules: {
-                address: {
+            $("#SC-SO-Ship-CreateNewAddress").validate(
+            {
+              rules:
+              {
+                address:
+                {
                   required: true
                 },
-                city: {
+                city:
+                {
                   required: true
                 },
-                state: {
+                state:
+                {
                   required: true
                 },
-                zipcode: {
+                zipcode:
+                {
                   required: true
                 }
 
               },
-              messages: {
+              messages:
+              {
 
                 address: errorCodes.SC_REQUIRED_ADDRESS,
                 city: errorCodes.SC_REQUIRED_CITY,
                 state: errorCodes.SC_REQUIRED_STATE,
                 zipcode: errorCodes.SC_REUIRED_POSTAL_CODE
               },
-              tooltip_options: {
+              tooltip_options:
+              {
 
-                address: {
+                address:
+                {
                   trigger: 'focus',
                   placement: 'bottom',
                   html: true
                 },
-                city: {
+                city:
+                {
                   trigger: 'focus',
                   placement: 'bottom',
                   html: true
                 },
-                state: {
+                state:
+                {
                   trigger: 'focus',
                   placement: 'bottom',
                   html: true
                 },
-                zipcode: {
+                zipcode:
+                {
                   trigger: 'focus',
                   placement: 'bottom',
                   html: true
                 }
 
               },
-              submitHandler: function (form) {
+              submitHandler: function (form)
+              {
                 event.preventDefault();
                 SiebelJS.Log("conId is -- In Address creation:" + conId);
 
                 $(".SC-add-table-popup").modal("hide");
                 $("body").trigger('Custom.Start');
-                setTimeout(function () {
+                setTimeout(function ()
+                {
                   //SBOORLA:Added code for B2B order Address creation
-                  if (accAddr == "Y") {
+                  if (accAddr == "Y")
+                  {
                     accAddr = "N";
                     SiebelJS.Log("Account Address");
                     var Bservice = '',
@@ -4191,18 +4322,21 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     GetAccountAddressList(ShipToContactRecordSet[0]["Ship To Account Id"]);
                     addressLine = AttachAddresses(ShipToContactRecordSet[0]["Ship To Address Id"]);
                     $("#scship-Acc-adr").html(addressLine);
-                    if (NewAddrLineLevel == "Y") {
+                    if (NewAddrLineLevel == "Y")
+                    {
                       var line_row_id = parseInt(Addr_line_row_id) - 1;
                       $("#s_" + appletSeq + "_l tr#" + Addr_line_row_id + "").trigger("click");
                       SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().SetFieldValue("Ship To Address Id", addrid);
                       SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].InvokeMethod("WriteRecord");
                       var orderrcd = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet();
-                      for (var i = 0; i < orderrcd.length; i++) {
+                      for (var i = 0; i < orderrcd.length; i++)
+                      {
                         addressLine = AttachAddresses(orderrcd[i]["Ship To Address Id"]);
                         $("#" + (i + 1) + "Ship-ShipToAddress").html(addressLine);
 
                       }
-                      if (AddrServiceLevel[addrid] == "") {
+                      if (AddrServiceLevel[addrid] == "")
+                      {
                         var Bservice = '',
                           inPS = '',
                           outPS = '';
@@ -4212,7 +4346,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                         Bservice = SiebelApp.S_App.GetService("SC HD Delivery Eligibility"); //get service
                         outPS = Bservice.InvokeMethod("GetHDEligibility", inPS);
                       }
-                    } else {
+                    }
+                    else
+                    {
                       SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Address Id", addrid);
                       SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
                       ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
@@ -4232,7 +4368,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       inPS.SetProperty("SearchSpecification", "[Order Header Id] = '" + orderid + "'AND [Fulfillment Status Code]='In Progress'");
                       Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
                       outPS = Bservice.InvokeMethod("Insert", inPS);
-                      if (AddrServiceLevel[addrid] == "") {
+                      if (AddrServiceLevel[addrid] == "")
+                      {
                         var Bservice = '',
                           inPS = '',
                           outPS = '';
@@ -4248,30 +4385,37 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       ai.scope = this;
                       ai.mask = true;
                       ai.opdecode = true;
-                      ai.errcb = function () {
+                      ai.errcb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                         SiebelJS.Log("In 2716 Refresh BC Error");
                       };
-                      ai.cb = function () {
+                      ai.cb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                         SiebelJS.Log("In 2721 Refresh BC Call Back");
                       };
                       SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", inPropSet, ai);
                       //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
                     }
-                  } else {
+                  }
+                  else
+                  {
                     var Bservice = '',
                       inPS = '',
                       outPS = '';
                     inPS = SiebelApp.S_App.NewPropertySet();
                     outPS = SiebelApp.S_App.NewPropertySet();
-                    if (NewAddrLineLevel == "Y") {
+                    if (NewAddrLineLevel == "Y")
+                    {
                       var linercd = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet();
                       SiebelJS.Log("shipToContactRecordSet::" + JSON.stringify(linercd));
                       var line_row_id = parseInt(Addr_line_row_id) - 1;
                       inPS.SetProperty("ContactId", linercd[line_row_id]["Ship To Contact Id"]);
                       //inPS.SetProperty("ContactId", linercd[Addr_line_row_id]["Ship To Contact Id"]);
-                    } else {
+                    }
+                    else
+                    {
                       inPS.SetProperty("ContactId", conId);
                     }
                     inPS.SetProperty("SC StreetAddr1", $("#SC-SO-Ship-NA-Address").val());
@@ -4286,8 +4430,10 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     SiebelJS.Log("Workflow invoked");
                     var addrid = outPS.GetChild(0).GetProperty("AddressId")
                     SiebelJS.Log(outPS.GetChild(0).GetProperty("AddressId"));
-                    if (addrid != "" && addrid != undefined) {
-                      if (NewAddrLineLevel == "N") {
+                    if (addrid != "" && addrid != undefined)
+                    {
+                      if (NewAddrLineLevel == "N")
+                      {
                         GetAddressList(conId);
                         addressLine = AttachAddresses(addrid);
                         $(".Ship-ShipToAddress").html(addressLine);
@@ -4318,22 +4464,27 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                         ai.scope = this;
                         ai.mask = true;
                         ai.opdecode = true;
-                        ai.errcb = function () {
+                        ai.errcb = function ()
+                        {
                           //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                           SiebelJS.Log("In 3458 Refresh BC Error");
                         };
-                        ai.cb = function () {
+                        ai.cb = function ()
+                        {
                           //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                           SiebelJS.Log("In 3462 Refresh BC Call Back");
                         };
                         SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", inPropSet, ai);
                         //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
                         var orderrcd = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet();
-                        for (var i = 0; i < orderrcd.length; i++) {
+                        for (var i = 0; i < orderrcd.length; i++)
+                        {
                           $("#" + i + "Ship-ShipToAddress").html(addressLine);
 
                         }
-                      } else {
+                      }
+                      else
+                      {
 
                         //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetSelection(Addr_line_row_id);
                         $("#s_" + appletSeq + "_l tr#" + Addr_line_row_id + "").trigger("click");
@@ -4351,8 +4502,10 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                           GetAddressList(ShipToContactRecordSet[0]["Ship To Contact Id"]);
                         addressLine = AttachAddresses(ShipToContactRecordSet[0]["Ship To Address Id"]);
                         $("#Ship-Default-BillToAddress").html(addressLine);
-                        for (var i = 0; i < orderrcd.length; i++) {
-                          if (orderrcd[i]["Product Line"] != 'DELIVERY' && orderrcd[i]["Product Type Code"] != ProductTypeCode) {
+                        for (var i = 0; i < orderrcd.length; i++)
+                        {
+                          if (orderrcd[i]["Product Line"] != 'DELIVERY' && orderrcd[i]["Product Type Code"] != ProductTypeCode)
+                          {
                             //This comments has to be removed after removed the sc-readonly class for line level change contact
                             //GetAddressList(orderrcd[i]["Ship To Contact Id"]);
                             addressLine = AttachAddresses(orderrcd[i]["Ship To Address Id"]);
@@ -4368,7 +4521,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       }
 
                       //SBOORLA: Added code for Defect 638
-                      if (AddrServiceLevel[addrid] == "") {
+                      if (AddrServiceLevel[addrid] == "")
+                      {
                         var Bservice = '',
                           inPS = '',
                           outPS = '';
@@ -4400,12 +4554,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
             });
           });
-          $(document).on('change', '.Ship-ShipToAddress', function () {
+          $(document).on('change', '.Ship-ShipToAddress', function ()
+          {
             var val = $(this).val();
             var addrid = parentAddrJSON[val];
             SiebelJS.Log(addrid);
-            if (this.id == "Ship-Default-BillToAddress") {
-              if (val != "ADD NEW ADDRESS") {
+            if (this.id == "Ship-Default-BillToAddress")
+            {
+              if (val != "ADD NEW ADDRESS")
+              {
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Address Id", addrid);
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
                 ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
@@ -4427,18 +4584,19 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 inPS.SetProperty("SearchSpecification", "([Order Header Id] = '" + orderid + "' AND (([Fulfillment Status Code]='In Progress') OR ([SC Revisable]='Revisable' AND ([Request To Cancel] IS NULL OR [Request To Cancel]='N'))))");
                 Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
                 outPS = Bservice.InvokeMethod("Insert", inPS);
-                var inPropSet = CCFMiscUtil_CreatePropSet(); //LikhithaK:Added as part of DF-2040
                 var ai = {};
                 ai.async = false;
                 ai.selfbusy = true;
                 ai.scope = this;
                 ai.mask = true;
                 ai.opdecode = true;
-                ai.errcb = function () {
+                ai.errcb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                   SiebelJS.Log("In 3750 Refresh BC Error");
                 };
-                ai.cb = function () {
+                ai.cb = function ()
+                {
                   //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                   SiebelJS.Log("In 3574 Refresh BC Call Back");
                 };
@@ -4447,14 +4605,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 var orderrcd = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet();
                 GetAddressList(conId);
                 addressLine = AttachAddresses(addrid);
-                for (var i = 0; i < orderrcd.length; i++) {
+                for (var i = 0; i < orderrcd.length; i++)
+                {
 
                   SiebelJS.Log(conId + "   bujyhb" + orderrcd[i]["Ship To Contact Id"]);
                   $("#" + (i + 1) + "Ship-ShipToAddress").html(addressLine);
                 }
               }
-            } else {
-              if (val != "ADD NEW ADDRESS") {
+            }
+            else
+            {
+              if (val != "ADD NEW ADDRESS")
+              {
                 SiebelJS.Log("entered");
                 //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetSelection(Addr_line_row_id);
                 $("#s_" + appletSeq + "_l tr#" + Addr_line_row_id + "").trigger("click");
@@ -4462,22 +4624,31 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].InvokeMethod("WriteRecord");
               }
             }
-            if (val == "ADD NEW ADDRESS") {
+            if (val == "ADD NEW ADDRESS")
+            {
               accAddr = "N";
-              if (this.id == "Ship-Default-BillToAddress") {
+              if (this.id == "Ship-Default-BillToAddress")
+              {
                 NewAddrLineLevel = "N";
-              } else {
+              }
+              else
+              {
                 NewAddrLineLevel = 'Y';
               }
-              if (isShipToAcc == "Y") {
+              if (isShipToAcc == "Y")
+              {
                 accAddr = "Y";
                 NewAddrLineLevel = 'Y';
               }
-              $("#SC-add-address").modal({
+              $("#SC-add-address").modal(
+              {
                 backdrop: 'static'
               });
-            } else {
-              if (AddrServiceLevel[addrid] == "") {
+            }
+            else
+            {
+              if (AddrServiceLevel[addrid] == "")
+              {
                 var Bservice = '',
                   inPS = '',
                   outPS = '';
@@ -4500,7 +4671,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               var strOrdAddrId, strOrderId, recSetLen, strLineItemAddrId, fieldnames, fieldvalues;
               var Bservice, inPS, outPS;
 
-              if (elemId == "Delivery-Tier" || elemId == "acc-Delivery-Tier") { //copy delivery tier onto the line items with matching ship address
+              if (elemId == "Delivery-Tier" || elemId == "acc-Delivery-Tier")
+              { //copy delivery tier onto the line items with matching ship address
                 strLineItemAddrId = "";
 
                 strOrdAddrId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Ship To Address Id");
@@ -4508,7 +4680,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
 
                 updateShipping(strSelectedTier, false, strOrdAddrId);
-              } else {
+              }
+              else
+              {
                 $("#s_" + appletSeq + "_l tr#" + elemId.match(/^(\d+)/g)[0]).trigger("click");
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetFieldValue("Shipping", strSelectedTier);
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].InvokeMethod("WriteRecord");
@@ -4516,11 +4690,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               }
             });
           //Start:code for on change of ship to Account Address
-          $(document).on('change', '#scship-Acc-adr', function () {
+          $(document).on('change', '#scship-Acc-adr', function ()
+          {
             var val = $(this).val();
             var addrid = parentAddrJSON[val];
             SiebelJS.Log(addrid);
-            if (val != "ADD NEW ADDRESS") {
+            if (val != "ADD NEW ADDRESS")
+            {
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Ship To Address Id", addrid);
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
               ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
@@ -4544,19 +4720,23 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               outPS = Bservice.InvokeMethod("Insert", inPS);
               var orderrcd = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet();
               addressLine = AttachAddresses(addrid);
-              for (var i = 0; i < orderrcd.length; i++) {
+              for (var i = 0; i < orderrcd.length; i++)
+              {
                 $("#" + (i + 1) + "Ship-ShipToAddress").html(addressLine);
               }
             }
-            if (val == "ADD NEW ADDRESS") {
+            if (val == "ADD NEW ADDRESS")
+            {
               accAddr = "Y";
               NewAddrLineLevel = "N";
-              $("#SC-add-address").modal({
+              $("#SC-add-address").modal(
+              {
                 backdrop: 'static'
               });
             }
 
-            if (AddrServiceLevel[addrid] == "") {
+            if (AddrServiceLevel[addrid] == "")
+            {
               var Bservice = '',
                 inPS = '',
                 outPS = '';
@@ -4570,811 +4750,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             getDeliveryTierOptions(orderid); //evaluate delivery tiers
           });
           //End:code for on change of ship to Account Address
-          $(document).on('click', '.new-Add-Address', function () {
+          $(document).on('click', '.new-Add-Address', function ()
+          {
             SiebelJS.Log("add new address is selected");
           })
         } //End of BindEvents
-        //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-        function displaySummaryPage() {
-          console.log("displaysummarypage triggered");
-          //NGOLLA for 598 defect 
-          $(".edit-details").hide();
-          if ($(".customline").is(":visible"))
-            $(".customline").siblings(2).css("cssText", "padding-left: 7% !important;");
-          $(".deleteline").hide();
-          $(".prodcoupon").hide();
-          $(".discount-btn").hide();
-          $(".customline").hide();
-          $(".displaybed").addClass("SC-readonly");
-          $(".quantitybox").addClass("input-readonly");
-          $(".amount-width").addClass("input-readonly");
-          $(".overflow-title").css("cssText", "margin-left:30px !important");
-          $(".SC-Discount-button").hide(); //Sukumar 12/18 to hide discount button
-          $(".maualdiscaddons").hide(); //Sukumar 12/18 to hide discount button	 
-          $(".prodcoupon").hide(); //Sukumar 01/25 to hide discount button
-          $(".coupdescdel").hide(); //Sukumar 01/25 to hide discount button
-          $(".scmanualdisdelete").hide(); //Sukumar 01/25 to hide discount button
-          $(".addonsdel").hide();
-
-          var inPS = SiebelApp.S_App.NewPropertySet();
-          var outPS = SiebelApp.S_App.NewPropertySet();
-          var Bservice = "";
-          inPS.SetProperty("OrderId", orderid)
-          SiebelJS.Log("Invoking Business Service");
-          Bservice = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
-          outPS = Bservice.InvokeMethod("Query", inPS); //invoke the method
-          getordersummarylineitems(outPS);
-
-          if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag != "Y") {
-            SC_OUI_Methods.PoleDisplay(poleJSON, "N");
-          }
-          if (localStorage.getItem("InvokepoleDisplay") == 'Y' && sP2PEFlag == "Y") {
-            SC_OUI_Methods.TaxDetailsP2PEDisplay(orderid, poleJSON, subpoleJSON);
-          }
-
-          $("#SC-SO-CF-success").modal({
-            backdrop: 'static'
-          });
-          $("#SC-SO-CF-success").css({
-            "display": "flex",
-            "justify-content": "center",
-            "align-items": "center"
-          });
-          $(".modal-backdrop").css('background', '#ffffff');
-          setTimeout(function () {
-            //$("#SC-SO-CF-verify").modal('hide');
-            $("#SC-SO-CF-success").css({
-              "display": "",
-              "justify-content": "",
-              "align-items": ""
-            });
-            $("#SC-SO-CF-success").modal('hide');
-            $("#custommaskoverlay").hide();
-            $("div").scrollTop(10000);
-            if (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Management Products"].GetPModel().Get("AddReferral") || $("#SC-Add-Referral").is(":visible")) {
-              pm.SetProperty("AddReferralFlg", true);
-            };
-            //ShowReferralPopup();
-          }, 2000);
-        }
-
-        function customerInfoConformation() {
-          console.log("customerInfoConformation triggered");
-
-          //03-MAY-19: VALLA : Added to show customer and hd address details on P2PE Device
-          //var PromptConfirmFlag = localStorage.getItem("promptConfirmFlag");
-          //VALLA : Added the below line to enable Contact Info for all Stores
-          var shipItemRecordSet = pm.Get("GetRecordSet");
-          //PJAYASHA: Added to take terminal ID check 
-          var inPS = SiebelApp.S_App.NewPropertySet();
-          var outPS = SiebelApp.S_App.NewPropertySet();
-          var Bservice = SiebelApp.S_App.GetService("SC Adyen Payment Service");
-          var OrderNum = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Order Number');
-
-          inPS.SetProperty('Order Number', OrderNum);
-
-          if (Bservice) {
-            outPS = Bservice.InvokeMethod("GetTerminalId", inPS);
-            var termId = outPS.GetChild(0).GetProperty('TerminalId');
-            SiebelJS.Log("termId: " + termId);
-          }
-          if (sP2PEFlag == "Y" && termId != "No Terminal Available" && localStorage.getItem('PoleDisplayConfBypass') == "N") {
-            // Start--SNARRA added popup 
-            $("#SC-SO-P2PE-Info-Main").text("Please ask customer to validate contact details and delivery phone/address and tap Yes/No on payment terminal.");
-            $("#SC-SO-P2PE-Info").modal({
-              backdrop: 'static'
-            });
-            $("#SC-SO-P2PE-Info").css({
-              "display": "flex",
-              "justify-content": "center",
-              "align-items": "center"
-            });
-            $("#SC-SO-P2PE-Info").addClass("in");
-            var sBillToEmail = ShipToContactRecordSet[0]["Primary Bill To Email Address"];
-            var sBillToWorkPhone = ShipToContactRecordSet[0]["Primary Bill To Work Phone"];
-            var sBillToCelluar = ShipToContactRecordSet[0]["Primary Bill To Cellular Phone"];
-            var sBillToHomePhone = ShipToContactRecordSet[0]["Primary Bill To Home Phone"];
-            var sBillToAddress = ShipToContactRecordSet[0]["Primary Contact Address"];
-            var sBillToCity = ShipToContactRecordSet[0]["Primary Contact City"];
-            var sBillToState = ShipToContactRecordSet[0]["Primary Contact State"];
-            var sBillToCountry = ShipToContactRecordSet[0]["Primary Contact Country"];
-            var sBillToPostalCode = ShipToContactRecordSet[0]["Primary Contact Postal Code"];
-            var sPrimaryAddress = sBillToAddress + ", " + sBillToCity + ", " + sBillToState + ", " + sBillToCountry + ", " + sBillToPostalCode;
-            var sBillToContId = ShipToContactRecordSet[0]["Bill To Contact Id"];
-            var sBillToAccId = ShipToContactRecordSet[0]["Bill To Account Id"];
-            var sOrderId = ShipToContactRecordSet[0]["Id"];
-
-            var cleaned = ('' + sBillToCelluar).replace(/\D/g, '')
-            var match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/)
-            if (match) {
-              var intlCode = (match[1] ? '+1 ' : '')
-              sBillToCelluar = [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('')
-            }
-            //START:VALLA:8/9/2023
-            ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
-            var PromptConfirmQuestion = "Confirm the contact ",
-              PromptConfirmValue = "";
-            if (ShipToContactRecordSet[0]["Ship To Address Id"] != ShipToContactRecordSet[0]["Bill To Address Id"]) {
-
-              if (sIpadFeatureFlag == 'Y') {
-                PromptConfirmValue = "Mobile Phone#:\n " + sBillToCelluar + " \n Email Address: " + sBillToEmail + " \n Primary Address:" + sPrimaryAddress;
-              } else {
-                PromptConfirmValue = "Mobile Phone#: " + sBillToCelluar + " \n Email Address: " + sBillToEmail + " \n Primary Address:" + sPrimaryAddress;
-              }
-
-
-            } else {
-
-              if (sIpadFeatureFlag == 'Y') {
-                PromptConfirmValue = "Mobile Phone#:\n " + sBillToCelluar + " \n Email Address: " + sBillToEmail;
-              } else {
-                PromptConfirmValue = "Mobile Phone#: " + sBillToCelluar + " \n Email Address: " + sBillToEmail;
-              }
-            }
-
-            var shipItemRecordSet = pm.Get("GetRecordSet");
-            var bHasHomeDelItems = false;
-            var arrDeliveryAddrs = new Set();
-            var arrDelieryAdds = [];
-            var sDelPhoneNumber = "",
-              cleaned = "",
-              match = "",
-              intlCode = "";
-
-            for (var h = 0; h < shipItemRecordSet.length; h++) {
-              if (shipItemRecordSet[h]["Product Line"] != 'DELIVERY' && shipItemRecordSet[h]["Ship Method"] != "Recd At Store" && shipItemRecordSet[h]["Fulfillment Status Code"] == "In Progress") {
-                bHasHomeDelItems = true;
-                cleaned = ('' + shipItemRecordSet[h]["SC Preferred Contact"]).replace(/\D/g, '')
-                match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/)
-                if (match) {
-                  intlCode = (match[1] ? '+1 ' : '')
-                  sDelPhoneNumber = [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('')
-                }
-                arrDeliveryAddrs.add(shipItemRecordSet[h]["Ship Method"] + ":" + sDelPhoneNumber + " | " + shipItemRecordSet[h]["SC Ship To Address Name"]);
-
-                sDelPhoneNumber = "", cleaned = "", match = "", intlCode = "";
-              }
-            }
-            if (bHasHomeDelItems) {
-              var sHDAddress = "";
-              var sHDTypes = [];
-              var sHDAddrParts = [];
-              var sHDType = "";
-              var scHDAddrParts = [];
-              var scHDType = "";
-              for (let items of arrDeliveryAddrs) {
-                sHDAddrParts = items.split(":");
-                sHDType = sHDAddrParts[0];
-                if (!sHDTypes.includes(sHDType)) {
-                  sHDTypes.push(sHDType);
-                  sHDAddress = sHDAddress + sHDType + ":\n";
-                  for (let item of arrDeliveryAddrs) {
-                    scHDAddrParts = item.split(":");
-                    scHDType = scHDAddrParts[0];
-                    if (scHDType == sHDType) {
-                      sHDAddress = sHDAddress + scHDAddrParts[1] + "\n";
-                    }
-                  }
-                  sHDAddress = sHDAddress + "\n";
-                }
-              }
-              PromptConfirmValue += "\n" + sHDAddress;
-              PromptConfirmQuestion += '/ delivery phone / address ';
-            }
-
-            PromptConfirmQuestion += 'information below';
-            if (sIpadFeatureFlag == "Y") {
-              PromptConfirmQuestion = 'Please confirm:';
-            }
-
-            //End::VALLA:8/9/2023
-            var confirmFlag = "";
-            setTimeout(function () {
-              var inPS = SiebelApp.S_App.NewPropertySet();
-              var outPS = SiebelApp.S_App.NewPropertySet();
-              var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
-              inPS.SetProperty("ProcessName", "SC P2PE Customer Info Prompt");
-              inPS.SetProperty("Object Id", sOrderId);
-              //inPS.SetProperty("PromptConfirmQuestion", "Confirm the contact information below");
-              //inPS.SetProperty("PromptConfirmValue", "Mobile Phone#: " + sBillToCelluar + " \n Email Address: " + sBillToEmail + " \n Primary Address:" + sPrimaryAddress);
-              inPS.SetProperty("PromptConfirmQuestion", PromptConfirmQuestion);
-              inPS.SetProperty("PromptConfirmValue", PromptConfirmValue);
-              outPS = Bservice.InvokeMethod("RunProcess", inPS); //invoke the method
-              confirmFlag = outPS.GetChild(0).GetProperty("PromptConfirmResult");
-              var sConfirmTimeOut = SiebelApp.S_App.GetProfileAttr('ConfirmTimeOutFlag'); //PJAYASHA:Added for timeout case 
-              SC_OUI_Methods.ClearP2PEPoleDisplay(sOrderId);
-              // Start--SNARRA hiding  popup 
-              $("#SC-SO-P2PE-Info").modal("hide");
-              $('.modal-backdrop').remove();
-              if (confirmFlag == "Y" || sConfirmTimeOut == "Y" || termId == "No Terminal Available") {
-                //added below code for Terminal CR.
-                if (localStorage.getItem('BypassTerminalSave') == "Y") {
-                  if (sP2PEFlag == "Y") {
-                    fNJConfirmFunction(); //Navigation to Payments page, after Confirmation call if Pole Display is "N".
-                  }
-
-                } else {
-                  //fAddressConfirmFunction();
-                  displaySummaryPage();
-                  SiebelApp.S_App.SetProfileAttr("ConfirmTimeOutFlag", "");
-                }
-              } else if (confirmFlag != "Y" && sConfirmTimeOut != "Y" && termId != "No Terminal Available") {
-                //Added below code for Terminal CR.
-
-
-                fUpdateBilltoContactConf();
-                /* $("body").trigger('Custom.Start');
-                setTimeout(function() {
-                    var InPut = SiebelApp.S_App.NewPropertySet();
-                    var OutPut = SiebelApp.S_App.NewPropertySet();
-                    if (sBillToAccId != "" && sBillToAccId != null) {
-                        InPut.SetProperty("View", "SC Account 360 View OUI");
-                        InPut.SetProperty("Business Component", "Account");
-                        InPut.SetProperty("Row Id", sBillToAccId);
-                    } else {
-                        InPut.SetProperty("View", "SC Contact 360 Degree View OUI");
-                        InPut.SetProperty("Business Component", "Contact");
-                        InPut.SetProperty("Row Id", sBillToContId);
-                    }
-                    localStorage.setItem("IsP2PECustom", "Y");
-
-                    var BService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
-                    OutPut = BService.InvokeMethod("GotoView", InPut);
-                }, 50);*/
-              } else {
-                //SiebelApp.S_App.GotoView("SC Order Entry - Payment View Sales OUI", "", "", "");
-                displaySummaryPage();
-              }
-            }, 100);
-          } else {
-            //Added below if/else condition for DF-1980 
-            if (localStorage.getItem('BypassTerminalSave') == "Y") {
-              fNJConfirmFunction(); //Navigation to Payments page, after Confirmation call if Pole Display is "N".
-            } else {
-              displaySummaryPage();
-            }
-          }
-        }
-
-        function fUpdateBilltoContactConf() {
-          console.log("fUpdateBilltoContactConf function triggered");
-
-          var sBillToContId = ShipToContactRecordSet[0]["Bill To Contact Id"];
-          var sBillToAccId = ShipToContactRecordSet[0]["Bill To Account Id"];
-          var sOrderId = ShipToContactRecordSet[0]["Id"];
-          var confirmFlag = "";
-          setTimeout(function () {
-            var inPS = SiebelApp.S_App.NewPropertySet();
-            var outPS = SiebelApp.S_App.NewPropertySet();
-            var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
-            inPS.SetProperty("ProcessName", "SC P2PE Customer Info Prompt");
-            inPS.SetProperty("Object Id", sOrderId);
-            //inPS.SetProperty("PromptConfirmQuestion", "Update Bill To Contact Details?");
-            //inPS.SetProperty("PromptConfirmValue", "");
-            if (sIpadFeatureFlag == "Y") {
-              inPS.SetProperty("PromptConfirmQuestion", "Do You Want To");
-              inPS.SetProperty("PromptConfirmValue", "Update Bill To Contact Details?"); //PJAYASHA:Added :280524
-            } else {
-              inPS.SetProperty("PromptConfirmQuestion", "Update Bill To Contact Details?");
-              inPS.SetProperty("PromptConfirmValue", "");
-            }
-            outPS = Bservice.InvokeMethod("RunProcess", inPS); //invoke the method
-            confirmFlag = outPS.GetChild(0).GetProperty("PromptConfirmResult");
-            SC_OUI_Methods.ClearP2PEPoleDisplay(sOrderId);
-
-            if (confirmFlag == "Y") {
-              //Updated for Terminal CR:Start
-              var poleDisplayFlg = SiebelApp.S_App.GetProfileAttr('PoleDisplayOUI');
-              if (sIpadFeatureFlag == "Y" && poleDisplayFlg == "N") {
-                localStorage.setItem('PoleDisplayConfBypass', 'Y');
-                $('.profile-block #SC-terminal-tile').css('display', 'none');
-                $('#terminal-list-bypass option').not(':first').remove();
-              }
-              var OrderNum = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Order Number');
-              SC_OUI_Methods.ResetTerminalFromOrder(OrderNum);
-              //Updated for Terminal CR:End
-              $("body").trigger('Custom.Start');
-              setTimeout(function () {
-                var InPut = SiebelApp.S_App.NewPropertySet();
-                var OutPut = SiebelApp.S_App.NewPropertySet();
-                if (sBillToAccId != "" && sBillToAccId != null) {
-                  InPut.SetProperty("View", "SC Account 360 View OUI");
-                  InPut.SetProperty("Business Component", "Account");
-                  InPut.SetProperty("Row Id", sBillToAccId);
-                } else {
-                  InPut.SetProperty("View", "SC Contact 360 Degree View OUI");
-                  InPut.SetProperty("Business Component", "Contact");
-                  InPut.SetProperty("Row Id", sBillToContId);
-                }
-                localStorage.setItem("IsP2PECustom", "Y");
-
-                var BService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
-                OutPut = BService.InvokeMethod("GotoView", InPut);
-              }, 50);
-            } else {
-              //Updated for Terminal CR:Start
-              var poleDisplayFlg = SiebelApp.S_App.GetProfileAttr('PoleDisplayOUI');
-              if (sIpadFeatureFlag == "Y" && poleDisplayFlg == "N") {
-                localStorage.setItem('PoleDisplayConfBypass', 'Y');
-                localStorage.setItem('BypassTerminalSave', 'N');
-                $('.profile-block #SC-terminal-tile').css('display', 'none');
-                $('#terminal-list-bypass option').not(':first').remove();
-                var OrderNum = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Order Number');
-                SC_OUI_Methods.ResetTerminalFromOrder(OrderNum);
-              }
-              //Updated for Terminal CR:End
-              localStorage.setItem("flowfrom", "proceed");
-              localStorage.setItem('ProceedToShipping', 'Y');
-              $("#Ship-Option-Markup").show();
-              $("#Default-Shipping").show();
-              $("#Shipping-Detils").show();
-              $("#SC_Order_ship_markup").hide();
-              $("#SC_Order_ship_markup1").hide();
-              $("#SC_Order_ship_markup2").hide();
-              $("#footerbutton").hide();
-              $("#SC-SO-ShippingSummary").hide();
-
-              $(".edit-details").show();
-              if ($(".customline").is(":visible"))
-                $(".customline").siblings(2).css("cssText", "padding-left: 0% !important;");
-              $(".deleteline").show();
-              $(".prodcoupon").show();
-              $(".discount-btn").show();
-              $(".customline").show();
-              $(".displaybed").removeClass("SC-readonly");
-              $(".quantitybox").removeClass("input-readonly");
-              $(".amount-width").removeClass("input-readonly");
-              $(".overflow-title").css("cssText", "margin-left:0px !important");
-              $(".SC-Discount-button").show(); //Sukumar 12/18 to hide discount button
-              $(".maualdiscaddons").show(); //Sukumar 12/18 to hide discount button	 
-              $(".prodcoupon").show(); //Sukumar 01/25 to hide discount button
-
-              $(".coupdescdel").show(); //Sukumar 01/25 to hide discount button
-              $(".scmanualdisdelete").show(); //Sukumar 01/25 to hide discount button
-              $(".addonsdel").show();
-
-              if ($('[id^=ProductCoupon]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-                if ($('[id^=ProductCoupon]')[0].innerText === "no coupons applied") {
-                  $('[id^=ProductCoupon]').prev().hide()
-                }
-              }
-              if ($('[id^=scmanualcouponval]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-                if ($('[id^=scmanualcouponval]')[0].innerText === "no coupons applied") {
-                  $('[id^=scmanualcouponval]').prev().hide()
-                }
-              }
-
-              if (isOrder360 == "Y")
-                backToShip = 'N';
-              else
-                backToShip = "Y";
-              FieldQueryPair = {
-                "SKU #": ""
-              };
-              SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Order Entry Line Item List Applet");
-
-              $("#SC-SO-P2PE-Cust-change").modal({
-                backdrop: 'static'
-              });
-              $("#SC-SO-P2PE-Cust-change").css({
-                "display": "flex",
-                "justify-content": "center",
-                "align-items": "center"
-              });
-
-
-            }
-          }, 100);
-
-        }
-
-        function fAddressConfirmFunction() {
-          console.log("fAddressConfirmFunction triggered");
-          ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
-          var shipItemRecordSet = pm.Get("GetRecordSet");
-          var bHasHomeDelItems = false;
-          var arrDeliveryAddrs = new Set();
-          var arrDelieryAdds = [];
-          var sDelPhoneNumber = "",
-            cleaned = "",
-            match = "",
-            intlCode = "";
-
-          for (var h = 0; h < shipItemRecordSet.length; h++) {
-            if (shipItemRecordSet[h]["Product Line"] != 'DELIVERY' && shipItemRecordSet[h]["Ship Method"] != "Recd At Store" && shipItemRecordSet[h]["Fulfillment Status Code"] == "In Progress") {
-              bHasHomeDelItems = true;
-              cleaned = ('' + shipItemRecordSet[h]["SC Preferred Contact"]).replace(/\D/g, '')
-              match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/)
-              if (match) {
-                intlCode = (match[1] ? '+1 ' : '')
-                sDelPhoneNumber = [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('')
-              }
-              arrDeliveryAddrs.add(shipItemRecordSet[h]["Ship Method"] + ":" + sDelPhoneNumber + " | " + shipItemRecordSet[h]["SC Ship To Address Name"]);
-              /*if(shipItemRecordSet[h]["Shipping"] == "Doorstep"){
-								arrDeliveryAddrs.add(shipItemRecordSet[h]["Ship Method"] +" - "+ shipItemRecordSet[h]["Shipping"] +":" + sDelPhoneNumber + " | " + shipItemRecordSet[h]["SC Ship To Address Name"]);
-							}else{
-								arrDeliveryAddrs.add(shipItemRecordSet[h]["Ship Method"] + ":" + sDelPhoneNumber + " | " + shipItemRecordSet[h]["SC Ship To Address Name"]);
-                            }*/
-              sDelPhoneNumber = "", cleaned = "", match = "", intlCode = "";
-            }
-          }
-
-          if (bHasHomeDelItems) {
-            var sOrderId = ShipToContactRecordSet[0]["Id"];
-            // Start--SNARRA added popup 
-            $("#SC-SO-P2PE-Addr-Info").modal({
-              backdrop: 'static'
-            });
-            $("#SC-SO-P2PE-Addr-Info").css({
-              "display": "flex",
-              "justify-content": "center",
-              "align-items": "center"
-            });
-            // End--SNARRA added popup 
-
-            setTimeout(function () {
-              ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
-              var addrInPS = SiebelApp.S_App.NewPropertySet();
-              var addrOutPS = SiebelApp.S_App.NewPropertySet();
-              var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
-              addrInPS.SetProperty("ProcessName", "SC P2PE Customer Info Prompt");
-              addrInPS.SetProperty("PromptConfirmQuestion", "Confirm delivery phone / address information below");
-              addrInPS.SetProperty("Object Id", sOrderId);
-              var sHDAddress = "";
-              var sHDTypes = [];
-              var sHDAddrParts = [];
-              var sHDType = "";
-              var scHDAddrParts = [];
-              var scHDType = "";
-              for (let items of arrDeliveryAddrs) {
-                sHDAddrParts = items.split(":");
-                sHDType = sHDAddrParts[0];
-                if (!sHDTypes.includes(sHDType)) {
-                  sHDTypes.push(sHDType);
-                  sHDAddress = sHDAddress + sHDType + ":\n";
-                  for (let item of arrDeliveryAddrs) {
-                    scHDAddrParts = item.split(":");
-                    scHDType = scHDAddrParts[0];
-                    if (scHDType == sHDType) {
-                      sHDAddress = sHDAddress + scHDAddrParts[1] + "\n";
-                    }
-                  }
-                  sHDAddress = sHDAddress + "\n";
-                }
-              }
-              addrInPS.SetProperty("PromptConfirmValue", sHDAddress);
-              addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method
-              var addrconfirmFlag = addrOutPS.GetChild(0).GetProperty("PromptConfirmResult");
-              SC_OUI_Methods.ClearP2PEPoleDisplay(sOrderId);
-              // Start--SNARRA hiding  popup 
-              $("#SC-SO-P2PE-Addr-Info").modal("hide");
-
-              //VALLA:21-Nov-2019: Getting Terms And Conditions
-              if (addrconfirmFlag == "Y") {
-                displaySummaryPage();
-              } else {
-                localStorage.setItem("flowfrom", "proceed");
-                localStorage.setItem('ProceedToShipping', 'Y');
-                $("#Ship-Option-Markup").show();
-                $("#Default-Shipping").show();
-                $("#Shipping-Detils").show();
-                $("#SC_Order_ship_markup").hide();
-                $("#SC_Order_ship_markup1").hide();
-                $("#SC_Order_ship_markup2").hide();
-                $("#footerbutton").hide();
-                $("#SC-SO-ShippingSummary").hide();
-                //NGOLLA for 598 defect
-                $(".edit-details").show();
-                if ($(".customline").is(":visible"))
-                  $(".customline").siblings(2).css("cssText", "padding-left: 0% !important;");
-                $(".deleteline").show();
-                $(".prodcoupon").show();
-                $(".discount-btn").show();
-                $(".customline").show();
-                $(".displaybed").removeClass("SC-readonly");
-                $(".quantitybox").removeClass("input-readonly");
-                $(".amount-width").removeClass("input-readonly");
-                $(".SC-Discount-button").show(); //Sukumar 12/18 to hide discount button
-                $(".maualdiscaddons").show(); //Sukumar 12/18 to hide discount button	
-                $(".prodcoupon").show(); //Sukumar 01/25 to hide discount button
-                $(".coupdescdel").show(); //Sukumar 01/25 to hide discount button
-                $(".scmanualdisdelete").show(); //Sukumar 01/25 to hide discount button
-                $(".addonsdel").show();
-
-                if ($('[id^=ProductCoupon]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-                  if ($('[id^=ProductCoupon]')[0].innerText === "no coupons applied") {
-                    $('[id^=ProductCoupon]').prev().hide()
-                  }
-                }
-                if ($('[id^=scmanualcouponval]')[0] != undefined) { //LikhithaK:SFSTRY0003472:Added if case
-                  if ($('[id^=scmanualcouponval]')[0].innerText === "no coupons applied") {
-                    $('[id^=scmanualcouponval]').prev().hide()
-                  }
-                }
-
-                $(".overflow-title").css("cssText", "margin-left:0px !important");
-                if (isOrder360 == "Y")
-                  backToShip = 'N';
-                else
-                  backToShip = "Y";
-                FieldQueryPair = {
-                  "SKU #": ""
-                };
-                SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Order Entry Line Item List Applet");
-                // Start--SNARRA added popup 
-                $("#SC-SO-P2PE-Cust-change").modal({
-                  backdrop: 'static'
-                });
-                $("#SC-SO-P2PE-Cust-change").css({
-                  "display": "flex",
-                  "justify-content": "center",
-                  "align-items": "center"
-                });
-                // End--SNARRA added popup 
-              }
-            }, 5000);
-          } else {
-            //fNJConfirmFunction();
-            displaySummaryPage();
-          }
-        }
-
-        function getShowTermsFlag() {
-          console.log("getShowTermsFlag triggered");
-          var Bservice = '',
-            inPS = '',
-            outPS = '';
-          inPS = SiebelApp.S_App.NewPropertySet();
-          outPS = SiebelApp.S_App.NewPropertySet();
-          inPS.SetProperty("Name", "SC Terms Flag");
-          Bservice = SiebelApp.S_App.GetService("SessionAccessService");
-          outPS = Bservice.InvokeMethod("GetProfileAttr", inPS);
-          var sTermsFlag = outPS.GetChild(0).GetProperty("Value");
-          return sTermsFlag;
-        }
-
-        //VALLA : 09-DEC-2019 : Added the below logic to prompt the NJ Clause on P2PE device
-        function fNJConfirmFunction() {
-          console.log("fNJConfirmFunction triggered");
-          var bDisplayTerms = 'Y';
-          //Logic to get the Terms Display flag value  from profile attribute
-          bDisplayTerms = getShowTermsFlag();
-          if (bDisplayTerms == 'Y' && sP2PEFlag == 'Y') {
-            ShipToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
-            //New Jersey Clause Logic
-            var sOrderId = ShipToContactRecordSet[0]["Id"];
-            var Custom_Service = "",
-              Input_BS = "",
-              Out_BS = "";
-            Custom_Service = SiebelApp.S_App.GetService("SC Custom Query");
-            Input_BS = SiebelApp.S_App.NewPropertySet();
-            Out_BS = SiebelApp.S_App.NewPropertySet();
-            searchfields = "State";
-            Input_BS.SetProperty("BO", "Internal Division");
-            Input_BS.SetProperty("BC", "Internal Division");
-            Input_BS.SetProperty("SearchSpecification", "[SC Store Number] = '" + ShipToContactRecordSet[0]["SC Store Number"] + "'");
-            Input_BS.SetProperty("SortSpecification", "");
-            Input_BS.SetProperty("ReqNoOfRecords", "");
-            Input_BS.SetProperty("FieldsArray", searchfields);
-            Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
-            var Child_BS = Out_BS.GetChild(0);
-            var BS_Data = Child_BS.GetProperty("OutputRecordSet");
-            var StoreStateArray = new Array;
-            if (BS_Data != "}") {
-              var ResArray = new Array;
-              ResArray = BS_Data.split(";");
-              for (var i = 0; i < ResArray.length; i++) {
-                jsonRes = JSON.parse(ResArray[i]);
-                SiebelJS.Log(jsonRes["State"]);
-                StoreStateArray[i] = jsonRes["State"];
-              }
-            }
-            var hasNJState = "";
-            for (var i = 0; i < StoreStateArray.length; i++) {
-              if (StoreStateArray[i] == "NJ") {
-                hasNJState = "Y";
-              }
-            }
-            if (hasNJState == "Y" || ShipToContactRecordSet[0]["Primary Ship To State"] == "NJ" || ShipToContactRecordSet[0]["Primary Bill To State"] == "NJ") {
-              var inPS = SiebelApp.S_App.NewPropertySet();
-              var outPS = SiebelApp.S_App.NewPropertySet();
-              var searchfields = "Description,Id";
-              inPS.SetProperty("BO", "SC TACOS");
-              inPS.SetProperty("BC", "SC TACOS Admin");
-              var Type = "NJ Clause";
-              inPS.SetProperty("SearchSpecification", "[Type] = '" + Type + "' AND [Effective Start Date] <= TODAY() AND ([Effective End Date] >= TODAY() OR [Effective End Date] IS NULL)");
-              inPS.SetProperty("ReqNoOfRecords", "");
-              inPS.SetProperty("FieldsArray", searchfields);
-              var BserviceT = SiebelApp.S_App.GetService("SC Custom Query"); //get service
-              outPS = BserviceT.InvokeMethod("Query", inPS);
-              var Child_BS = outPS.GetChild(0);
-              var BS_Data = Child_BS.GetProperty("OutputRecordSet");
-              NJ_Terms_TACOS = "", NJ_Terms_TACOS_RowId = "", NJ_POP_TACOS = "";
-              if (BS_Data != "}") {
-                var ResArray = new Array;
-                ResArray = BS_Data.split(";");
-                for (var i = 0; i < ResArray.length; i++) {
-                  jsonRes = JSON.parse(ResArray[i].replace(/\n/g, '__'));
-                  SiebelJS.Log(jsonRes["Description"]);
-                  SiebelJS.Log(jsonRes["Id"]);
-                  NJ_Terms_TACOS_RowId = jsonRes["Id"];
-                  NJ_POP_TACOS = NJ_POP_TACOS + jsonRes["Description"].replace(/__/g, '<br/>') + '<br/>';
-                  NJ_Terms_TACOS = NJ_Terms_TACOS + jsonRes["Description"].replace(/__/g, '\n') + '\n';
-                }
-              }
-
-              $("#SC-NJ-TACOS-Info").modal({
-                backdrop: 'static'
-              });
-              $("#SC-NJ-TACOS-Info").css({
-                "display": "flex",
-                "justify-content": "center",
-                "align-items": "center"
-              });
-
-              var NJDate = new Date();
-              var numberOfDaysToAdd = 56;
-              NJDate.setDate(NJDate.getDate() + numberOfDaysToAdd);
-              var dd = NJDate.getDate();
-              var mm = NJDate.getMonth() + 1;
-              var y = NJDate.getFullYear();
-              var NJFormattedDate = mm + '/' + dd + '/' + y;
-              NJ_Terms_TACOS = NJ_Terms_TACOS.replace('NJDATE', NJFormattedDate);
-              NJ_POP_TACOS = NJ_POP_TACOS.replace('NJDATE', NJFormattedDate);
-              $('#NJAddrTerms').html(NJ_POP_TACOS);
-              setTimeout(function () {
-                var addrInPS = SiebelApp.S_App.NewPropertySet();
-                var addrOutPS = SiebelApp.S_App.NewPropertySet();
-                var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
-                addrInPS.SetProperty("ProcessName", "SC P2PE Customer Info Prompt");
-                addrInPS.SetProperty("PromptConfirmQuestion", "Please Review");
-                addrInPS.SetProperty("Object Id", sOrderId);
-                addrInPS.SetProperty("PromptConfirmValue", NJ_Terms_TACOS); //pass NJ text data.
-                addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method
-                var NJFlag = addrOutPS.GetChild(0).GetProperty("PromptConfirmResult");
-                if (NJFlag == 'Y') {
-                  var fieldnames = 'SC NJ TACOS RowId|,|SC NJ TACOS Desc';
-                  var fieldvalues = NJ_Terms_TACOS_RowId + '|,|' + NJ_Terms_TACOS;
-                  var Bservice = '',
-                    inPS = '',
-                    outPS = '';
-                  inPS = SiebelApp.S_App.NewPropertySet();
-                  outPS = SiebelApp.S_App.NewPropertySet();
-                  inPS.SetProperty("BO", "Order Entry (Sales)");
-                  inPS.SetProperty("BC", "Order Entry - Orders");
-                  inPS.SetProperty("FieldsArray", fieldnames);
-                  inPS.SetProperty("ValuesArray", fieldvalues);
-                  inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
-                  Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
-                  outPS = Bservice.InvokeMethod("InsertTACOS", inPS);
-                  fPTConfirmFunction();
-                } else {
-                  fPTConfirmFunction();
-                }
-              }, 1000);
-            } else {
-              fPTConfirmFunction();
-            }
-          } else {
-            SiebelApp.S_App.GotoView("SC Order Entry - Payment View Sales OUI", "", "", "");
-          }
-        }
-
-        function fPTConfirmFunction() {
-          console.log("fPTConfirmFunction triggered");
-          var sOrderId = ShipToContactRecordSet[0]["Id"];
-          var inPS = SiebelApp.S_App.NewPropertySet();
-          var outPS = SiebelApp.S_App.NewPropertySet();
-          var searchfields = "Description,Id";
-          inPS.SetProperty("BO", "SC TACOS");
-          inPS.SetProperty("BC", "SC TACOS Admin");
-          var Type = "Exclusions/Final Sale";
-          inPS.SetProperty("SearchSpecification", "[Type] = '" + Type + "' AND [Effective Start Date] <= TODAY() AND ([Effective End Date] >= TODAY() OR [Effective End Date] IS NULL)");
-          inPS.SetProperty("ReqNoOfRecords", "");
-          inPS.SetProperty("FieldsArray", searchfields);
-          var BserviceT = SiebelApp.S_App.GetService("SC Custom Query"); //get service
-          outPS = BserviceT.InvokeMethod("Query", inPS);
-          var Child_BS = outPS.GetChild(0);
-          var BS_Data = Child_BS.GetProperty("OutputRecordSet");
-          var TACOS = "";
-          var popTACOS = "";
-          var sTACOSRowId = "";
-          if (BS_Data != "}") {
-            var ResArray = new Array;
-            ResArray = BS_Data.split(";");
-            for (var i = 0; i < ResArray.length; i++) {
-              jsonRes = JSON.parse(ResArray[i].replace(/\n/g, '__'));
-              SiebelJS.Log(jsonRes["Description"]);
-              SiebelJS.Log(jsonRes["Id"]);
-              sTACOSRowId = jsonRes["Id"];
-              TACOS = TACOS + jsonRes["Description"].replace(/__/g, '\n') + '\n';
-              TACOS = Type + " " + TACOS;
-              popTACOS = popTACOS + jsonRes["Description"].replace(/__/g, '<br/>') + '<br/>';
-            }
-          }
-
-          $("#SC-NJ-TACOS-Info").modal("hide");
-          $("#SC-Prod-Terms-Info").modal({
-            backdrop: 'static'
-          });
-          $("#SC-Prod-Terms-Info").css({
-            "display": "flex",
-            "justify-content": "center",
-            "align-items": "center"
-          });
-          $('#ProdTerms').html(popTACOS)
-
-          setTimeout(function () {
-            var addrInPS = SiebelApp.S_App.NewPropertySet();
-            var addrOutPS = SiebelApp.S_App.NewPropertySet();
-            var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
-            addrInPS.SetProperty("ProcessName", "SC P2PE Product Terms Info Prompt");
-            addrInPS.SetProperty("Object Id", sOrderId);
-            addrInPS.SetProperty("TermsandConditions", TACOS);
-            addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method
-            var bProdTACOSSales = addrOutPS.GetChild(0).GetProperty("PromptResponse");
-            SC_OUI_Methods.ClearP2PEPoleDisplay(sOrderId);
-            if (bProdTACOSSales == "A") {
-              $("#SC-Prod-Terms-Info").modal("hide");
-              $("#SC-Prod-Terms-Info").on('hidden.bs.modal', function () {
-                $(".modal-backdrop.in").hide();
-              });
-              var oDate = new Date();
-              var dd = oDate.getDate();
-              var mm = oDate.getMonth() + 1;
-              var yy = oDate.getFullYear();
-              var hh = oDate.getHours();
-              var min = oDate.getMinutes();
-              var secs = oDate.getSeconds()
-              var ocurdate = mm + '/' + dd + '/' + yy + ' ' + hh + ':' + min + ':' + secs;
-              var fieldnames = 'SC Products TACOS Acceptance,SC Products TACOS Acceptance Date,SC Product TACOS RowId';
-              var fieldvalues = 'Y,' + ocurdate + ',' + sTACOSRowId;
-              var Bservice = '',
-                inPS = '',
-                outPS = '';
-              inPS = SiebelApp.S_App.NewPropertySet();
-              outPS = SiebelApp.S_App.NewPropertySet();
-              inPS.SetProperty("BO", "Order Entry (Sales)");
-              inPS.SetProperty("BC", "Order Entry - Orders");
-              inPS.SetProperty("FieldsArray", fieldnames);
-              inPS.SetProperty("ValuesArray", fieldvalues);
-              inPS.SetProperty("SearchSpecification", "[Id] = '" + sOrderId + "'");
-              Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
-              outPS = Bservice.InvokeMethod("Insert", inPS);
-              SiebelApp.S_App.GotoView("SC Order Entry - Payment View Sales OUI", "", "", "");
-              //displaySummaryPage();
-            } else {
-              var addrInPS = SiebelApp.S_App.NewPropertySet();
-              var addrOutPS = SiebelApp.S_App.NewPropertySet();
-              var Bservice = SiebelApp.S_App.GetService("Workflow Process Manager"); //get service
-              addrInPS.SetProperty("ProcessName", "SC P2PE Customer Info Prompt");
-              addrInPS.SetProperty("PromptConfirmQuestion", "");
-              addrInPS.SetProperty("Object Id", sOrderId);
-              addrInPS.SetProperty("PromptConfirmQuestion", "Do you want to cancel?");
-              addrInPS.SetProperty("PromptConfirmValue", "By Declining the summary of the terms and conditions, you are requesting to cancel your transaction. Please select Yes if you would like to cancel and No if you would like to review the terms again.");
-              addrOutPS = Bservice.InvokeMethod("RunProcess", addrInPS); //invoke the method
-              var closeConfFlag = addrOutPS.GetChild(0).GetProperty("PromptConfirmResult");
-              SC_OUI_Methods.ClearP2PEPoleDisplay(sOrderId);
-              if (closeConfFlag == "Y") {
-                $("#SC-Prod-Terms-Info").modal("hide");
-                $("#SC-Prod-Terms-Decline-Info").modal({
-                  backdrop: 'static'
-                });
-                $("#SC-Prod-Terms-Decline-Info").css({
-                  "display": "flex",
-                  "justify-content": "center",
-                  "align-items": "center"
-                });
-              } else {
-                $("#SC-Prod-Terms-Info").modal("hide");
-                fPTConfirmFunction();
-              }
-            }
-          }, 1000);
-        }
-        //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
         //Start:Markup for Contact Search
-        function contactSearchMarkup() {
+        function contactSearchMarkup()
+        {
           if (scAccountOrder)
             csearchfields = SC_OUI_Definitions.contactAccountsearchfields();
           else
@@ -5399,10 +4782,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           markup += '                                            <form name="search">';
           markup += '                            <div id="field">';
           markup += '                                <select class="select-box margin-top sc-contact-select-box" autocomplete="off" id="field0" name="prof1">';
-          for (i = 0; i < csearchfields.length; i++) {
-            if (i == 0) {
+          for (i = 0; i < csearchfields.length; i++)
+          {
+            if (i == 0)
+            {
               markup += '                                    <option id="' + csearchfields[i] + '" value="' + csearchfields[i] + '" selected="selected">' + csearchfields[i] + '</option>';
-            } else {
+            }
+            else
+            {
               markup += '                                    <option id="' + csearchfields[i] + '" value="' + csearchfields[i] + '">' + csearchfields[i] + '</option>';
             }
           }
@@ -5412,10 +4799,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           markup += '                                                </div>';
           markup += '                            <div id="field">';
           markup += '                                <select class="select-box margin-top sc-contact-select-box" autocomplete="off" id="field1" name="prof1">';
-          for (i = 0; i < csearchfields.length; i++) {
-            if (i == 1) {
+          for (i = 0; i < csearchfields.length; i++)
+          {
+            if (i == 1)
+            {
               markup += '                                    <option id="' + csearchfields[i] + '" value="' + csearchfields[i] + '" selected="selected">' + csearchfields[i] + '</option>';
-            } else {
+            }
+            else
+            {
               markup += '                                    <option id="' + csearchfields[i] + '" value="' + csearchfields[i] + '">' + csearchfields[i] + '</option>';
             }
           }
@@ -5452,10 +4843,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           markup += '                        </div>';
           $("#shipping-order-search").html(markup);
           // hiding the dropdown values
-          $(".sc-contact-select-box").each(function () {
+          $(".sc-contact-select-box").each(function ()
+          {
             var value = $(this).val();
-            for (var i = 0; i < sFields.length; i++) {
-              if (value != sFields[i]) {
+            for (var i = 0; i < sFields.length; i++)
+            {
+              if (value != sFields[i])
+              {
                 $("#" + $(this).attr("id") + " option[value='" + sFields[i] + "']").wrap("<span>");
               }
             }
@@ -5463,7 +4857,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
         }
         //End:Markup for Contact Search	
-        function referralcontactSearchMarkup() {
+        function referralcontactSearchMarkup()
+        {
           refsearchfields = SC_OUI_Definitions.referralcontactsearchfields();
           searchCount = 2;
           next = 1;
@@ -5486,10 +4881,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           markup += '                                            <form name="search">';
           markup += '                            <div id="field">';
           markup += '                                <select class="select-box margin-top sc-ref-select-box" autocomplete="off" id="cfield0" name="prof1">';
-          for (i = 0; i < refsearchfields.length; i++) {
-            if (i == 0) {
+          for (i = 0; i < refsearchfields.length; i++)
+          {
+            if (i == 0)
+            {
               markup += '                                    <option id="' + refsearchfields[i] + '" value="' + refsearchfields[i] + '" selected="selected">' + refsearchfields[i] + '</option>';
-            } else {
+            }
+            else
+            {
               markup += '                                    <option id="' + refsearchfields[i] + '" value="' + refsearchfields[i] + '">' + refsearchfields[i] + '</option>';
             }
           }
@@ -5499,10 +4898,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           markup += '                                                </div>';
           markup += '                            <div id="field">';
           markup += '                                <select class="select-box margin-top sc-ref-select-box" autocomplete="off" id="cfield1" name="prof1">';
-          for (i = 0; i < refsearchfields.length; i++) {
-            if (i == 1) {
+          for (i = 0; i < refsearchfields.length; i++)
+          {
+            if (i == 1)
+            {
               markup += '                                    <option id="' + refsearchfields[i] + '" value="' + refsearchfields[i] + '" selected="selected">' + refsearchfields[i] + '</option>';
-            } else {
+            }
+            else
+            {
               markup += '                                    <option id="' + refsearchfields[i] + '" value="' + refsearchfields[i] + '">' + refsearchfields[i] + '</option>';
             }
           }
@@ -5539,10 +4942,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           markup += '                        </div>';
           $("#Referral-Contact-search").html(markup);
           // hiding the dropdown values
-          $(".sc-ref-select-box").each(function () {
+          $(".sc-ref-select-box").each(function ()
+          {
             var value = $(this).val();
-            for (var i = 0; i < sFields.length; i++) {
-              if (value != sFields[i]) {
+            for (var i = 0; i < sFields.length; i++)
+            {
+              if (value != sFields[i])
+              {
                 $("#" + $(this).attr("id") + " option[value='" + sFields[i] + "']").wrap("<span>");
               }
             }
@@ -5551,69 +4957,99 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
         }
 
         //Start:Search contacts
-        function searchContact() {
+        function searchContact()
+        {
           $("body").trigger('Custom.Start');
           var searchObj = [];
           var finalObj = {};
-          $("select[id*='field']").each(function () {
+          $("select[id*='field']").each(function ()
+          {
             var fname = $(this).val();
             var fvalue = $(this).next().val();
             fvalue = $.trim(fvalue);
             var phonespec = "";
-            if (fname !== "" && fvalue !== "" && fvalue !== undefined && fname !== undefined) {
-              if (fname == "Phone Number") {
+            if (fname !== "" && fvalue !== "" && fvalue !== undefined && fname !== undefined)
+            {
+              if (fname == "Phone Number")
+              {
                 var phone = ["Cellular Phone #", "Work Phone #", "Home Phone #"];
-                for (i = 0; i < phone.length; i++) {
-                  if (i < phone.length - 1) {
+                for (i = 0; i < phone.length; i++)
+                {
+                  if (i < phone.length - 1)
+                  {
                     phonespec = phonespec + "[" + phone[i] + "] Like '" + fvalue + "' OR "
-                  } else {
+                  }
+                  else
+                  {
                     phonespec = phonespec + "[" + phone[i] + "] Like '" + fvalue + "'";
                   }
                 }
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": "Cellular Phone #",
                   "value": phonespec
                 });
-              } else if (fname == "Customer Number" || fname == "Employee Number") {
+              }
+              else if (fname == "Customer Number" || fname == "Employee Number")
+              {
                 fvalue = fvalue + "*";
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": fname,
                   "value": fvalue
                 });
-              } else if (fname == "Postal Code") {
+              }
+              else if (fname == "Postal Code")
+              {
                 fvalue = fvalue + "*";
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": "Personal Postal Code",
                   "value": fvalue
                 });
-              } else if (fname == "City") {
+              }
+              else if (fname == "City")
+              {
                 fvalue = fvalue + "*";
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": "Personal City",
                   "value": fvalue
                 });
-              } else if (fname == "State") {
+              }
+              else if (fname == "State")
+              {
                 fvalue = fvalue + "*";
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": "Personal State",
                   "value": fvalue
                 });
-              } else if (fname == "Address (Mail To)") {
+              }
+              else if (fname == "Address (Mail To)")
+              {
                 fvalue = fvalue + "*";
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": "Personal Street Address",
                   "value": fvalue
                 });
-              } else if (fname == "Email Address") {
+              }
+              else if (fname == "Email Address")
+              {
                 fvalue = fvalue + "*";
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": "Primary Email Address",
                   "value": fvalue
                 });
-              } else {
+              }
+              else
+              {
                 //SNARRA 20/07/2018: Added code for appostrophe text field values
                 fvalue = '"' + fvalue.toUpperCase() + '*"';
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": fname,
                   "value": fvalue
                 });
@@ -5621,65 +5057,87 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             }
           });
 
-          if (searchObj.length > 0) {
-            for (var i = 0; i < searchObj.length; i++) {
+          if (searchObj.length > 0)
+          {
+            for (var i = 0; i < searchObj.length; i++)
+            {
               finalObj[searchObj[i].field_name] = searchObj[i].value;
             }
           }
 
           FieldQueryPair = finalObj;
-          if (scAccountOrder) {
+          if (scAccountOrder)
+          {
             SC_OUI_Methods.ExecuteListAppletFramesync(SiebelConstant, FieldQueryPair, "SC Account Contact Shipping List OUI");
             ContactAccountSearch_GetRecordSearch();
-          } else
+          }
+          else
             SC_OUI_Methods.ExecuteListAppletFrame(SiebelConstant, FieldQueryPair, "SC Contact Shipping List OUI");
 
         }
         //End:Search contacts
         //START:Ref Search Contacts
-        function refSearchContact() {
+        function refSearchContact()
+        {
           referredsearchfields();
           $("body").trigger('Custom.Start');
           var searchObj = [];
           var finalObj = {};
-          $("select[id*='field']").each(function () {
+          $("select[id*='field']").each(function ()
+          {
             var fname = $(this).val();
             var fvalue = $(this).next().val();
             fvalue = $.trim(fvalue);
             var phonespec = "";
-            if (fname !== "" && fvalue !== "" && fvalue !== undefined && fname !== undefined) {
-              if (fname == "Phone Number") {
+            if (fname !== "" && fvalue !== "" && fvalue !== undefined && fname !== undefined)
+            {
+              if (fname == "Phone Number")
+              {
                 //var phone=["Cellular Phone #","Work Phone #","Home Phone #"];
                 var phone = ["Primary Contact Cellular Phone #", "Primary Contact Home Phone #", "Primary Contact Work Phone #"];
-                for (i = 0; i < phone.length; i++) {
-                  if (i < phone.length - 1) {
+                for (i = 0; i < phone.length; i++)
+                {
+                  if (i < phone.length - 1)
+                  {
                     phonespec = phonespec + "[" + phone[i] + "] Like '" + fvalue + "' OR "
-                  } else {
+                  }
+                  else
+                  {
                     phonespec = phonespec + "[" + phone[i] + "] Like '" + fvalue + "'";
                   }
                 }
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": "Cellular Phone #",
                   "value": phonespec
                 });
-              } else if (fname == "Customer Number") {
+              }
+              else if (fname == "Customer Number")
+              {
                 fvalue = fvalue + "*";
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": fname,
                   "value": fvalue
                 });
-              } else if (fname == "Email Address") {
+              }
+              else if (fname == "Email Address")
+              {
                 fvalue = fvalue;
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": fname,
                   "value": fvalue
                 });
-              } else {
+              }
+              else
+              {
                 fvalue = fvalue.toUpperCase() + "*";
                 //SJAKKIDI: Start Added for appostrophe text field values
                 fvalue = '"' + fvalue + '"';
                 //SJAKKIDI: End Added for appostrophe text field values
-                searchObj.push({
+                searchObj.push(
+                {
                   "field_name": fname,
                   "value": fvalue
                 });
@@ -5687,8 +5145,10 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             }
           });
 
-          if (searchObj.length > 0) {
-            for (var i = 0; i < searchObj.length; i++) {
+          if (searchObj.length > 0)
+          {
+            for (var i = 0; i < searchObj.length; i++)
+            {
               finalObj[searchObj[i].field_name] = searchObj[i].value;
             }
           }
@@ -5699,12 +5159,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
         }
         //END:Ref Search Contacts
-        function searchfields() {
-          $("input[type=text]").each(function () {
+        function searchfields()
+        {
+          $("input[type=text]").each(function ()
+          {
             $(this).attr("value", $(this).val());
           });
 
-          $("select option").each(function () {
+          $("select option").each(function ()
+          {
             if ($(this).attr("selected") == "selected")
               $(this).attr("selected", "true");
             else
@@ -5712,12 +5175,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
         }
 
-        function referredsearchfields() {
-          $("#sc-referral-search-box").each(function () {
+        function referredsearchfields()
+        {
+          $("#sc-referral-search-box").each(function ()
+          {
             $(this).attr("value", $(this).val());
           });
 
-          $("#sc-ref-select-box").each(function () {
+          $("#sc-ref-select-box").each(function ()
+          {
             if ($(this).attr("selected") == "selected")
               $(this).attr("selected", "true");
             else
@@ -5725,7 +5191,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
         }
         //Start:ignore the error codes for on clcik of verify button
-        function verfiyErrorCodes() {
+        function verfiyErrorCodes()
+        {
           var OrderErrors = [];
           FieldQueryPair = {
             "Id": ""
@@ -5741,14 +5208,16 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           OrderErrors = OrderErrors.concat(validatemessageorderitem);
           OrderErrors = OrderErrors.concat(validatemessageorderlist);
           OrderErrors = OrderErrors.concat(validatemessagepaymentlist);
-          for (var err = 0; err < OrderErrors.length; err++) {
+          for (var err = 0; err < OrderErrors.length; err++)
+          {
             if (ignoreErrorCodes.indexOf(OrderErrors[err]["Message Code"]) == -1)
               return 1;
           }
           return 0;
         }
         //End:ignore the error codes for on clcik of verify button
-        function setValidationErrors() {
+        function setValidationErrors()
+        {
           var OrderErrors = [];
           var OrderDetailserr = "";
           var lineDetailserr = "";
@@ -5763,17 +5232,20 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           $("#SC-error-block").html(scerrormarkup);
           if ($("#SC-error-block").is(":visible"))
             $("#CommunicationPanelContainer").css("cssText", "padding-top: 132px !important;");
-          $("#SC-SO-CF-failure").modal({
+          $("#SC-SO-CF-failure").modal(
+          {
             backdrop: 'static'
           });
-          $("#SC-SO-CF-failure").css({
+          $("#SC-SO-CF-failure").css(
+          {
             "display": "flex",
             "justify-content": "center",
             "align-items": "center"
           });
           $(".modal-backdrop").css('background', '#ffffff');
           $("#SC-SO-CF-verify").modal('hide');
-          $("#SC-SO-CF-failure").css({
+          $("#SC-SO-CF-failure").css(
+          {
             "display": "",
             "justify-content": "",
             "align-items": ""
@@ -5813,29 +5285,37 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           if ($("#SC-error-block").is(":visible"))
             $("#CommunicationPanelContainer").css("cssText", "padding-top: 132px !important;");
           shippingerr += '<a href="#Default-Shipping" class="SC-shipping-error" style="text-decoration: none">';
-          for (var err = 0; err < OrderErrors.length; err++) {
-            bRefreshShipMethod = (OrderErrors[err]["Message Code"] == "TD-01") ? true : bRefreshShipMethod; //SL;Added for Tier Delivery;DF-1975
-            if (mappingerrorcodes[OrderErrors[err]["Message Code"]] == "LineDetailsError") {
+          for (var err = 0; err < OrderErrors.length; err++)
+          {
+            bReloadMarkup = (OrderErrors[err]["Message Code"] == "TD-01") ? true : bReloadMarkup; //SL;Added for Tier Delivery;DF-1975
+			if (mappingerrorcodes[OrderErrors[err]["Message Code"]] == "LineDetailsError")
+            {
               if (OrderErrors[err].hasOwnProperty('SC Line Number'))
                 lineDetailserr += '<li>' + '#' + OrderErrors[err]["SC Line Number"] + '-' + OrderErrors[err]["Message Text"] + '</li>';
               else
                 lineDetailserr += '<li>' + OrderErrors[err]["Message Text"] + '</li>';
               lineDetailserrlen += 1;
 
-            } else if (mappingerrorcodes[OrderErrors[err]["Message Code"]] == "OrderHeaderError") {
+            }
+            else if (mappingerrorcodes[OrderErrors[err]["Message Code"]] == "OrderHeaderError")
+            {
               if (OrderErrors[err].hasOwnProperty('SC Line Number'))
                 OrderDetailserr += '<li>' + '#' + OrderErrors[err]["SC Line Number"] + '-' + OrderErrors[err]["Message Text"] + '</li>';
               else
                 OrderDetailserr += '<li>' + OrderErrors[err]["Message Text"] + '</li>';
               orderDetailserrlen += 1;
 
-            } else if (mappingerrorcodes[OrderErrors[err]["Message Code"]] == "ShippingError") {
+            }
+            else if (mappingerrorcodes[OrderErrors[err]["Message Code"]] == "ShippingError")
+            {
               if (OrderErrors[err].hasOwnProperty('SC Line Number'))
                 shippingerr += '<li>' + '#' + OrderErrors[err]["SC Line Number"] + '-' + OrderErrors[err]["Message Text"] + '</li>';
               else
                 shippingerr += '<li>' + OrderErrors[err]["Message Text"] + '</li>';
               shippingerrlen += 1;
-            } else if (mappingerrorcodes[OrderErrors[err]["Message Code"]] == "ContactError") {
+            }
+            else if (mappingerrorcodes[OrderErrors[err]["Message Code"]] == "ContactError")
+            {
               if (OrderErrors[err].hasOwnProperty('SC Line Number'))
                 contacterr += '<li>' + '#' + OrderErrors[err]["SC Line Number"] + '-' + OrderErrors[err]["Message Text"] + '</li>';
               else
@@ -5846,51 +5326,71 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
           shippingerr += '</a>';
 
-          if (orderDetailserrlen == 0) {
+          if (orderDetailserrlen == 0)
+          {
             $("#SC-select-oder-item").html('<img src="images/custom/done_mini.png"/>');
-            $("#SC-label-select-Orderdetails-item").css({
+            $("#SC-label-select-Orderdetails-item").css(
+            {
               "pointer-events": 'none'
             });
-          } else {
+          }
+          else
+          {
             $("#orderdetailserrno").html(orderDetailserrlen + ' ERRORS FOUND');
             $("#orderdetailserrors").html(OrderDetailserr);
-            $("#SC-label-select-Orderdetails-item").css({
+            $("#SC-label-select-Orderdetails-item").css(
+            {
               "pointer-events": 'all'
             });
           }
-          if (lineDetailserrlen == 0) {
+          if (lineDetailserrlen == 0)
+          {
             $("#SC-select-line-item").html('<img src="images/custom/done_mini.png"/>');
-            $("#SC-label-select-linedetail-item").css({
+            $("#SC-label-select-linedetail-item").css(
+            {
               "pointer-events": 'none'
             });
-          } else {
+          }
+          else
+          {
             $("#linedetailserrno").html(lineDetailserrlen + ' ERRORS FOUND');
             $("#linedetailserrors").html(lineDetailserr);
-            $("#SC-label-select-linedetail-item").css({
+            $("#SC-label-select-linedetail-item").css(
+            {
               "pointer-events": 'all'
             });
           }
-          if (shippingerrlen == 0) {
+          if (shippingerrlen == 0)
+          {
             $("#SC-select-ship-item").html('<img src="images/custom/done_mini.png"/>');
-            $("#SC-label-select-shipping-item").css({
+            $("#SC-label-select-shipping-item").css(
+            {
               "pointer-events": 'none'
             });
-          } else {
+          }
+          else
+          {
             $("#shippingserrno").html(shippingerrlen + ' ERRORS FOUND');
             $("#shippingserros").html(shippingerr);
-            $("#SC-label-select-shipping-item").css({
+            $("#SC-label-select-shipping-item").css(
+            {
               "pointer-events": 'all'
             });
           }
-          if (contacterrlen == 0) {
+          if (contacterrlen == 0)
+          {
             $("#SC-select-contact-item").html('<img src="images/custom/done_mini.png"/>');
-            $("#SC-label-select-contact-item").css({
+            $("#SC-label-select-contact-item").css(
+            {
               "pointer-events": 'none'
             });
-          } else {
+          }
+          else
+          {
             $("#contacterrorno").html(contacterrlen + ' ERRORS FOUND');
             $("#contacterrors").html(contacterr);
-            $("#SC-label-select-contact-item").css({
+            $("#SC-label-select-contact-item").css(
+            {
               "pointer-events": 'all'
             });
           }
@@ -5901,14 +5401,16 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
         }
 
-        function GetAddressList(conId_Global) {
+        function GetAddressList(conId_Global)
+        {
           var search_Spec = "[Contact Id] = '" + conId_Global + "' AND ([End Date] IS NULL  OR [End Date] > TODAY())";
           var Fields = "Id,Address Name,SC HD Eligible,SC HD Service Level,City,Postal Code,State,Street Address";
           addList = SC_OUI_Methods.GetContactAddressesList("Contact", "FINS Contact Address", search_Spec, Fields);
           SiebelJS.Log("addList is:" + addList);
         }
 
-        function GetAccountAddressList(AccId_Global) {
+        function GetAccountAddressList(AccId_Global)
+        {
 
           var search_Spec = "[Account Id] = '" + AccId_Global + "'";
           var Fields = "Id,Address Name,SC HD Eligible,SC HD Service Level,City,Postal Code,State,Street Address";
@@ -5922,7 +5424,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
         {
           if (arrays.length === 0)
             return [];
-          return arrays.reduce((common, array) => {
+          return arrays.reduce((common, array) =>
+          {
             return common.filter(element => array.includes(element));
           });
         }
@@ -5934,21 +5437,30 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           var bDeliveryTier = true,
             strReturnVal = true;
 
-          $('[id$="Delivery-Tier"]').not('#Delivery-Tier').each(function () {
-            if ($(this).val() == "") {
+          $('[id$="Delivery-Tier"]').not('#Delivery-Tier').each(function ()
+          {
+            if ($(this).val() == "")
+            {
               bDeliveryTier = false;
             }
           });
-          if (bDeliveryTier) {
+          if (bDeliveryTier)
+          {
             ps_TierDelivery = SiebelApp.S_App.NewPropertySet();
             oliRecSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet();
             numOfRec = oliRecSet.length;
-            for (var i = 0; i < numOfRec; i++) {
-              if (oliRecSet[i]['Ship Method'] == "Home Delivery" && oliRecSet[i]['Product Line'] != 'DELIVERY' && oliRecSet[i]['Product Line'] != 'SERVICE' && oliRecSet[i]["Product Type Code"] != ProductTypeCode[0] && ((oliRecSet[i]['Fulfillment Status Code'] == 'In Progress') || (oliRecSet[i]['SC Revisable'] == 'Revisable' && (oliRecSet[i]['Request To Cancel'] == "" || oliRecSet[i]['Request To Cancel'] == 'N')))) {
-                if (!ps_TierDelivery.PropertyExists(oliRecSet[i]["Ship To Address Id"])) {
+            for (var i = 0; i < numOfRec; i++)
+            {
+              if (oliRecSet[i]['Ship Method'] == "Home Delivery" && oliRecSet[i]['Product Line'] != 'DELIVERY' && oliRecSet[i]['Product Line'] != 'SERVICE' && oliRecSet[i]["Product Type Code"] != ProductTypeCode[0] && ((oliRecSet[i]['Fulfillment Status Code'] == 'In Progress') || (oliRecSet[i]['SC Revisable'] == 'Revisable' && (oliRecSet[i]['Request To Cancel'] == "" || oliRecSet[i]['Request To Cancel'] == 'N'))))
+              {
+                if (!ps_TierDelivery.PropertyExists(oliRecSet[i]["Ship To Address Id"]))
+                {
                   ps_TierDelivery.SetProperty(oliRecSet[i]["Ship To Address Id"], oliRecSet[i]["Shipping"]);
-                } else {
-                  if (ps_TierDelivery.GetProperty(oliRecSet[i]["Ship To Address Id"]) != oliRecSet[i]["Shipping"]) {
+                }
+                else
+                {
+                  if (ps_TierDelivery.GetProperty(oliRecSet[i]["Ship To Address Id"]) != oliRecSet[i]["Shipping"])
+                  {
                     strReturnVal = false;
                     break;
                   }
@@ -5969,11 +5481,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           var psSelectedTier;
           lineItemRecSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetBusComp().GetRecordSet()
           numOfRec = lineItemRecSet.length;
-          if (bEmptyDeliveryTier) {
+          if (bEmptyDeliveryTier)
+          {
             $('[id$="Delivery-Tier"]').empty(); //remove the delivery tier options
           }
           psSelectedTier = SiebelApp.S_App.NewPropertySet();
-          for (var i = 0; i < numOfRec; i++) {
+          for (var i = 0; i < numOfRec; i++)
+          {
             bAddressMatch = false;
             if (!bEmptyDeliveryTier) //delivery tier at shipping header is updated;so update delivery tier at line items with matching address
             {
@@ -5981,7 +5495,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               if (strOrdAddrId == strLineItemAddrId)
                 bAddressMatch = true;
             }
-            if ((bEmptyDeliveryTier || bAddressMatch) && lineItemRecSet[i]['Ship Method'] == "Home Delivery" && lineItemRecSet[i]['Product Line'] != 'DELIVERY' && lineItemRecSet[i]['Product Line'] != 'SERVICE' && lineItemRecSet[i]["Product Type Code"] != ProductTypeCode[0] && ((lineItemRecSet[i]['Fulfillment Status Code'] = 'In Progress') || (lineItemRecSet[i]['SC Revisable'] = 'Revisable' && lineItemRecSet[i]['Request To Cancel'] != 'Y'))) {
+            if ((bEmptyDeliveryTier || bAddressMatch) && lineItemRecSet[i]['Ship Method'] == "Home Delivery" && lineItemRecSet[i]['Product Line'] != 'DELIVERY' && lineItemRecSet[i]['Product Line'] != 'SERVICE' && lineItemRecSet[i]["Product Type Code"] != ProductTypeCode[0] && ((lineItemRecSet[i]['Fulfillment Status Code'] = 'In Progress') || (lineItemRecSet[i]['SC Revisable'] = 'Revisable' && lineItemRecSet[i]['Request To Cancel'] != 'Y')))
+            {
               $("#" + (i + 1) + "Delivery-Tier").val(jsonDeliveryTier[value]); //Set the value at line item
               $("#s_" + appletSeq + "_l tr#" + (i + 1)).trigger("click");
               SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetFieldValue("Shipping", value);
@@ -5992,15 +5507,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             {
               if (lineItemRecSet[i]['Ship Method'] == "Home Delivery" && lineItemRecSet[i]['Product Line'] != 'DELIVERY' && lineItemRecSet[i]['Product Line'] != 'SERVICE' && lineItemRecSet[i]["Product Type Code"] != ProductTypeCode[0] && ((lineItemRecSet[i]['Fulfillment Status Code'] = 'In Progress') || (lineItemRecSet[i]['SC Revisable'] = 'Revisable' && lineItemRecSet[i]['Request To Cancel'] != 'Y'))) //store the delivery tier of shippable line
               {
-                if (!psSelectedTier.PropertyExists(lineItemRecSet[i]["Ship To Address Id"])) {
+                if (!psSelectedTier.PropertyExists(lineItemRecSet[i]["Ship To Address Id"]))
+                {
                   psSelectedTier.SetProperty(lineItemRecSet[i]["Ship To Address Id"], lineItemRecSet[i]["Shipping"]);
                 }
               }
-              if (lineItemRecSet[i]['Ship Method'] == "Home Delivery" && (lineItemRecSet[i]['Product Line'] == 'DELIVERY' || lineItemRecSet[i]['Product Line'] == 'SERVICE') && psSelectedTier.PropertyExists(lineItemRecSet[i]["Ship To Address Id"]) && ((lineItemRecSet[i]['Fulfillment Status Code'] = 'In Progress') || (lineItemRecSet[i]['SC Revisable'] = 'Revisable' && lineItemRecSet[i]['Request To Cancel'] != 'Y'))) {
+              if (lineItemRecSet[i]['Ship Method'] == "Home Delivery" && (lineItemRecSet[i]['Product Line'] == 'DELIVERY' || lineItemRecSet[i]['Product Line'] == 'SERVICE') && psSelectedTier.PropertyExists(lineItemRecSet[i]["Ship To Address Id"]) && ((lineItemRecSet[i]['Fulfillment Status Code'] = 'In Progress') || (lineItemRecSet[i]['SC Revisable'] = 'Revisable' && lineItemRecSet[i]['Request To Cancel'] != 'Y')))
+              {
                 strDeliveryTier = psSelectedTier.GetProperty(lineItemRecSet[i]["Ship To Address Id"]);
                 $("#s_" + appletSeq + "_l tr#" + (i + 1)).trigger("click");
                 var bWriteRec = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "WriteRecord");
-                if (bWriteRec) {
+                if (bWriteRec)
+                {
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetFieldValue("Shipping", strDeliveryTier);
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].InvokeMethod("WriteRecord");
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].InvokeMethod("RefreshBusComp");
@@ -6029,31 +5547,40 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           var elemId;
           if (orderId != null && orderId != "") //Get the tier options for line item
           {
-            if ($('#Ship-to-Account-button').hasClass('p-item-active')) {
+            if ($('#Ship-to-Account-button').hasClass('p-item-active'))
+            {
               elemId = "acc-Delivery-Tier";
-            } else {
+            }
+            else
+            {
               elemId = "Delivery-Tier";
             }
             inputPS = SiebelApp.S_App.NewPropertySet();
             outputPS = SiebelApp.S_App.NewPropertySet();
             inputPS.SetProperty("Order Id", orderId);
             Defalult_ship_AddrId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Ship To Address Id")
-            if (Defalult_ship_AddrId != null && Defalult_ship_AddrId != "" && Defalult_ship_AddrId != "No Match Row Id") {
+            if (Defalult_ship_AddrId != null && Defalult_ship_AddrId != "" && Defalult_ship_AddrId != "No Match Row Id")
+            {
               objService = SiebelApp.S_App.GetService("SC Order Management Service");
               outputPS = objService.InvokeMethod("GetDeliveryTier", inputPS);
               sTierEligbleVal = outputPS.GetChild(0).GetProperty("strTierFlag_Mkt");
-              if (outputPS.GetChild(0).GetChildByType('Address') != null) {
+              if (outputPS.GetChild(0).GetChildByType('Address') != null)
+              {
                 ps_AddrNode = outputPS.GetChild(0).GetChildByType('Address');
-                if (ps_AddrNode.GetChildCount() > 0) {
-                  for (var i = 0; i < ps_AddrNode.GetChildCount(); i++) {
+                if (ps_AddrNode.GetChildCount() > 0)
+                {
+                  for (var i = 0; i < ps_AddrNode.GetChildCount(); i++)
+                  {
                     strLineIds = "";
                     strPropName = ps_AddrNode.GetChild(i).GetFirstProperty(); //Line id
 
-                    while (strPropName != "" && strPropName != null) {
+                    while (strPropName != "" && strPropName != null)
+                    {
                       strLineIds = (strLineIds == "") ? strPropName : (strLineIds + "," + strPropName);
                       strPropValue = ps_AddrNode.GetChild(i).GetProperty(strPropName); //get eligible tiers associated to each line under the same address
                       lineDeliveryTiers_list = strPropValue.split(","); //array of eligible tiers for a line
-                      if (lineDeliveryTiers_list.length > 0) {
+                      if (lineDeliveryTiers_list.length > 0)
+                      {
                         groupLineTDs_list.push(lineDeliveryTiers_list); //array of arrays - group of eligible tier arrays 
                       }
                       strPropName = ps_AddrNode.GetChild(i).GetNextProperty();
@@ -6070,12 +5597,12 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                           $("#s_" + appletSeq + "_l tr#" + (j + 1)).trigger("click");
                           SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetBusComp().SetFieldValue("Shipping", "Home Delivery");
                           SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].InvokeMethod("WriteRecord");
-                          tierOptions += '<option value="Home Delivery" selected>Home Delivery</option>'; //DF-1975;default to Home Delivery
-                          $('[id="' + (j + 1) + 'Delivery-Tier"]').addClass("SC-readonly");
                         }
-                        for (var k = 0; k < strEligibleTierArray.length; k++) {
+                        for (var k = 0; k < strEligibleTierArray.length; k++)
+                        {
                           var tierValue = strEligibleTierArray[k];
-                          if (tierValue != "") {
+                          if (tierValue != "")
+                          {
                             tierOptions += '<option value="' + jsonDeliveryTier[tierValue] + '"';
                             if (lineItemRecSet[j]["Shipping"] == tierValue)
                               tierOptions += 'selected>';
@@ -6094,26 +5621,31 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     orderRecSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
                     if (ps_AddrNode.GetChild(i).GetType() == orderRecSet[0]["Ship To Address Id"]) //apply deliver tier at shipping header
                     {
-                      $('#' + elemId).html(tierOptions);
+                      $('#'+elemId).html(tierOptions);
                       //below lines to sort the dropdown
-                      options = $('#' + elemId + ' option');
+                      options = $('#'+elemId+' option');
                       options.sort((a, b) => a.value.localeCompare(b.value));
-                      $('#' + elemId).empty().append(options); //update the sorted options
+                      $('#'+elemId).empty().append(options); //update the sorted options
                     }
                   }
-                } else
-                  $('#' + elemId).empty(); //DF-1859  
+                }
+                else
+                  $('#'+elemId).empty(); //DF-1859  
               }
-            } else
+            }
+            else
               SiebelJS.Log("Shipping Address Unavailable!!");
           }
         }
         //Start: Funtion to get the all addresses of the billingTo contact
-        function AttachAddresses(Addrid) {
+        function AttachAddresses(Addrid)
+        {
 
           var addressLine = '';
-          for (var j = 0; j < addList.length; j++) {
-            if (addList[j] != "") {
+          for (var j = 0; j < addList.length; j++)
+          {
+            if (addList[j] != "")
+            {
               var addr_JSON = JSON.parse(addList[j]);
               var DetailAddlist = {};
               //parentAddrJSON[addr_JSON["Address Name"]] = addr_JSON["Id"];
@@ -6130,10 +5662,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             addressLine += '<option>' + parentJSON[Addrid] + '</option>';
           else
             addressLine += '<option></option>';
-          for (var j = 0; j < addList.length; j++) {
-            if (addList[j] != "") {
+          for (var j = 0; j < addList.length; j++)
+          {
+            if (addList[j] != "")
+            {
               var addr_JSON = JSON.parse(addList[j]);
-              if (addr_JSON["Id"] != Addrid) {
+              if (addr_JSON["Id"] != Addrid)
+              {
                 //addressLine += '<option>' + addr_JSON["Address Name"] + '</option>';
                 addressLine += '<option>' + addr_JSON["Street Address"] + "," + addr_JSON["City"] + "," + addr_JSON["State"] + "," + addr_JSON["Postal Code"] + '</option>';
               }
@@ -6149,14 +5684,18 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           return addressLine
         }
 
-        function AttachLineAddresses(PrimaryAddr) {
+        function AttachLineAddresses(PrimaryAddr)
+        {
 
           var addressLine = '';
           addressLine += '<option>' + PrimaryAddr + '</option>';
-          for (var j = 0; j < addList.length; j++) {
-            if (addList[j] != "") {
+          for (var j = 0; j < addList.length; j++)
+          {
+            if (addList[j] != "")
+            {
               var addr_JSON = JSON.parse(addList[j]);
-              if (PrimaryAddr != addr_JSON["Address Name"]) {
+              if (PrimaryAddr != addr_JSON["Address Name"])
+              {
                 //addressLine += '<option>' + addr_JSON["Address Name"] + '</option>';
                 addressLine += '<option>' + addr_JSON["Street Address"] + "," + addr_JSON["City"] + "," + addr_JSON["State"] + "," + addr_JSON["Postal Code"] + '</option>';
                 //parentJSON[addr_JSON["Id"]] = addr_JSON["Address Name"];
@@ -6175,14 +5714,16 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
         }
         //SBOORLA:code for verfying the regisrty location with MobilePOSNumbers
-        function VerifyPOSLocation() {
+        function VerifyPOSLocation()
+        {
           var storenumber = "",
             storeuser = "";
           var mystoreNumber = "";
           salelocationnumber = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Location Store Number");
           storenumber = SiebelApp.S_App.GetProfileAttr("MachineInfo");
           storeuser = SiebelApp.S_App.GetProfileAttr("SC Store User");
-          if (storenumber != "" && storenumber != undefined) {
+          if (storenumber != "" && storenumber != undefined)
+          {
             storenumber = storenumber.split('_');
             storenumber = storenumber[0];
           }
@@ -6190,22 +5731,28 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           else
             return 2;
           //End:remove this code once disa installation is done in all machines
-          if (disaflag === "Y" && storeuser === "Y") {
+          if (disaflag === "Y" && storeuser === "Y")
+          {
             mystoreNumber = SiebelApp.S_App.GetProfileAttr("SC Store Number");
-            if (POSRegArray.indexOf(storenumber) != -1) {
-              if (salelocationnumber != mystoreNumber) {
+            if (POSRegArray.indexOf(storenumber) != -1)
+            {
+              if (salelocationnumber != mystoreNumber)
+              {
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Change", "Y");
                 SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
                 $("#SC-SO-CF-verify").modal('hide');
-                $("#SC-SO-CF-verify").css({
+                $("#SC-SO-CF-verify").css(
+                {
                   "display": "",
                   "justify-content": "",
                   "align-items": ""
                 });
-                $("#SC-SO-store-location").modal({
+                $("#SC-SO-store-location").modal(
+                {
                   backdrop: 'static'
                 });
-                $("#SC-SO-store-location").css({
+                $("#SC-SO-store-location").css(
+                {
                   "display": "flex",
                   "justify-content": "center",
                   "align-items": "center"
@@ -6213,17 +5760,22 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 $(".modal-backdrop").css('background', '#ffffff');
                 return 1;
               }
-            } else {
+            }
+            else
+            {
               $("#SC-SO-CF-verify").modal('hide');
-              $("#SC-SO-CF-verify").css({
+              $("#SC-SO-CF-verify").css(
+              {
                 "display": "",
                 "justify-content": "",
                 "align-items": ""
               });
-              $("#SC-SO-my-store").modal({
+              $("#SC-SO-my-store").modal(
+              {
                 backdrop: 'static'
               });
-              $("#SC-SO-my-store").css({
+              $("#SC-SO-my-store").css(
+              {
                 "display": "flex",
                 "justify-content": "center",
                 "align-items": "center"
@@ -6232,12 +5784,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               return 0;
             }
             return 2;
-          } else {
+          }
+          else
+          {
             return 2;
           }
         }
         //Start:Function to get lineitem 
-        function getordersummarylineitems(outPS) {
+        function getordersummarylineitems(outPS)
+        {
           poleJSON = [];
           subpoleJSON = [];
           var markup = "";
@@ -6253,7 +5808,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           var addonpricewithtax = "";
           SiebelJS.Log(outPS);
 
-          for (var pr = 0; pr < outPS.GetChild(0).GetChildCount(); pr++) {
+          for (var pr = 0; pr < outPS.GetChild(0).GetChildCount(); pr++)
+          {
             startprice = outPS.GetChild(0).GetChild(pr).GetProperty("Start Price") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("Start Price")) : 0.00;
             discounts = outPS.GetChild(0).GetChild(pr).GetProperty("SC Total Line Discounts") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("SC Total Line Discounts")) : 0.00;
             netprice = outPS.GetChild(0).GetChild(pr).GetProperty("NRC Sub Total") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("Item Price - Display")) : 0.00;
@@ -6263,7 +5819,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             startprice = (startprice * qty).toFixed(2);
             tax = outPS.GetChild(0).GetChild(pr).GetProperty("Tax Amount") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("Tax Amount")) : 0.00;
             pricewithtax = outPS.GetChild(0).GetChild(pr).GetProperty("SC Line Total NRC") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("SC Line Total NRC")) : 0.00;
-            if (outPS.GetChild(0).GetChild(pr).GetProperty("Request To Cancel") != "Y" && outPS.GetChild(0).GetChild(pr).GetProperty("Product Line") != "DELIVERY" && outPS.GetChild(0).GetChild(pr).GetProperty("Product Type Code") != ProductTypeCode) {
+            if (outPS.GetChild(0).GetChild(pr).GetProperty("Request To Cancel") != "Y" && outPS.GetChild(0).GetChild(pr).GetProperty("Product Line") != "DELIVERY" && outPS.GetChild(0).GetChild(pr).GetProperty("Product Type Code") != ProductTypeCode)
+            {
               markup += '                                <div class="cart-item clearfix no-margin-bottom20">';
               markup += '                                    <div class="SC-SO-Prod-items">';
               markup += '                                        <div class="title-sku less-padding">';
@@ -6300,11 +5857,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               markup += '                                        </div>';
               markup += '                                    </div>';
               //SiebelJS.Log(outPS.GetChild(0).GetChild(pr).GetChildCount());
-              if (outPS.GetChild(0).GetChild(pr).GetChildCount() != 0) {
+              if (outPS.GetChild(0).GetChild(pr).GetChildCount() != 0)
+              {
                 markup += '                                    <div class="SC-SO-Prod-addon-items-block">';
                 markup += '                                        <span class="no-padding">Add-ons</span>';
               }
-              for (var childpr = 0; childpr < outPS.GetChild(0).GetChild(pr).GetChildCount(); childpr++) {
+              for (var childpr = 0; childpr < outPS.GetChild(0).GetChild(pr).GetChildCount(); childpr++)
+              {
                 addonstartprice = outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Start Price") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Start Price")) : 0.00;
                 addondiscount = outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Total Line Discounts") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Total Line Discounts")) : 0.00;
                 addontax = outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Tax Amount") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Tax Amount")) : 0.00;
@@ -6344,25 +5903,33 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 markup += '                                    </div>';
             }
             //SBOORLA:Added code for Pole Display
-            if (outPS.GetChild(0).GetChild(pr).GetProperty("Request To Cancel") != "Y" && outPS.GetChild(0).GetChild(pr).GetProperty("Product Type Code") != ProductTypeCode) {
-              if (outPS.GetChild(0).GetChild(pr).GetProperty("Product Line") != "DELIVERY") {
-                poleJSON.push({
-                  "Command": "Ready",
-                  "ProductDesc": outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description"),
-                  "Quantity": outPS.GetChild(0).GetChild(pr).GetProperty("Quantity Requested"),
-                  "Price": netprice
-                });
-              } else {
-                subpoleJSON.push({
+            if (outPS.GetChild(0).GetChild(pr).GetProperty("Request To Cancel") != "Y" && outPS.GetChild(0).GetChild(pr).GetProperty("Product Type Code") != ProductTypeCode)
+            {
+              if (outPS.GetChild(0).GetChild(pr).GetProperty("Product Line") != "DELIVERY")
+              {
+                poleJSON.push(
+                {
                   "Command": "Ready",
                   "ProductDesc": outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description"),
                   "Quantity": outPS.GetChild(0).GetChild(pr).GetProperty("Quantity Requested"),
                   "Price": netprice
                 });
               }
-              for (var childpr = 0; childpr < outPS.GetChild(0).GetChild(pr).GetChildCount(); childpr++) {
+              else
+              {
+                subpoleJSON.push(
+                {
+                  "Command": "Ready",
+                  "ProductDesc": outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description"),
+                  "Quantity": outPS.GetChild(0).GetChild(pr).GetProperty("Quantity Requested"),
+                  "Price": netprice
+                });
+              }
+              for (var childpr = 0; childpr < outPS.GetChild(0).GetChild(pr).GetChildCount(); childpr++)
+              {
                 var poleNetprice = outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Item Price - Display") != "" ? parseFloat(outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Item Price - Display")) : 0.00;
-                poleJSON.push({
+                poleJSON.push(
+                {
                   "Command": "Ready",
                   "ProductDesc": outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("SC Calc Long Description"),
                   "Quantity": outPS.GetChild(0).GetChild(pr).GetChild(childpr).GetProperty("Quantity Requested"),
@@ -6372,9 +5939,12 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             }
             markup += '                                </div>';
           }
-          if (sP2PEFlag != "Y") {
-            for (var p = 0; p < subpoleJSON.length; p++) {
-              poleJSON.push({
+          if (sP2PEFlag != "Y")
+          {
+            for (var p = 0; p < subpoleJSON.length; p++)
+            {
+              poleJSON.push(
+              {
                 "Command": "Ready",
                 "ProductDesc": subpoleJSON[p]["ProductDesc"],
                 "Quantity": subpoleJSON[p]["Quantity"],
@@ -6387,17 +5957,20 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           return markup;
         }
         ////end:Function to get lineitem
-        function Get_OrderShipToLineItems(lineItemsRecordSet, shiplineitemrcdset) {
+        function Get_OrderShipToLineItems(lineItemsRecordSet, shiplineitemrcdset)
+        {
           var lineItemsList = '';
           var k = 1;
           var bInvokeTD = "N"; //SL;09Nov24;Added for Tier Delivery
           if (ShipToContactRecordSet[0]["Ship To Contact Id"] != null && ShipToContactRecordSet[0]["Ship To Contact Id"] != "" && ShipToContactRecordSet[0]["Ship To Contact Id"] != "undefined" && ShipToContactRecordSet[0]["Ship To Contact Id"] != "No Match Row Id")
             GetAddressList(ShipToContactRecordSet[0]["Ship To Contact Id"]);
           SiebelJS.Log("Total Line Items Count: " + lineItemsRecordSet.length);
-          for (var i = 0; i < lineItemsRecordSet.length; i++) {
+          for (var i = 0; i < lineItemsRecordSet.length; i++)
+          {
             //if(i==0 && shiplineitemrcdset[i]["Ship To Contact Id"]!=null&&shiplineitemrcdset[i]["Ship To Contact Id"]!=""&&shiplineitemrcdset[i]["Ship To Contact Id"]!="undefined"&&shiplineitemrcdset[i]["Ship To Contact Id"]!="No Match Row Id")
             //GetAddressList(shiplineitemrcdset[i]["Ship To Contact Id"]);
-            if ((scAccountOrder || lineItemsRecordSet[i]["Product Line"] != 'DELIVERY') && shiplineitemrcdset[i]["Product Type Code"] != ProductTypeCode) {
+            if ((scAccountOrder || lineItemsRecordSet[i]["Product Line"] != 'DELIVERY') && shiplineitemrcdset[i]["Product Type Code"] != ProductTypeCode)
+            {
               var lineItem = '';
               var ScReadonly = "N";
               /*if(shiplineitemrcdset[i]["Fulfillment Status Code"]=="Booked"||shiplineitemrcdset[i]["Fulfillment Status Code"]=="Closed"||shiplineitemrcdset[i]["Fulfillment Status Code"]=="Completed"||shiplineitemrcdset[i]["Fulfillment Status Code"]=="Cancelled")
@@ -6407,10 +5980,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 				if(ScReadonly=="N"){*/
 
               //if((shiplineitemrcdset[i]["SC Revisable"]=="Revisable" && shiplineitemrcdset[i]["Request To Cancel"]!="Y")|| shiplineitemrcdset[i]["Fulfillment Status Code"] == "In Progress"){
-              if (lineItemsRecordSet[i]["SC Address Revisable"] == "N") {
-                if (shiplineitemrcdset[i]["Fulfillment Status Code"] == "In Progress") {
+              if (lineItemsRecordSet[i]["SC Address Revisable"] == "N")
+              {
+                if (shiplineitemrcdset[i]["Fulfillment Status Code"] == "In Progress")
+                {
                   lineItem += '	<div class="table-row">';
-                } else {
+                }
+                else
+                {
                   lineItem += '	<div class="table-row sn-bookedlines-readonly">';
                 }
                 lineItem += '		<div class="column minitr">' + shiplineitemrcdset[i]["Line Number"] + '</div>';
@@ -6422,14 +5999,17 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 //lineItem += '			<select class="Ship-ShippingMethod-lineitem shipping-dropdown Ship-ShippingMethod SC-readonly" id="' + (i+1) + 'Ship-ShippingMethod">';
                 //else
                 lineItem += '			<select class="Ship-ShippingMethod-lineitem shipping-dropdown Ship-ShippingMethod" id="' + (i + 1) + 'Ship-ShippingMethod">';
-                if (lineItemsRecordSet[i]["Ship Method"] != "") {
+                if (lineItemsRecordSet[i]["Ship Method"] != "")
+                {
                   if (lovArray_ShipMethods.includes(lineItemsRecordSet[i]["Ship Method"]))
                     lineItem += '<option>' + lineItemsRecordSet[i]["Ship Method"] + '</option>';
                   else
                     lineItem += '<option hidden>' + lineItemsRecordSet[i]["Ship Method"] + '</option>';
-                } else
+                }
+                else
                   lineItem += '<option></option>';
-                for (var j = 0; j < lovArray_ShipMethods.length; j++) {
+                for (var j = 0; j < lovArray_ShipMethods.length; j++)
+                {
                   if (lovArray_ShipMethods[j] != lineItemsRecordSet[i]["Ship Method"])
                     lineItem += '<option>' + lovArray_ShipMethods[j] + '</option>';
                 }
@@ -6437,20 +6017,24 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 lineItem += '			</select>';
                 lineItem += '		</div>';
                 //column3
-                if (shiplineitemrcdset[i]["Shipping"] != null && shiplineitemrcdset[i]["Shipping"] != undefined) {
+                if (shiplineitemrcdset[i]["Shipping"] != null && shiplineitemrcdset[i]["Shipping"] != undefined)
+                {
                   //17Sep24;SL;Modified below for Tiered Delivery
-                  if (shippingItemsRecordSet[i]['Ship Method'] == "Home Delivery") {
-                    bInvokeTD = (bInvokeTD == "N") ? "Y" : bInvokeTD;
-                  }
-                  if (shippingItemsRecordSet[i]['Ship Method'] == "Home Delivery" && shippingItemsRecordSet[i]['Product Line'] != "SERVICE") {
+                  if (shippingItemsRecordSet[i]['Ship Method'] == "Home Delivery" && shippingItemsRecordSet[i]['Product Line'] != "SERVICE")
+                  {
                     lineItem += '		<div class="column bigtr">';
                     lineItem += '			<select class="shipping-dropdown" id="' + (i + 1) + 'Delivery-Tier">';
                     lineItem += '			</select>';
                     lineItem += '		</div>';
-                  } else {
+                    bInvokeTD = (bInvokeTD == "N") ? "Y" : bInvokeTD;
+                  }
+                  else
+                  {
                     lineItem += '   <div class="column bigtr">' + shiplineitemrcdset[i]["Shipping"] + '</div>';
                   }
-                } else {
+                }
+                else
+                {
                   lineItem += '   <div class="column bigtr"> </div>';
                 }
                 //Column3
@@ -6461,7 +6045,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 lineItem += '			<select class="Ship-ShipToAddress-lineitem shipping-dropdown Ship-ShipToAddress" id="' + (i + 1) + 'Ship-ShipToAddress">';
                 //GetAddressList(shiplineitemrcdset[i]["Ship To Contact Id"]);
                 //lineaddress=AttachLineAddresses(shiplineitemrcdset[i]["SC Ship To Address Name"]);
-                if (shiplineitemrcdset[i]["Ship To Contact Id"] != null && shiplineitemrcdset[i]["Ship To Contact Id"] != "" && shiplineitemrcdset[i]["Ship To Contact Id"] != "undefined" && shiplineitemrcdset[i]["Ship To Contact Id"] != "No Match Row Id") {
+                if (shiplineitemrcdset[i]["Ship To Contact Id"] != null && shiplineitemrcdset[i]["Ship To Contact Id"] != "" && shiplineitemrcdset[i]["Ship To Contact Id"] != "undefined" && shiplineitemrcdset[i]["Ship To Contact Id"] != "No Match Row Id")
+                {
                   //GetAddressList(shiplineitemrcdset[i]["Ship To Contact Id"]);
                   lineaddress = AttachAddresses(shiplineitemrcdset[i]["Ship To Address Id"]);
                   lineItem += lineaddress;
@@ -6474,22 +6059,26 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 //SPATIBANDLA :changed code for defect 616
                 var dataContent_Ch_Ad_Contact = "<div><div class='titles' id='Ship_NewContact'>New Contact</div><div class='titles' id='ship_ChangeContact'>Change Contact</div></div>";
                 lineItem += '			<img src="images/custom/profile_round_grey.png"  class="sc-shipping-icon-con sc-table-img SC-readonly" id="' + (i + 1) + 'Ship-ShipToContactImg" data-toggle="popover" data-html="true" tooltip-append-to-body="true" data-content="' + dataContent_Ch_Ad_Contact + '" data-original-title="" title="">';
-                if (shiplineitemrcdset[i]["Ship To Contact Id"] != null && shiplineitemrcdset[i]["Ship To Contact Id"] != "" && shiplineitemrcdset[i]["Ship To Contact Id"] != "undefined" && shiplineitemrcdset[i]["Ship To Contact Id"] != "No Match Row Id") {
+                if (shiplineitemrcdset[i]["Ship To Contact Id"] != null && shiplineitemrcdset[i]["Ship To Contact Id"] != "" && shiplineitemrcdset[i]["Ship To Contact Id"] != "undefined" && shiplineitemrcdset[i]["Ship To Contact Id"] != "No Match Row Id")
+                {
                   var shipcontactname = shiplineitemrcdset[i]["Ship To First Name"] + " " + shiplineitemrcdset[i]["Ship To Last Name"];
                   //if(ScReadonly=="Y")
                   //lineItem += '			<input type="" name="" class="shipping-input contact total-width SC-readonly" id="' + (i+1) + 'Ship-ShipToContact" value="' +shipcontactname  + '">';
                   //else
                   lineItem += '			<input type="" name="" class="shipping-input contact total-width ShipToContactlineitem SC-readonly" id="' + (i + 1) + 'Ship-ShipToContact" value="' + shipcontactname + '">';
-                } else
+                }
+                else
                   lineItem += '			<input type="" name="" class="shipping-input contact total-width ShipToContactlineitem SC-readonly" id="' + (i + 1) + 'Ship-ShipToContact" value="">';
                 lineItem += '		</div>';
 
                 //Column5
 
                 lineItem += '		<div class="column bigtr">';
-                if (shiplineitemrcdset[i]["Ship To Contact Id"] != null && shiplineitemrcdset[i]["Ship To Contact Id"] != "" && shiplineitemrcdset[i]["Ship To Contact Id"] != "undefined" && shiplineitemrcdset[i]["Ship To Contact Id"] != "No Match Row Id") {
+                if (shiplineitemrcdset[i]["Ship To Contact Id"] != null && shiplineitemrcdset[i]["Ship To Contact Id"] != "" && shiplineitemrcdset[i]["Ship To Contact Id"] != "undefined" && shiplineitemrcdset[i]["Ship To Contact Id"] != "No Match Row Id")
+                {
                   var linelevelMbNum = shiplineitemrcdset[i]["SC Preferred Contact"];
-                  if (linelevelMbNum != '' && linelevelMbNum.match(/^\d+$/) && linelevelMbNum.length == 10) {
+                  if (linelevelMbNum != '' && linelevelMbNum.match(/^\d+$/) && linelevelMbNum.length == 10)
+                  {
                     var USFormt_mblNum = '';
                     USFormt_mblNum = "(" + linelevelMbNum.substring(0, linelevelMbNum.length - 7) + ") " + linelevelMbNum.substring(3, linelevelMbNum.length - 4) + "-" + linelevelMbNum.substring(6, linelevelMbNum.length);
                     linelevelMbNum = USFormt_mblNum;
@@ -6497,13 +6086,17 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   //lineItem += '			<input type="" name="" class="shipping-input total-width Ship-ShipToContactPhNum SC-readonly" maxlength="14" id="' + (i+1) + 'Ship-ShipToContactPhNum" value="' + linelevelMbNum + '">';
                   //else
                   lineItem += '			<input type="" name="" class="shipping-input total-width Ship-ShipToContactPhNum Ship-ShipToContactPhNum-lineitem" maxlength="14" id="' + (i + 1) + 'Ship-ShipToContactPhNum" value="' + linelevelMbNum + '">';
-                } else
+                }
+                else
                   lineItem += '			<input type="" name="" class="shipping-input total-width Ship-ShipToContactPhNum Ship-ShipToContactPhNum-lineitem" id="' + (i + 1) + 'Ship-ShipToContactPhNum" value="">';
                 lineItem += '		</div>';
                 //new column
-                if (lineItemsRecordSet[i]["ATP Status As Of Date"] != null && lineItemsRecordSet[i]["ATP Status As Of Date"] != undefined) {
+                if (lineItemsRecordSet[i]["ATP Status As Of Date"] != null && lineItemsRecordSet[i]["ATP Status As Of Date"] != undefined)
+                {
                   lineItem += '   <div class="column smalltr" id="' + (i + 1) + 'Ship-ShippingLineItemATP">' + lineItemsRecordSet[i]["ATP Status As Of Date"] + '</div>';
-                } else {
+                }
+                else
+                {
                   lineItem += '   <div class="column smalltr" id="' + (i + 1) + 'Ship-ShippingLineItemATP"> </div>';
                 }
                 //Column6
@@ -6543,11 +6136,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           /* if(!($(".Ship-ShipToContactPhNum").hasClass("SN-fields-readonly")))
               $(".Ship-ShipToContactPhNum").addClass("SN-fields-readonly SC-readonly"); */
           //Start: Showing - Hiding Pop over for Change/Add Contact
-          $(".SC-shipping-table .table-row .contact-popover Img").popover({
+          $(".SC-shipping-table .table-row .contact-popover Img").popover(
+          {
             trigger: "click",
             placement: "bottom",
           });
-          $(document).on('click', ".SC-shipping-table .table-row .contact-popover Img", function (e) {
+          $(document).on('click', ".SC-shipping-table .table-row .contact-popover Img", function (e)
+          {
 
             //var con_id = 
 
@@ -6558,24 +6153,31 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           //End: Showing - Hiding Pop over for Change/Add Contact
         };
 
-        function Get_OrderShipToLineItemsAccount(lineItemsRecordSet, shiplineitemrcdset) {
+        function Get_OrderShipToLineItemsAccount(lineItemsRecordSet, shiplineitemrcdset)
+        {
           var lineItemsList = '';
           var k = 1;
-          var bInvokeTD = "N"; //SL;09Nov24;Added for Tier Delivery
+		  var bInvokeTD = "N"; //SL;09Nov24;Added for Tier Delivery
           SiebelJS.Log("Total Line Items Count: " + lineItemsRecordSet.length);
           GetAccountAddressList(ShipToContactRecordSet[0]["Bill To Account Id"]);
           SiebelJS.Log("Total Line Items Count: " + lineItemsRecordSet.length);
-          for (var i = 0; i < lineItemsRecordSet.length; i++) {
+          for (var i = 0; i < lineItemsRecordSet.length; i++)
+          {
             //if(i==0)
             //GetAccountAddressList(ShipToContactRecordSet[i]["Bill To Account Id"]);
-            if (shiplineitemrcdset[i]["Product Type Code"] != ProductTypeCode) {
+            if (shiplineitemrcdset[i]["Product Type Code"] != ProductTypeCode)
+            {
               var lineItem = '';
               var ScReadonly = "N";
               //if((shiplineitemrcdset[i]["SC Revisable"]=="Revisable" && shiplineitemrcdset[i]["Request To Cancel"]!="Y" )|| shiplineitemrcdset[i]["Fulfillment Status Code"] == "In Progress"){
-              if (lineItemsRecordSet[i]["SC Address Revisable"] == "N") {
-                if (shiplineitemrcdset[i]["Fulfillment Status Code"] == "In Progress") {
+              if (lineItemsRecordSet[i]["SC Address Revisable"] == "N")
+              {
+                if (shiplineitemrcdset[i]["Fulfillment Status Code"] == "In Progress")
+                {
                   lineItem += '	<div class="table-row">';
-                } else {
+                }
+                else
+                {
                   lineItem += '	<div class="table-row sn-bookedlines-readonly">';
                 }
                 lineItem += '		<div class="column minitr">' + shiplineitemrcdset[i]["Line Number"] + '</div>';
@@ -6584,34 +6186,41 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 //Column2
                 lineItem += '		<div class="column bigtr">';
                 lineItem += '			<select class="Ship-ShippingMethod-lineitem shipping-dropdown Ship-ShippingMethod" id="' + (i + 1) + 'Ship-ShippingMethod">';
-                if (lineItemsRecordSet[i]["Ship Method"] != "") {
+                if (lineItemsRecordSet[i]["Ship Method"] != "")
+                {
                   if (lovArray_ShipMethods.includes(lineItemsRecordSet[i]["Ship Method"]))
                     lineItem += '<option>' + lineItemsRecordSet[i]["Ship Method"] + '</option>';
                   else
                     lineItem += '<option hidden>' + lineItemsRecordSet[i]["Ship Method"] + '</option>';
-                } else
+                }
+                else
                   lineItem += '<option></option>';
-                for (var j = 0; j < lovArray_ShipMethods.length; j++) {
+                for (var j = 0; j < lovArray_ShipMethods.length; j++)
+                {
                   if (lovArray_ShipMethods[j] != lineItemsRecordSet[i]["Ship Method"])
                     lineItem += '<option>' + lovArray_ShipMethods[j] + '</option>';
                 }
                 lineItem += '			</select>';
                 lineItem += '		</div>';
-                //SL;12Nov24;Added below for Tier Delivery
-                if (shiplineitemrcdset[i]["Shipping"] != null && shiplineitemrcdset[i]["Shipping"] != undefined) {
+				//SL;12Nov24;Added below for Tier Delivery
+				if (shiplineitemrcdset[i]["Shipping"] != null && shiplineitemrcdset[i]["Shipping"] != undefined)
+                {
                   //09Nov24;SL;Modified below for Tiered Delivery
-                  if (shippingItemsRecordSet[i]['Ship Method'] == "Home Delivery") {
-                    bInvokeTD = (bInvokeTD == "N") ? "Y" : bInvokeTD;
-                  }
-                  if (shiplineitemrcdset[i]['Ship Method'] == "Home Delivery" && shiplineitemrcdset[i]['Product Line'] != "SERVICE" && shiplineitemrcdset[i]['Product Line'] != "DELIVERY") {
+                  if (shiplineitemrcdset[i]['Ship Method'] == "Home Delivery" && shiplineitemrcdset[i]['Product Line'] != "SERVICE" && shiplineitemrcdset[i]['Product Line'] != "DELIVERY")
+                  {
                     lineItem += '		<div class="column bigtr">';
                     lineItem += '			<select class="shipping-dropdown" id="' + (i + 1) + 'Delivery-Tier">';
                     lineItem += '			</select>';
                     lineItem += '		</div>';
-                  } else {
+                    bInvokeTD = (bInvokeTD == "N") ? "Y" : bInvokeTD;
+                  }
+                  else
+                  {
                     lineItem += '   <div class="column bigtr">' + shiplineitemrcdset[i]["Shipping"] + '</div>';
                   }
-                } else {
+                }
+                else
+                {
                   lineItem += '   <div class="column bigtr"> </div>';
                 }
                 //Column3
@@ -6640,7 +6249,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 lineItem += '		<div class="column bigtr">';
 
                 var linelevelMbNum = shiplineitemrcdset[i]["SC Preferred Contact"];
-                if (linelevelMbNum != '' && linelevelMbNum.match(/^\d+$/) && linelevelMbNum.length == 10) {
+                if (linelevelMbNum != '' && linelevelMbNum.match(/^\d+$/) && linelevelMbNum.length == 10)
+                {
                   var USFormt_mblNum = '';
                   USFormt_mblNum = "(" + linelevelMbNum.substring(0, linelevelMbNum.length - 7) + ") " + linelevelMbNum.substring(3, linelevelMbNum.length - 4) + "-" + linelevelMbNum.substring(6, linelevelMbNum.length);
                   linelevelMbNum = USFormt_mblNum;
@@ -6649,9 +6259,12 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
                 lineItem += '		</div>';
                 //new column
-                if (lineItemsRecordSet[i]["ATP Status As Of Date"] != null && lineItemsRecordSet[i]["ATP Status As Of Date"] != undefined) {
+                if (lineItemsRecordSet[i]["ATP Status As Of Date"] != null && lineItemsRecordSet[i]["ATP Status As Of Date"] != undefined)
+                {
                   lineItem += '   <div class="column smalltr" id="' + (i + 1) + 'Ship-ShippingLineItemATP">' + lineItemsRecordSet[i]["ATP Status As Of Date"] + '</div>';
-                } else {
+                }
+                else
+                {
                   lineItem += '   <div class="column smalltr" id="' + (i + 1) + 'Ship-ShippingLineItemATP"> </div>';
                 }
                 //Column6
@@ -6661,10 +6274,12 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                 if (shiplineitemrcdset[i]["Due Date"] != "null" && shiplineitemrcdset[i]["Due Date"] != "")
                   Reqshipdate = shiplineitemrcdset[i]["Due Date"].split(' ')[0];
 
-                if (lineItemsRecordSet[i]["Ship Method"] != "Recd At Store") {
+                if (lineItemsRecordSet[i]["Ship Method"] != "Recd At Store")
+                {
 
                   lineItem += '			<input type="" name="" class="shipping-input date total-width defaultRequestShipDate reqShipDateTDSN" id="' + (i + 1) + 'defaultRequestShipDate" value="' + Reqshipdate + '">';
-                } else
+                }
+                else
                   lineItem += '			<input type="" name="" class="shipping-input date total-width SC-readonly reqShipDateTDSN" id="' + (i + 1) + 'defaultRequestShipDate" value="">';
                 lineItem += '		</div>';
                 lineItem += '	</div>';
@@ -6681,7 +6296,7 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           $("#TBody-Ship-Details-LineItems").find(".sn-bookedlines-readonly").find(".Ship-ShipToContactPhNum-lineitem").addClass("SC-readonly");
           $("#TBody-Ship-Details-LineItems").find(".sn-bookedlines-readonly").find(".Ship-ShippingMethod").addClass("SC-readonly");
           $("#TBody-Ship-Details-LineItems").find(".SC-readonly").addClass("SN-fields-readonly");
-          if (bInvokeTD == "Y") //08Oct24;SL;Added for Tiered Delivery
+		  if (bInvokeTD == "Y") //08Oct24;SL;Added for Tiered Delivery
           {
             getDeliveryTierOptions(orderid);
           }
@@ -6691,7 +6306,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
 
         };
 
-        function ContactAccountSearch_GetRecordSearch() {
+        function ContactAccountSearch_GetRecordSearch()
+        {
           var AccountContactPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Account Contact Shipping List OUI"].GetPModel().GetRenderer().GetPM();
           var AccconSearch_RS = AccountContactPM.Get("GetRecordSet");
           var rcdLen = "";
@@ -6710,7 +6326,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           newRecord += '                                    </thead>';
           newRecord += '                                    <tbody>';
           rcdLen = AccconSearch_RS.length;
-          for (var loop = 0; loop < rcdLen; loop++) {
+          for (var loop = 0; loop < rcdLen; loop++)
+          {
             ContactDetails = "";
             ContactDetails = AccconSearch_RS[loop]["Primary Personal Address Id"] + '_' + AccconSearch_RS[loop]["Contact Id"] + '_' + AccconSearch_RS[loop]["First Name"] + '_' + AccconSearch_RS[loop]["Last Name"] + '_' + AccconSearch_RS[loop]["Cellular Phone #"];
             newRecord += '		<tr id="SC-Conta-Search-Rcd' + loop + '">';
@@ -6724,8 +6341,10 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           }
           newRecord += '                                    </tbody>';
           newRecord += '                                </table>';
-          if (AccconSearch_RS.length == 0) {
-            if (sChangeContactClicked == "Y") {
+          if (AccconSearch_RS.length == 0)
+          {
+            if (sChangeContactClicked == "Y")
+            {
               //sChangeContactClicked="N";
               var noresults_markup = "";
               noresults_markup += ' <div class="SC-noresults-container clearfix no-padding margin-top">';
@@ -6734,11 +6353,15 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               noresults_markup += '                </div>';
               noresults_markup += '            </div>';
               $("#SC-table-search-contact-body").html(noresults_markup);
-            } else {
+            }
+            else
+            {
               markup = SC_OUI_Markups.ResultsMessage(AccountContactPM, FieldQueryPair, "contacts");
               $("#SC-table-search-contact-body").html(markup);
             }
-          } else {
+          }
+          else
+          {
 
             $("#shipping-contact-pagination").show();
             SC_OUI_Methods.PrimaryButton(AccountContactPM, 'shipping-contact-pagination');
@@ -6746,7 +6369,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           }
         }
 
-        function DeliveryTypePopup() {
+        function DeliveryTypePopup()
+        {
           var sOrderRevisionNum = parseInt(ShipToContactRecordSet[0]["Revision"]);
           var pEligibleAddresses = SiebelApp.S_App.NewPropertySet();
           var inPS = "",
@@ -6758,7 +6382,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           inPS = SiebelApp.S_App.NewPropertySet();
           outPS = SiebelApp.S_App.NewPropertySet();
           inPS.SetProperty("OrderId", orderid);
-          if (sTierEligbleVal == "N") {
+          if (sTierEligbleVal == "N")
+          {
             Bservice = SiebelApp.S_App.GetService("SC Order Management Service");
             outPS = Bservice.InvokeMethod("CheckProductEligibilty", inPS);
             pEligibleAddresses = outPS.GetChild(0).GetChildByType('EligibleAddresses');
@@ -6766,38 +6391,43 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             bReOptionEligibleAdderCount = parseInt(pEligibleAddresses.GetProperty('ReOptionEligAddrs_Cnt'));
           }
           //if(pEligibleAddresses.GetChildCount()){
-          if (iEligibleAdderCount) {
-            if (sIpadFeatureFlag == "Y") //Kolasani:Added if case
-            {
-              $("#SC-SO-CF-verify").modal('hide');
-            }
+          if (iEligibleAdderCount)
+          {
             var deliveryTypeMarkup = SCOrderShipMarkup.SelectDeliveryType(pEligibleAddresses);
             $("#custommaskoverlay").hide();
             $("#SC-Delivery-Type").html(deliveryTypeMarkup);
-            $("#SC-Delivery-Type").modal({
+            $("#SC-Delivery-Type").modal(
+            {
               backdrop: 'static'
             });
-            $("#SC-Delivery-Type").css({
+            $("#SC-Delivery-Type").css(
+            {
               "display": "flex",
               "justify-content": "center",
               "align-items": "center"
             });
             $(".modal-backdrop").css('background', '#ffffff');
-          } else if (bReOptionEligibleAdderCount && sOrderRevisionNum > 1) {
+          }
+          else if (bReOptionEligibleAdderCount && sOrderRevisionNum > 1)
+          {
             $("#SC-SO-CF-verify").modal('hide');
             var deliveryTypeMarkup = SCOrderShipMarkup.ReSelectDeliveryTypeOption(pEligibleAddresses);
             $("#custommaskoverlay").hide();
             $("#SC-Delivery-Type").html(deliveryTypeMarkup);
-            $("#SC-Delivery-Type").modal({
+            $("#SC-Delivery-Type").modal(
+            {
               backdrop: 'static'
             });
-            $("#SC-Delivery-Type").css({
+            $("#SC-Delivery-Type").css(
+            {
               "display": "flex",
               "justify-content": "center",
               "align-items": "center"
             });
             $(".modal-backdrop").css('background', '#ffffff');
-          } else {
+          }
+          else
+          {
             var fieldvalues = "Home Delivery";
             var fieldnames = "Shipping";
             var Bservice = '',
@@ -6814,27 +6444,6 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             //07Oct24;SL;Tier Delivery - Added Shipping criteria to the search spec;
             inPS.SetProperty("SearchSpecification", "[Order Header Id] = '" + orderid + "'AND ([Fulfillment Status Code] = 'In Progress' OR [SN Address Update Flag]='Y') AND [Ship Method] = 'Home Delivery' AND [Request To Cancel] <> 'Y' AND ([Shipping] = 'Home Delivery' OR [Shipping] IS NULL)");
             outPS = Bservice.InvokeMethod("Insert", inPS);
-            //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-            //added below line due to selected record modified error.
-            if (sIpadFeatureFlag == "Y") {
-              //SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
-              var ai = {};
-              ai.async = false;
-              ai.selfbusy = true;
-              ai.scope = this;
-              ai.mask = true;
-              ai.opdecode = true;
-              ai.errcb = function () {
-                //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
-                SiebelJS.Log("In 3458 Refresh BC Error");
-              };
-              ai.cb = function () {
-                //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
-                SiebelJS.Log("In 3462 Refresh BC Call Back");
-              };
-              SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", inPropSet, ai);
-            }
-            //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
             SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Freight Calculated Flag", "N");
             SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
             var inPropSet = CCFMiscUtil_CreatePropSet();
@@ -6844,28 +6453,34 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             ai.scope = this;
             ai.mask = true;
             ai.opdecode = true;
-            ai.errcb = function () {
+            ai.errcb = function ()
+            {
               //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
               SiebelJS.Log("In validate Error");
             };
-            ai.cb = function () {
+            ai.cb = function ()
+            {
               //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
               SiebelJS.Log("In Validate Call Back");
               $("#SC-Delivery-Type").modal('hide');
               var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
               var canInvokeVerify = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "QuotesAndOrdersValidate");
-              if (canInvokeVerify) {
-                $("#SC-SO-CF-verify").modal({
+              if (canInvokeVerify)
+              {
+                $("#SC-SO-CF-verify").modal(
+                {
                   backdrop: 'static'
                 });
-                $("#SC-SO-CF-verify").css({
+                $("#SC-SO-CF-verify").css(
+                {
                   "display": "flex",
                   "justify-content": "center",
                   "align-items": "center"
                 });
                 $(".modal-backdrop").css('background', '#ffffff');
                 $("#custommaskoverlay").show();
-                setTimeout(function () {
+                setTimeout(function ()
+                {
                   //SCVerify = 'Y';
                   var inPropSet = CCFMiscUtil_CreatePropSet();
                   var ai = {};
@@ -6874,11 +6489,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   ai.scope = this;
                   ai.mask = true;
                   ai.opdecode = true;
-                  ai.errcb = function () {
+                  ai.errcb = function ()
+                  {
                     //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                     SiebelJS.Log("In validate Error");
                   };
-                  ai.cb = function () {
+                  ai.cb = function ()
+                  {
                     //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                     SiebelJS.Log("In Validate Call Back");
                     SCVerify = 'Y';
@@ -6889,11 +6506,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     a1i.scope = this;
                     a1i.mask = true;
                     a1i.opdecode = true;
-                    a1i.errcb = function () {
+                    a1i.errcb = function ()
+                    {
                       //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                       SiebelJS.Log("In validate Error");
                     };
-                    a1i.cb = function () {
+                    a1i.cb = function ()
+                    {
                       //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                       SiebelJS.Log("In Validate Call Back");
                     };
@@ -6901,20 +6520,26 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                   };
                   SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", inPropSet, ai);
                 }, 100);
-              } else if (canInvokeCalculate) {
-                $("#SC-SO-CF-verify").modal({
+              }
+              else if (canInvokeCalculate)
+              {
+                $("#SC-SO-CF-verify").modal(
+                {
                   backdrop: 'static'
                 });
-                $("#SC-SO-CF-verify").css({
+                $("#SC-SO-CF-verify").css(
+                {
                   "display": "flex",
                   "justify-content": "center",
                   "align-items": "center"
                 });
                 $(".modal-backdrop").css('background', '#ffffff');
                 $("#custommaskoverlay").show();
-                setTimeout(function () {
+                setTimeout(function ()
+                {
                   var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
-                  if (canInvokeCalculate) {
+                  if (canInvokeCalculate)
+                  {
                     SCfrieghtCalculation = 'Y';
                     var inPropSet = CCFMiscUtil_CreatePropSet();
                     var ai = {};
@@ -6923,70 +6548,88 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     ai.scope = this;
                     ai.mask = true;
                     ai.opdecode = true;
-                    ai.errcb = function () {
+                    ai.errcb = function ()
+                    {
                       //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                       SiebelJS.Log("In validate Error");
                     };
-                    ai.cb = function () {
+                    ai.cb = function ()
+                    {
                       //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                       SiebelJS.Log("In Validate Call Back");
                     };
                     SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "SC Calculate Shipping", inPropSet, ai);
                   }
                 }, 100);
-              } else {
+              }
+              else
+              {
                 SiebelJS.Log("Not able to invoke SC Freight Calculate")
               }
             };
             SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", inPropSet, ai);
           }
 
-          $(document).on('click', '.SC-order-DelType input', function (e) {
+          $(document).on('click', '.SC-order-DelType input', function (e)
+          {
             e.stopImmediatePropagation();
             var cnt = 0;
-            $(".SC-order-DelType input[type=radio]:checked").each(function () {
+            $(".SC-order-DelType input[type=radio]:checked").each(function ()
+            {
               cnt = cnt + 1;
             });
-            if (cnt == iEligibleAdderCount) {
+            if (cnt == iEligibleAdderCount)
+            {
               $("#update-delivery-type").removeClass("SC-disabled");
               $("#update-delivery-type").attr("style", "background: #F63 !important;border: #F63 !important;");
-            } else {
+            }
+            else
+            {
               $("#update-delivery-type").addClass("SC-disabled");
               $("#update-delivery-type").attr("style", "background: #808080!important;border: #808080	!important;");
             }
           });
 
 
-          $(document).on('click', '.SC-order-ReDelType input', function (e) {
+          $(document).on('click', '.SC-order-ReDelType input', function (e)
+          {
             e.stopImmediatePropagation();
             var cnt = 0;
-            $(".SC-order-ReDelType input[type=radio]:checked").each(function () {
+            $(".SC-order-ReDelType input[type=radio]:checked").each(function ()
+            {
               cnt = cnt + 1;
             });
-            if (cnt == bReOptionEligibleAdderCount) {
+            if (cnt == bReOptionEligibleAdderCount)
+            {
               $("#update-delivery-type").removeClass("SC-disabled");
               $("#update-delivery-type").attr("style", "background: #F63 !important;border: #F63 !important;");
-            } else {
+            }
+            else
+            {
               $("#update-delivery-type").addClass("SC-disabled");
               $("#update-delivery-type").attr("style", "background: #808080!important;border: #808080	!important;");
             }
           });
 
 
-          $(document).on('click', '#update-delivery-type-cancel', function (e) {
+          $(document).on('click', '#update-delivery-type-cancel', function (e)
+          {
             e.stopImmediatePropagation();
             $("#SC-Delivery-Type").modal('hide');
-            $("#SC-SO-CF-verify").modal({
+            $("#SC-SO-CF-verify").modal(
+            {
               backdrop: 'static'
             });
-            $("#SC-SO-CF-verify").css({
+            $("#SC-SO-CF-verify").css(
+            {
               "display": "flex",
               "justify-content": "center",
               "align-items": "center"
             });
             $(".modal-backdrop").css('background', '#ffffff');
             $("#custommaskoverlay").show();
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               var inPropSet = CCFMiscUtil_CreatePropSet();
               var ai = {};
               ai.async = true;
@@ -6994,28 +6637,34 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
               ai.scope = this;
               ai.mask = true;
               ai.opdecode = true;
-              ai.errcb = function () {
+              ai.errcb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                 SiebelJS.Log("In validate Error");
               };
-              ai.cb = function () {
+              ai.cb = function ()
+              {
                 //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                 SiebelJS.Log("In Validate Call Back");
                 $("#SC-Delivery-Type").modal('hide');
                 var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
                 var canInvokeVerify = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "QuotesAndOrdersValidate");
-                if (canInvokeVerify) {
-                  $("#SC-SO-CF-verify").modal({
+                if (canInvokeVerify)
+                {
+                  $("#SC-SO-CF-verify").modal(
+                  {
                     backdrop: 'static'
                   });
-                  $("#SC-SO-CF-verify").css({
+                  $("#SC-SO-CF-verify").css(
+                  {
                     "display": "flex",
                     "justify-content": "center",
                     "align-items": "center"
                   });
                   $(".modal-backdrop").css('background', '#ffffff');
                   $("#custommaskoverlay").show();
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     //SCVerify = 'Y';
                     var inPropSet = CCFMiscUtil_CreatePropSet();
                     var ai = {};
@@ -7024,11 +6673,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     ai.scope = this;
                     ai.mask = true;
                     ai.opdecode = true;
-                    ai.errcb = function () {
+                    ai.errcb = function ()
+                    {
                       //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                       SiebelJS.Log("In validate Error");
                     };
-                    ai.cb = function () {
+                    ai.cb = function ()
+                    {
                       //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                       SiebelJS.Log("In Validate Call Back");
                       SCVerify = 'Y';
@@ -7039,11 +6690,13 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       a1i.scope = this;
                       a1i.mask = true;
                       a1i.opdecode = true;
-                      a1i.errcb = function () {
+                      a1i.errcb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                         SiebelJS.Log("In validate Error");
                       };
-                      a1i.cb = function () {
+                      a1i.cb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                         SiebelJS.Log("In Validate Call Back");
                       };
@@ -7051,20 +6704,26 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     };
                     SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", inPropSet, ai);
                   }, 100);
-                } else if (canInvokeCalculate) {
-                  $("#SC-SO-CF-verify").modal({
+                }
+                else if (canInvokeCalculate)
+                {
+                  $("#SC-SO-CF-verify").modal(
+                  {
                     backdrop: 'static'
                   });
-                  $("#SC-SO-CF-verify").css({
+                  $("#SC-SO-CF-verify").css(
+                  {
                     "display": "flex",
                     "justify-content": "center",
                     "align-items": "center"
                   });
                   $(".modal-backdrop").css('background', '#ffffff');
                   $("#custommaskoverlay").show();
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
-                    if (canInvokeCalculate) {
+                    if (canInvokeCalculate)
+                    {
                       SCfrieghtCalculation = 'Y';
                       var inPropSet = CCFMiscUtil_CreatePropSet();
                       var ai = {};
@@ -7073,18 +6732,22 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       ai.scope = this;
                       ai.mask = true;
                       ai.opdecode = true;
-                      ai.errcb = function () {
+                      ai.errcb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                         SiebelJS.Log("In validate Error");
                       };
-                      ai.cb = function () {
+                      ai.cb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                         SiebelJS.Log("In Validate Call Back");
                       };
                       SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "SC Calculate Shipping", inPropSet, ai);
                     }
                   }, 100);
-                } else {
+                }
+                else
+                {
                   SiebelJS.Log("Not able to invoke SC Freight Calculate")
                 }
               };
@@ -7093,16 +6756,19 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           });
 
 
-          $(document).on('click', '#update-delivery-type-option', function (e) {
+          $(document).on('click', '#update-delivery-type-option', function (e)
+          {
             e.stopImmediatePropagation();
-            setTimeout(function () {
+            setTimeout(function ()
+            {
               var deliveryTypeMarkup = SCOrderShipMarkup.ReSelectDeliveryType(pEligibleAddresses);
               $("#SC-Delivery-Type").html(deliveryTypeMarkup);
 
             }, 100);
           });
 
-          $(document).on('click', '#update-delivery-type', function (e) {
+          $(document).on('click', '#update-delivery-type', function (e)
+          {
             e.stopImmediatePropagation();
             var addressId = "",
               sHUBName, sRegionName;
@@ -7118,11 +6784,14 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             inPS.SetProperty("FieldsArray", fieldnames);
             Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
 
-            for (var i = 0; i < pEligibleAddresses.GetChildCount(); i++) {
+            for (var i = 0; i < pEligibleAddresses.GetChildCount(); i++)
+            {
               addressId = pEligibleAddresses.GetChild(i).GetValue();
               var ele = document.getElementsByName(addressId);
-              for (var j = 0; j < ele.length; j++) {
-                if (ele[j].checked) {
+              for (var j = 0; j < ele.length; j++)
+              {
+                if (ele[j].checked)
+                {
                   pEligibleAddresses.GetChild(i).SetProperty("SC New Delivery Type", ele[j].value);
                   //if(pEligibleAddresses.GetChild(i).GetProperty("SC Delivery Type") !== ele[j].value){
                   sRegionName = pEligibleAddresses.GetChild(i).GetProperty("Group");
@@ -7154,29 +6823,36 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             ai.scope = this;
             ai.mask = true;
             ai.opdecode = true;
-            ai.errcb = function () {
+            ai.errcb = function ()
+            {
               //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
               SiebelJS.Log("In validate Error");
             };
-            ai.cb = function () {
+            ai.cb = function ()
+            {
               //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
               SiebelJS.Log("In Validate Call Back");
               $("#SC-Delivery-Type").modal('hide');
-              setTimeout(function () {
+              setTimeout(function ()
+              {
                 var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
                 var canInvokeVerify = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "QuotesAndOrdersValidate");
-                if (canInvokeVerify) {
-                  $("#SC-SO-CF-verify").modal({
+                if (canInvokeVerify)
+                {
+                  $("#SC-SO-CF-verify").modal(
+                  {
                     backdrop: 'static'
                   });
-                  $("#SC-SO-CF-verify").css({
+                  $("#SC-SO-CF-verify").css(
+                  {
                     "display": "flex",
                     "justify-content": "center",
                     "align-items": "center"
                   });
                   $(".modal-backdrop").css('background', '#ffffff');
                   $("#custommaskoverlay").show();
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     SCVerify = 'Y';
                     var inPropSet = CCFMiscUtil_CreatePropSet();
                     var ai = {};
@@ -7185,30 +6861,38 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                     ai.scope = this;
                     ai.mask = true;
                     ai.opdecode = true;
-                    ai.errcb = function () {
+                    ai.errcb = function ()
+                    {
                       //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                       SiebelJS.Log("In validate Error");
                     };
-                    ai.cb = function () {
+                    ai.cb = function ()
+                    {
                       //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                       SiebelJS.Log("In Validate Call Back");
                     };
                     SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "QuotesAndOrdersValidate", inPropSet, ai);
                   }, 100);
-                } else if (canInvokeCalculate) {
-                  $("#SC-SO-CF-verify").modal({
+                }
+                else if (canInvokeCalculate)
+                {
+                  $("#SC-SO-CF-verify").modal(
+                  {
                     backdrop: 'static'
                   });
-                  $("#SC-SO-CF-verify").css({
+                  $("#SC-SO-CF-verify").css(
+                  {
                     "display": "flex",
                     "justify-content": "center",
                     "align-items": "center"
                   });
                   $(".modal-backdrop").css('background', '#ffffff');
                   $("#custommaskoverlay").show();
-                  setTimeout(function () {
+                  setTimeout(function ()
+                  {
                     var canInvokeCalculate = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("CanInvokeMethod", "SC Calculate Shipping");
-                    if (canInvokeCalculate) {
+                    if (canInvokeCalculate)
+                    {
                       SCfrieghtCalculation = 'Y';
                       var inPropSet = CCFMiscUtil_CreatePropSet();
                       var ai = {};
@@ -7217,18 +6901,22 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
                       ai.scope = this;
                       ai.mask = true;
                       ai.opdecode = true;
-                      ai.errcb = function () {
+                      ai.errcb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call fails
                         SiebelJS.Log("In validate Error");
                       };
-                      ai.cb = function () {
+                      ai.cb = function ()
+                      {
                         //Code occurs here for the method that Siebel Open UI runs if the AJAX call is successful
                         SiebelJS.Log("In Validate Call Back");
                       };
                       SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "SC Calculate Shipping", inPropSet, ai);
                     }
                   }, 100);
-                } else {
+                }
+                else
+                {
                   SiebelJS.Log("Not able to invoke SC Freight Calculate")
                 }
               }, 100);
@@ -7236,60 +6924,9 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", inPropSet, ai);
           });
         }
-        //LikhithaK:Start:21May2025:SFSTRY0003472:Terminal UI Changes
-        //Added below function to track inactivity.
-        function SCInactivityTime() {
 
-          window.onload = resetTimer;
-          // DOM Events
-          document.onmousemove = resetTimer;
-          document.onkeydown = resetTimer;
-          window.inacivityFlag = "N";
-
-          function logout() {
-            console.log('Inacivity Logout Fired!!');
-            var VName = SiebelApp.S_App.GetActiveView().GetName();
-            if (VName == "SC Create Sales Order View OUI") {
-              var inPS = SiebelApp.S_App.NewPropertySet();
-              var outPS = SiebelApp.S_App.NewPropertySet();
-              var Bservice = SiebelApp.S_App.GetService("SC Adyen Payment Service");
-              var OrderNum = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Order Number');
-              inPS.SetProperty('Order Number', OrderNum);
-              inPS.SetProperty('Terminal Id', '');
-              inPS.SetProperty('Terminal Name', '');
-
-              if (Bservice) {
-                outPS = Bservice.InvokeMethod("UpdateTerminalId", inPS, outPS);
-              }
-
-              //Idle API Call.
-              var OrderId = SiebelApp.S_App.GetActiveView().GetApplet('SC Sales Order Entry Form Applet OUI').GetBusComp().GetFieldValue('Id');
-              SC_OUI_Methods.CheckTerminalStatus(OrderId);
-
-            }
-
-          }
-
-          function setInactivity() {
-            window.inacivityFlag = "Y";
-            clearTimeout(window.scinactivetimer);
-            clearInterval(terminalcheck);
-          }
-
-          function resetTimer() {
-            if (window.inacivityFlag == "N") {
-              clearTimeout(window.scinactivetimer);
-              window.scinactivetimer = setTimeout(setInactivity, window.SCSessionTimeout);
-            } else {
-              clearTimeout(window.time);
-              window.time = setTimeout(logout, ((window.SCSessionTimeout * 2) - 60000));
-            } // 1000 milliseconds = 1 second
-          }
-        }
-
-        //LikhithaK:End:21May2025:SFSTRY0003472:Terminal UI Changes
-
-        function getPOSNumbers() {
+        function getPOSNumbers()
+        {
           //SBOORLA:Added code for defect 864
           var eventid = "";
           var SCStoreNumber = SC_OUI_Methods.SCGetProfileAttrValue("SC Store Number");
@@ -7310,7 +6947,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
           var Child_BS = Out_BS.GetChild(0);
           var BS_Data = Child_BS.GetProperty("OutputRecordSet");
-          if (BS_Data != "}") {
+          if (BS_Data != "}")
+          {
             var ResArray = new Array;
             ResArray = BS_Data.split(";");
 
@@ -7318,7 +6956,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             eventid = jsonRes["Id"];
             SiebelJS.Log("jsonSK" + jsonRes["Id"]);
           }
-          if (eventid != "") {
+          if (eventid != "")
+          {
             var Custom_Service = "",
               Input_BS = "",
               Out_BS = "";
@@ -7335,10 +6974,12 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
             Out_BS = Custom_Service.InvokeMethod("Query", Input_BS);
             var Child_BS = Out_BS.GetChild(0);
             var BS_Data = Child_BS.GetProperty("OutputRecordSet");
-            if (BS_Data != "}") {
+            if (BS_Data != "}")
+            {
               var ResArray = new Array;
               ResArray = BS_Data.split(";");
-              for (var i = 0; i < ResArray.length; i++) {
+              for (var i = 0; i < ResArray.length; i++)
+              {
                 jsonRes = JSON.parse(ResArray[i]);
                 SiebelJS.Log(jsonRes["Mobile POS Registers"]);
                 POSRegArray[i] = jsonRes["Mobile POS Registers"];
@@ -7348,7 +6989,8 @@ if (typeof (SiebelAppFacade.SCiPadOrderShipToItemListAppletPR) === "undefined") 
           }
         }
 
-        SCiPadOrderShipToItemListAppletPR.prototype.EndLife = function () {
+        SCiPadOrderShipToItemListAppletPR.prototype.EndLife = function ()
+        {
           SiebelAppFacade.SCiPadOrderShipToItemListAppletPR.superclass.EndLife.apply(this, arguments);
           localStorage.setItem("ComingFromPayments", "");
           SiebelJS.Log("Shipping - EndLife");

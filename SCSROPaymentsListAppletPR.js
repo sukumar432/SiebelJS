@@ -248,6 +248,17 @@ if (typeof(SiebelAppFacade.SCSROPaymentsListAppletPR) === "undefined") {
 					var errormessage = wfOutput.GetProperty("Error Message");
 					
 					if(errormessage == null || errormessage == ""){
+// Sukumar
+						
+	var Bservice = '',
+                                            inPS = '',
+                                            outPS = '';
+										inPS = SiebelApp.S_App.NewPropertySet();
+                                        outPS = SiebelApp.S_App.NewPropertySet();
+                                        inPS.SetProperty("Name", "SCCVV2Required");
+                                        inPS.SetProperty("Value", "No");
+                                        Bservice = SiebelApp.S_App.GetService("SessionAccessService");
+                                        outPS = Bservice.InvokeMethod("SetProfileAttr", inPS);					
 						$("#sn-fin-firstName").val(wfOutput.GetProperty("FirstName"));
 						$("#sn-fin-AccNumber").val(wfOutput.GetProperty("AccountNumber"));
 						var activationRequired = wfOutput.GetProperty("ActivationRequired");
@@ -510,4 +521,5 @@ if (typeof(SiebelAppFacade.SCSROPaymentsListAppletPR) === "undefined") {
   );
   return "SiebelAppFacade.SCSROPaymentsListAppletPR";
  })
+}
 }
