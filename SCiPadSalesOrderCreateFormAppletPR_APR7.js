@@ -1,0 +1,1800 @@
+if (typeof(SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR) === "undefined") {
+
+ SiebelJS.Namespace("SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR");
+ define("siebel/custom/SelectComfort/SCiPadSalesOrderCreateFormAppletPR", ["siebel/phyrenderer", "siebel/custom/SelectComfort/bootstrap.min.js", "siebel/custom/SelectComfort/jquery.validate.min","siebel/custom/SelectComfort/SCiPadSalesOrderMarkup","siebel/custom/SelectComfort/SC_OUI_Methods","siebel/custom/SelectComfort/SC_OUI_Markups","siebel/custom/SelectComfort/SCiPadOrderShipToLineItemMarkup","siebel/custom/SelectComfort/SCErrorCodes"],
+  function () {
+   SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR = (function () {
+   
+		var pm="",Appletid="",RecordSet="",mainmarkup="",markup="",headermarkup="",storechangemarkup,Lov,AccountOrder=false,a="",b="",billAddList="";
+		var selectstoreid="",c="",StoreLocation,LoginId,storeNumber,BService,billToContactRecordSet,responsibilityadmin,humancapitalresp,taxExeChange='N',Reason="";
+		var InPut = SiebelApp.S_App.NewPropertySet();
+		var OutPut = SiebelApp.S_App.NewPropertySet();
+		var SiebelConstant = SiebelJS.Dependency("SiebelApp.Constants");
+		var SCSalesCreateMarkup = SiebelJS.Dependency("SiebelApp.SCiPadSalesOrderMarkup");
+		var SC_OUI_Markups = SiebelJS.Dependency("SiebelApp.SC_OUI_Markups");
+		var SC_OUI_Methods = SiebelJS.Dependency("SiebelApp.SC_OUI_Methods");
+		 var SCErrorCodes = SiebelJS.Dependency("SiebelApp.SCErrorCodes");
+		var SCOrderShipMarkup = SiebelJS.Dependency("SiebelAppFacade.SCiPadOrderShipToLineItemMarkup");
+		var SCProducts = SiebelJS.Dependency("SiebelAppFacade.SCProductsPR");
+		var parentJSON={};
+		var parentAddrJSON={};
+		var OrderId="",conId="",OrderDate,fvalue="",revision;
+		var isCouponApplied="Y";
+
+    function SCiPadSalesOrderCreateFormAppletPR(pm) {
+     SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR.superclass.constructor.apply(this, arguments);
+    }
+
+    SiebelJS.Extend(SCiPadSalesOrderCreateFormAppletPR, SiebelAppFacade.PhysicalRenderer);
+
+    SCiPadSalesOrderCreateFormAppletPR.prototype.Init = function () {
+		SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR.superclass.Init.apply(this, arguments);
+		pm = this.GetPM();
+		$('#_sweview').hide();
+		SiebelJS.Log("In SalesOrder PR init");
+		revision=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision");
+		if(revision>1)
+			localStorage.setItem("comingfrom","revise");
+		else
+		   localStorage.setItem("comingfrom","");
+		   localStorage.setItem("flowfrom","");
+		//storeNumber = SiebelApp.S_App.GetProfileAttr("SC Store Number");
+		//LoginId = SiebelApp.S_App.GetProfileAttr("Login Name");
+		storeNumber = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Store Number");
+		LoginId = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Login Name");
+		$('#CommunicationPanelContainer').css("padding-top","77px");
+    }
+
+    SCiPadSalesOrderCreateFormAppletPR.prototype.ShowUI = function () {
+     SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR.superclass.ShowUI.apply(this, arguments);
+		$('#_sweview').show();
+		//hiding tool tip.
+		$('div[title="Line Items"]').attr("title","");
+		
+		
+		
+		//a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Employee List Applet"].GetPModel().Get("GetFullId");
+		//$("#"+a).append(mainmarkup);
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Management Products"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Category List Applet"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry - Line Items Form Applet"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Validation Message - Order Item List Applet"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Validation Message - Order List Applet"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Validation Message - Payments List Applet"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Report Output List Applet"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Contact Shipping List OUI"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["Order Entry - Attachment Applet"].GetPModel().Get("GetFullId");
+		$("#"+a).hide();
+        a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC LOY Member List Applet"].GetPModel().Get("GetFullId");		
+		$("#"+a).hide();
+		a=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Account Contact Shipping List OUI"].GetPModel().Get("GetFullId");		
+		$("#"+a).hide();		
+		
+		
+		 var sccreateorderSrchSpec = [],
+             sccreateorderSortSpec = [];
+		  sccreateorderSrchSpec[0] = "[Type]= 'SC_SUB_TYPE' and [Active] = 'Y' and [Parent]='Sales Order'";
+          sccreateorderSortSpec[0] = "Order By";
+		  sccreateorderSrchSpec[1] = "[Type]= 'FS_ORDER_STATUS' and [Active] = 'Y'";
+          sccreateorderSortSpec[1] = "Order By";
+		  sccreateorderSrchSpec[2] = "[Type]= 'SAP_SO_HEADER_DELIV_BLOCK' and [Active] = 'Y'";
+          sccreateorderSortSpec[2] = "Order By";
+		  sccreateorderSrchSpec[3] = "[Type]= 'SC_CUSTOMER_CATEGORY' and [Active] = 'Y' and [Name]='Insider'";
+          sccreateorderSortSpec[3] = "Order By";
+		  sccreateorderSrchSpec[4] = "[Type]= 'SC_MANUAL_DISCOUNT_REASON' and [Active] = 'Y'";
+          sccreateorderSortSpec[4] = "Order By";
+		  sccreateorderSrchSpec[5] = "[Type]= 'DISCNT_PERCENT' and [Active] = 'Y'";
+          sccreateorderSortSpec[5] = "Order By";
+		  sccreateorderSrchSpec[6] = "[Type]= 'FS_ORDER_STATUS' and [Active] = 'Y' and [Name]='In Progress'";
+          sccreateorderSortSpec[6] = "";
+		  sccreateorderSrchSpec[7] = "[Type]= 'FS_ORDER_STATUS' and [Active] = 'Y' and [Name]='Siebel Error'";
+          sccreateorderSortSpec[7] = "";
+		  sccreateorderSrchSpec[8]="[Type]= 'DIVISION_TYPE' and [Active] = 'Y' and [Name]='DIRECT'";
+		  sccreateorderSortSpec[8]="Order By";
+		  sccreateorderSrchSpec[9]="[Type]= 'DIVISION_TYPE' and [Active] = 'Y' and [Name]='ECOM'";
+		  sccreateorderSortSpec[9]="Order By";
+		  sccreateorderSrchSpec[10]="[Type]= 'PROD_CD' and [Active] = 'Y' and [Name]='Promotion'";
+	      sccreateorderSortSpec[10]="Order By";
+		  sccreateorderSrchSpec[11]="[Type]= 'SC_DISA_ENABLE_FLAG' and [Active] = 'Y' and [Name]='Enable Disa Flag'";
+		  sccreateorderSortSpec[11]="Order By";
+		  sccreateorderSrchSpec[12]="[Active]='Y' AND [Type]='CANCEL_REASON_TYPE'";
+		  sccreateorderSortSpec[12]="";
+		  
+		 
+		//var firstTime="";
+		//firstTime=SiebelApp.S_App.GetProfileAttr("LoginFirstTimeOUI");
+		//if(firstTime=="Y"){
+			//SC_OUI_Methods.SCSetOrderLoVs(sccreateorderSrchSpec, sccreateorderSortSpec);
+			//SC_OUI_Methods.SCGetProfileAttr("SC Primary Division Type,SC Store Number,MachineInfo,SC Store User,LoginFirstTimeOUI,DISALocFound,PoleDisplayOUI,SC Store Name OUI");
+		//}
+		Appletid=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetFullId");
+	 	mainmarkup=SCSalesCreateMarkup.SalesOrderCreateMarkup();
+		$('#s_'+Appletid+'_div').hide();
+		$('#'+Appletid).append(mainmarkup);
+		//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+		SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+		RecordSet=pm.Get("GetRecordSet");
+		var divsubtype = SC_OUI_Methods.SCGetProfileAttrValue('SC Primary Division Sub Type');
+		headermarkup=SC_OUI_Markups.SalesOrderCreateHeader_block(RecordSet,divsubtype);
+		$('.nav-header').html(headermarkup);
+		storechangemarkup=SC_OUI_Markups.StoreChange();
+		$('#SC-add-storelocation').html(storechangemarkup);
+		//Adding CustomerMarkup 
+		customtimermarkup=SC_OUI_Markups.CustomTimer();
+		$('#applet1').append(customtimermarkup);
+		
+		$("#SC_Order_ship_markup").hide();
+		$("#SC_Order_ship_markup1").hide();
+		$("#SC_Order_ship_markup2").hide();
+		$("#footerbutton").hide();
+		//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+		SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+		RecordSet=pm.Get("GetRecordSet");
+		
+		Contact_Id=RecordSet[0]["Bill To Contact Id"];
+		Account_Id=RecordSet[0]["Bill To Account Id"];
+		responsibilityadmin=RecordSet[0]["SC Admin Responsibility"];
+		humancapitalresp=RecordSet[0]["SC Human Capital OIC Resp"];
+		
+		
+		//NGOLLA defect#756
+		var in_progress_value = SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'FS_ORDER_STATUS' and [Active] = 'Y' and [Name]='In Progress'");
+		var siebel_error_value = SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'FS_ORDER_STATUS' and [Active] = 'Y' and [Name]='Siebel Error'");
+	
+		if(RecordSet[0]["SC Sub-Type"]=="Wholesale"||RecordSet[0]["SC Sub-Type"]=="Commercial" || RecordSet[0]["SC Sub-Type"]=="QVC"|| RecordSet[0]["SC Sub-Type"]=="Internal" || RecordSet[0]["SC Sub-Type"]=="HSN"){
+		  $("#ponumber").addClass("SC_WholeSale_edit");
+          $("#shiptoaccount").addClass("SC_WholeSale_edit");		  
+			
+		}
+		//based on subtype value order is determined if it is account order or contact order
+		if(RecordSet[0]["SC Sub-Type"]=="Wholesale"||RecordSet[0]["SC Sub-Type"]=="QVC"||RecordSet[0]["SC Sub-Type"]=="Commercial" || RecordSet[0]["SC Sub-Type"] == "Internal" || RecordSet[0]["SC Sub-Type"] == "HSN"){
+		//if(RecordSet[0]["Bill To Account Id"]!=null&&RecordSet[0]["Bill To Account Id"]!=""){
+			AccountOrder=true;
+			document.getElementById("viewcontact").innerHTML="View Account";
+			if(RecordSet[0]["SC Store User"]=="Y")
+				$("#sc-cr-view-account").hide();
+		}
+		else
+			AccountOrder=false;
+		//NGOLLA Defect #710
+		if(AccountOrder){
+			$("#SC_OM_USE").text('Comments');
+			
+		}
+		if((RecordSet[0]["Status"]=="In Progress"&&RecordSet[0]["Payment Record Count"]==0&&localStorage.getItem('comingfrom')!='revise'))
+			document.getElementById("deleteordermark").style.display = "block";
+		else
+			document.getElementById("deleteordermark").style.display = "none";
+		//SNARRA 26-07-2018 Added for performance POC
+		if(localStorage.getItem('isNewSalesOrder')!="Y"){
+		//sandeep
+		  var cancelorder = SCSalesCreateMarkup.CancelOrderPopup();
+		  $("#SC-SO-Cancel-order").html(cancelorder);
+		  var refundmarkup = SCSalesCreateMarkup.GetRefundDetails();
+		  $("#SC-refund-popup").html(refundmarkup);
+		//sandeep
+		}
+		//SNARRA Added code for CTItoolbar Issue
+		if($("#CommunicationPanelContainer").is(":visible")){
+				    $("#sc-orange").show();
+			   }
+		markup="";
+		markup+='						<div class="SC-SO-panel-head">';
+		markup+='                            <div class="SC-SO-panel-title">';
+		//commented for ipad
+		//if(localStorage.getItem('comingfrom')=="revise")
+			markup+='                                <button data-toggle="collapse" data-target="#sales-info" id="expand-collapse" class="sc-icon iconClosed" aria-expanded="true"></button>';
+		//else
+		//	markup+='                                <button data-toggle="collapse" data-target="#sales-info" id="expand-collapse" class="sc-icon iconOpen OrderDetailsclose" aria-expanded="false"></button>';
+		markup+='                                 <div class="SC-title-button">';
+		markup+='                                     <p class="no-margin">Order Details</p>';
+		markup+='                                 </div>';
+		markup+='                            </div>';
+		//removed style for ipad
+		markup+='                            <div class="SC-SO-details-items" id="sales-header">';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">Order Date:</label>';
+		markup+='                                    <label class="item-value overflow" title="'+RecordSet[0]["Order Date"]+'" id="corderdate">'+RecordSet[0]["Order Date"]+'</label>';
+		markup+='                                </div>';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">Subtype:</label>';
+		markup+='                                    <label class="item-value" id="csubtype" >'+RecordSet[0]["SC Sub-Type"]+'</label>';
+		markup+='                                </div>';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">Status:</label>';
+		markup+='                                    <label class="item-value pending" id="cstatus">'+RecordSet[0]["Status"]+'</label>';
+		markup+='                                </div>';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">Sales Order Team:</label>';
+		markup+='                                    <label class="item-value" id="csalesteam">'+RecordSet[0]["SC Sales Team Login"]+'</label>';
+		markup+='                                </div>';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">Sub-Channel:</label>';
+		markup+='                                    <label class="item-value" id="csubchan">'+RecordSet[0]["SC Location Sub-Channel"]+'</label>';
+		markup+='                                </div>';
+		markup+='                                <div class="SC-SO-detail-item">';
+		markup+='                                    <label class="item-label">Sale Location:</label>';
+		markup+='                                    <label class="item-value overflow" title="'+RecordSet[0]["SC Sale Location"]+'" id="clocation">'+RecordSet[0]["SC Sale Location"]+'</label>';
+		markup+='                                </div>';
+		markup+='                            </div>';
+		//Added style for ipad
+		markup+='                            <div class="edit-details cancel-title-head">';
+		//edit details or Cancel order button
+		markup+='              				</div>';
+		markup+='                            <div class="save-details" id="SC-SO-save-block"  style="display:none">';
+		markup+='                                <div class="save-edit-icon save" id="SC-SO-sales-save-changes">';
+		markup+='                                    <img  src="images/custom/done_mini.png" />';
+		markup+='                                </div>';
+		markup+='                                <div class="save-edit-icon cancel" id="SC-SO-sales-cancel-changes">';
+		markup+='                                    <img src="images/custom/close_mini.png" />';
+		markup+='                                </div>';
+		markup+='                            </div>';
+		markup+='                        </div>';
+		//commented for ipad
+		//if(localStorage.getItem('comingfrom')=="revise")
+			markup+='                        <div class="SC-SO-panel-body collapse clearfix" id="sales-info">';
+		//commented for ipad
+		/*else
+			markup+='                        <div class="SC-SO-panel-body collapse in clearfix" id="sales-info">';*/
+		 //markup+='                            <form id="sc-SalesOrder-Details">';
+		markup+='                            <div class="row no-margin">';
+		markup+='                                <div class="SC-SO-details-items">';
+		//RCHATHAR: For defect number 710
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Source Order:</label>';
+		//SCHERKU: For defect number 710
+		if(RecordSet[0]["SC Admin Responsibility"]== "Y")
+		markup+='                                        <input type="text" name="" class="SC-SO-input read-mode read-mode-admin overflow" id="SC-source-order" title="'+RecordSet[0]["SC Ext Order Number"]+'" value="'+RecordSet[0]["SC Ext Order Number"]+'">';
+		else
+		{
+			if(RecordSet[0]["SC Ext Order Number"] == undefined)
+				markup+='                                        <label class="item-value" id="SC-source-order">'+RecordSet[0]["SC Ext Order Number"]+'</label>';
+			else
+				markup+='                                        <label class="item-value" id="SC-source-order"></label>';		
+		//markup+='                                        <input type="text" name="" class="SC-SO-input read-mode read-mode-admin overflow" id="SC-source-order" title="" value="">';	
+		}
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">order date:</label>';
+		OrderDate=RecordSet[0]["Order Date"];
+		//SBOORLA:Added code for 710 defect
+		if(RecordSet[0]["SC Admin Responsibility"]=="Y")
+		markup+='                                        <input type="text" name="" class="SC-SO-input read-mode read-mode-admin overflow" id="SC-order-date" title="'+RecordSet[0]["Order Date"]+'" value="'+RecordSet[0]["Order Date"]+'">';
+		else
+		markup+='                                        <input type="text" name="" class="SC-SO-input SC-readonly-date" id="SC-order-date" title="'+RecordSet[0]["Order Date"]+'" value="'+RecordSet[0]["Order Date"]+'">';	
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">subtype:</label>';
+		markup+='                                        <select class="SC-SO-input inherit read-mode" id="subtype">';
+		Lov=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_SUB_TYPE' and [Active] = 'Y' and [Parent]='Sales Order'");
+		markup+='                                            <option class="SC-SO-Option" selected></option>';
+		for(var i=0;i<Lov.length;i++){
+			if(Lov[i]==RecordSet[0]["SC Sub-Type"]){
+					markup+='                                            <option class="SC-SO-Option" selected>'+Lov[i]+'</option>';
+			}
+			else{
+				markup+='                                            <option class="SC-SO-Option">'+Lov[i]+'</option>';
+			}
+		}
+		markup+='                                        </select>';
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Bill To:</label>';
+		if(AccountOrder==true)
+			markup+='                                        <label class="item-value overflow" id="scbillToaccdrilldown" title="'+RecordSet[0]["Bill To Account"]+'">'+RecordSet[0]["Bill To Account"]+'</label>';
+		else
+			//SVEMURI : Modified Record SET to FIRST NAME /LAST NAME from LAST NAME/FIRST NAME.
+			markup+='                                        <label class="item-value overflow" title="'+RecordSet[0]["Contact First Name"]+" "+RecordSet[0]["Contact Last Name"]+'">'+RecordSet[0]["Contact First Name"]+" "+RecordSet[0]["Contact Last Name"]+'</label>';
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Status:</label>';
+		//markup+='                                        <label class="item-value pending">'+RecordSet[0]["Status"]+'</label>';
+		//NGOLLA defect No:710
+		markup+='										<span class=" pending" title="'+RecordSet[0]["Status"]+'"></span>';		
+		markup+='                                        <select class="SC-SO-input read-mode-revise overflow" style="pointer-events:none" id="orderstatus" >';
+		Lov=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'FS_ORDER_STATUS' and [Active] = 'Y'");
+		markup+='                                            <option class="SC-SO-Option" selected></option>';
+		for(var i=0;i<Lov.length;i++){
+			if(Lov[i]==RecordSet[0]["Status"]){
+				markup+='                                            <option class="SC-SO-Option" value="'+Lov[i]+'" selected>'+Lov[i]+'</option>';
+			}
+			else{
+				markup+='                                            <option class="SC-SO-Option" value="'+Lov[i]+'">'+Lov[i]+'</option>';
+			}
+		}
+		markup+='                                        </select>';
+		
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Sales Order Team:</label>';
+		markup+='                                        <label class="item-value read-mode-human read-mode-revise" title="'+RecordSet[0]["SC Sales Team Login"]+'">'+RecordSet[0]["SC Sales Team Login"]+'</label>';
+		markup+='                                        <img src="images/custom/search-icon.png" class="location-search-icon bottom" id="SC-sales-team-icon" style="display:none">';
+		//markup+='                                        <img src="images/custom/search-icon.png" class="location-search-icon bottom" id="SC-sales-team-icon">';
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Customer #:</label>';
+		markup+='                                        <label class="item-value">'+RecordSet[0]["SC Ship To Customer Number"]+'</label>';
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Channel:</label>';
+		markup+='                                        <label class="item-value" id="SC-order-channel">'+RecordSet[0]["SC Location Type"]+'</label>';
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Sub-Channel:</label>';
+		markup+='                                        <label class="item-value" id="SC-order-subchannel">'+RecordSet[0]["SC Location Sub-Channel"]+'</label>';
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Store/Show#:</label>';
+			markup+='                                        <input type="text" name="" value="'+RecordSet[0]["SC Location Store Number"]+'" class="SC-SO-input read-mode-revise" title="'+RecordSet[0]["Comments"]+'"" id="SC-store-number">';
+		//markup+='                                        <label class="item-value read-mode-revise" id="SC-store-number">'+RecordSet[0]["SC Location Store Number"]+'</label>';
+		markup+='                                    </div>';
+		markup+='                                     <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label" >Bill To Address:</label>';
+		if(AccountOrder==true){
+			markup+='										<span title="'+RecordSet[0]["Primary Bill To Address"]+'" id="sc-billtoaddr-tittle">';		
+			markup+='                                        <select class="SC-SO-input inherit read-mode overflow" title="'+RecordSet[0]["Primary Bill To Address"]+'" id="addressto">';
+			markup+='                                        <option class="SC-SO-Option">'+RecordSet[0]["Primary Bill To Address"]+'</option></select>';
+		}
+		else{
+			markup+='										<span title="'+RecordSet[0]["SC Con Bill To Address"]+'" id="sc-billtoaddr-tittle">';		
+			markup+='                                        <select class="SC-SO-input inherit read-mode overflow" title="'+RecordSet[0]["SC Con Bill To Address"]+'" id="addressto">';
+			markup+='                                        <option class="SC-SO-Option">'+RecordSet[0]["SC Con Bill To Address"]+'</option></select>';
+		}
+		markup+='										 </select>';
+		markup+='										</span>';
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Sale Location:</label>';
+		markup+='                                        <label class="item-value read-mode-admin overflow read-mode-revise" title="'+RecordSet[0]["SC Sale Location"]+'" id="sc-cahnge-loaction">'+RecordSet[0]["SC Sale Location"]+'</label>';
+		markup+='                                        <img src="images/custom/search-icon.png" class="location-search-icon bottom" id="SC-sales-location-icon" style="display:none">';		
+		markup+='                                    </div>';
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Cancellation Reason:</label>';
+		markup+=' 										 <label class="item-value" id="sc-cancelreason">'+RecordSet[0]["Cancel Reason"]+'</label>';
+		markup+='                                    </div>';
+		if(AccountOrder==true){
+			markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label">Preferred Contact Method:</label>';
+			markup+='                                        <input type="text" name="" class="SC-SO-input read-mode" id="prefconmethod">';
+			markup+='                                    </div>';
+		}
+		markup+='                                     <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Hold Reason:</label>';
+		markup+='										<span title="'+RecordSet[0]["Delivery Block"]+'"></span>';		
+		markup+='                                        <select class="SC-SO-input read-mode overflow" id="holdreason" >';
+		Lov=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SAP_SO_HEADER_DELIV_BLOCK' and [Active] = 'Y'");
+		markup+='                                            <option class="SC-SO-Option" selected></option>';
+		for(var i=0;i<Lov.length;i++){
+			if(Lov[i]==RecordSet[0]["Delivery Block"]){
+				markup+='                                            <option class="SC-SO-Option" selected>'+Lov[i]+'</option>';
+			}
+			else{
+				markup+='                                            <option class="SC-SO-Option">'+Lov[i]+'</option>';
+			}
+		}
+		markup+='                                        </select>';
+		markup+='                                    </div>';
+		if(AccountOrder==true){
+			markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label">PO Number:</label>';
+			markup+='                                        <input type="text" name="" value="'+RecordSet[0]["SC Purchase Order Number"]+'" class="SC-SO-input read-mode read-mode-revise" id="ponumber">';
+			markup+='                                    </div>';
+			markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label">Ship To Account:</label>';
+			markup+='                                        <input type="text" name="" value="'+RecordSet[0]["Ship To Account Id"]+'" class="SC-SO-input" id="shiptoaccount">';
+			markup+='                                    </div>';
+		}
+		else{
+			markup+='                                      <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label" id="SC_OM_USE">OM Use only:</label>';
+			markup+='                                        <input type="text" name="" value="'+RecordSet[0]["Comments"]+'" class="SC-SO-input read-mode overflow read-mode-revise" title="'+RecordSet[0]["Comments"]+'"" id="omuseronly">';
+			markup+='                                    </div>';
+			markup+='                                     <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label">Referred By Insider:</label>';
+			if(RecordSet[0]["SC Referred By"] ==""){
+				markup+='                                       <input type="text" name="" value="'+RecordSet[0]["SC Referred By"]+'" class="SC-SO-input SC-readonly SC-applets" id="referreby">';
+			markup+='                                    <img src="images/custom/search-icon.png" class="location-search-icon SC-disabled" id="SC-search-icon-referreby" style="display: none">';
+			}else{
+			markup+='                                        <input type="text" name="" value="'+RecordSet[0]["SC Referred By"]+'" class="SC-SO-input  sc-referredby" id="referreby">';
+			markup+='                                    <img src="images/custom/search-icon.png" class="location-search-icon SC-disabled" id="SC-search-icon-referreby" style="display: none">';
+			}
+			markup+='                                    </div>';
+		}
+		markup+='                                    <div class="SC-SO-detail-item m-bottom">';		
+		markup+='                                        <label class="item-label">Tax Exempt:</label>';		
+		markup+='											<div class="attachment">';
+        markup+='                                   			 <p class="SC-checkbox-white-square SC-readonly">';
+        markup+='                                        			<input type="checkbox" name="" id="teoh"/>';
+        markup+='                                       			<label for="teoh" class="SC-360-cusin"></label>';
+        markup+='                                    		    </p>';
+        markup+='                                    			<div id="clip-img" class="attachment_img" style="display:none;">';
+        markup+='                                       			 <div class="attach_drop" id="list_item">';
+        markup+='                                           			<img src="images/custom/attachment-clips.png">';
+        markup+='                                            			<div class="arrow-down" id="SC-contact-arrow"></div>';
+        markup+='                                       			</div>';
+        markup+='                                       			<div class="list_option" id="SC-Attachment-list">';
+        markup+='                                        	    	</div>';
+        markup+='                                    			</div>';
+        markup+='                                			</div>';		
+		markup+='                                    </div>';
+		//SBOORLA:Added markup for defect 738
+		//if(parseInt(RecordSet[0]["Revision"])>1){
+		markup+='                                      <div class="SC-SO-detail-item m-bottom">';
+		markup+='                                        <label class="item-label">Revision:</label>';
+		markup+='                                        <input type="text" name="" value="'+RecordSet[0]["Revision"]+'" class="SC-SO-input SC-readonly" title="'+RecordSet[0]["Revision"]+'"">';
+		markup+='                                    </div>';
+		//}
+		//Ngolla for defect NO:#756
+		if(RecordSet[0]["SC Sub-Type"]=="QVC"){
+			markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label">QVC Notification Status:</label>';
+			if(RecordSet[0]["SC QVC Notification Status"]!=undefined)
+			markup+='                                        <input type="text" name="" class="SC-SO-input" style="pointer-events:none" value="'+RecordSet[0]["SC QVC Notification Status"]+'">';
+		    else
+			markup+='                                        <input type="text" name="" class="SC-SO-input" style="pointer-events:none" value="">';	
+			markup+='                                    </div>';
+			markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label">Sold To First Name:</label>';
+			if(RecordSet[0]["SC Pay To First Name"]!=undefined)
+			markup+='                                        <input type="text" name="" class="SC-SO-input" style="pointer-events:none" id="SC-Sold-First-name" value="'+RecordSet[0]["SC Pay To First Name"]+'">';
+		    else
+			markup+='                                        <input type="text" name="" class="SC-SO-input" style="pointer-events:none" id="SC-Sold-First-name" value="">';
+			markup+='                                    </div>';
+			markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label">Sold To Last Name:</label>';
+			if(RecordSet[0]["SC Pay To Last Name"]!=undefined)
+			markup+='                                        <input type="text" name="" class="SC-SO-input SC_QVC_edit" style="pointer-events:none" id="SC-Sold-last-name" value="'+RecordSet[0]["SC Pay To Last Name"]+'">';
+		    else
+				markup+='                                        <input type="text" name="" class="SC-SO-input SC_QVC_edit" style="pointer-events:none" id="SC-Sold-last-name" value="">';
+		    markup+='                                    <img src="images/custom/search-icon.png" class="location-search-icon" style="display:none" id="SC-last-name-pickApplet" >';
+	        markup+='                                    </div>';
+			markup+='                                    <div class="SC-SO-detail-item m-bottom">';
+			markup+='                                        <label class="item-label">Sold To Address:</label>';
+			if(RecordSet[0]["SC Pay To Contact Address"]!=undefined)
+			markup+='                                        <input type="text" name="" class="SC-SO-input SC_QVC_edit" style="pointer-events:none" value="'+RecordSet[0]["SC Pay To Contact Address"]+'">';
+		    else
+				markup+='                                        <input type="text" name="" class="SC-SO-input SC_QVC_edit" value="" style="pointer-events:none">';
+			  markup+='                                    <img src="images/custom/mvg.png" class="location-search-icon" style="display:none" id="SC-Address-pickApplet" >';
+	       markup+='                                    </div>';
+			}
+			//SNARRA:Added Fields for NFL Project
+			markup+='                                            <div class="SC-SO-detail-item m-bottom">';
+            markup+='                                                 <label class="item-label">coupon:</label>';
+			if(RecordSet[0]["SC Coupon Name"]!=undefined)
+            markup+='                                                 <input type="text" name="" class="SC-SO-input SC-readonly SC-applets" id="SC-coupon-name" value="'+RecordSet[0]["SC Coupon Name"]+'">';
+            else
+           markup+='                                                 <input type="text" name="" class="SC-SO-input SC-readonly SC-applets" id="SC-coupon-name" value="">';
+          markup+='                                                 <img src="images/custom/search-icon.png" class="location-search-icon" id="SC-coupon-icon" style="display:none">';
+            markup+='                                            </div>';
+			//SPATIBAN:Show number
+			markup+='                                            <div class="SC-SO-detail-item m-bottom">';
+            markup+='                                                 <label class="item-label">Show#:</label>';
+			if(RecordSet[0]["SC Show Number Readonly"]=="Y")
+            markup+='                                                 <input type="text" name="" class="SC-SO-input SC-readonly" id="SC-show-num" value="'+RecordSet[0]["SC Sale Show#"]+'">';
+            else{
+           markup+='                                                 <input type="text" name="" class="SC-SO-input SC-applets SC-readonly" id="SC-show-num" value="'+RecordSet[0]["SC Sale Show#"]+'">';
+          markup+='                                                 <img src="images/custom/search-icon.png" class="location-search-icon" id="SC-shownum-icon" style="display:none">';
+			}
+		   markup+='                                            </div>';
+		   //SNARRA:Added Manual Discount CHG0034230 
+		  /* markup+='                                            <div class="SC-SO-detail-item m-bottom">';
+            markup+='                                                 <label class="item-label"></label>';
+			 markup+='                                                 <input type="text" name="" class="SC-SO-input SC-applets" id="SC-show-num" value="'+RecordSet[0]["SC Manual Order Reason"]+'">';
+           markup+='                                            </div>';*/
+		   markup+='                                    <div class="SC-SO-detail-item m-bottom" id="manualreasonblock">';
+		markup+='                                        <label class="item-label">Manual Order Reason:</label>';
+		if(RecordSet[0]["SC Manual Order Reason"]!="")
+	   markup+='                                                 <input type="text" name="" class="SC-SO-input SC-applets" id="manualreason" value="'+RecordSet[0]["SC Manual Order Reason"]+'">';
+		 else
+		 markup+='                                                 <input type="text" name="" class="SC-SO-input SC-applets" id="manualreason" value="">';
+      	markup+='                                    </div>';
+		if(RecordSet[0]["SC Manual Order Reason"]!=""){
+			 markup+='                                            <div class="SC-SO-detail-item m-bottom" id="manualreasoncomm">';
+            markup+='                                                 <label class="item-label">Manual Order Comments:</label>';
+			markup+='                                                 <input type="text" name="" class="SC-SO-input SC-applets SC-readonly" id="SC-manual-commnets" value="'+RecordSet[0]["SC Manual Comments"]+'">';
+         markup+='                                            </div>';
+		}else{
+			markup+='                                            <div class="SC-SO-detail-item m-bottom" id="manualreasoncomm" style="display:none">';
+            markup+='                                                 <label class="item-label">Manual Order Comments:</label>';
+			markup+='                                                 <input type="text" name="" class="SC-SO-input SC-applets SC-readonly" id="SC-manual-commnets" value="'+RecordSet[0]["SC Manual Comments"]+'">';
+         markup+='                                            </div>';
+		}
+		markup+='                                </div>';
+		markup+='                            </div>';
+		//markup+='                            </form>';
+		markup+='                        </div>';
+		
+		$("#_swescrnbar").hide();
+		$("#_swethreadbar").hide();
+		$("#_sweappmenu").hide();
+		$("#s_vctrl_div").hide();
+		$(".siebui-button-toolbar").hide();
+		//$("#_swecontent").css("height","99%");
+		$('#_sweview').css("overflow","auto"); 
+		$('#sc-SalesOrder-Details').html(markup);
+		$(".cancel-title-head").hide();
+
+		//SNARRA Added for CTI toolbar Issue
+		if($("#CommunicationPanelContainer").is(":visible") && (localStorage.getItem('CTIToolbar')== "Y")){
+				   $(".SC-data-container").css("position","inherit");
+				   $("#sc-orange").show();
+				   $("#sc-white").hide();
+			   }
+		 if($("#CommunicationPanelContainer").is(":visible")){
+				    $("#sc-orange").show();
+					$("#sc-white").hide();
+			   }													
+		
+		
+		//for tax exempt flag
+		if(RecordSet[0]["Tax Exempt"]=='Y'){
+			$('#teoh').prop('checked', true);
+			$("#clip-img").show();
+		}
+		else
+			$('#teoh').prop('checked', false);
+		
+		//SBOORLA:Added code for defect 710
+		$(".SC-readonly-date").css({
+		   "pointer-events": 'none'
+		});
+		Lov=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_CUSTOMER_CATEGORY' and [Active] = 'Y' and [Name]='Insider'");
+		//to disbale referredby icon
+		/*if((RecordSet[0]["SC Referral Contact Id"] == null ) || (RecordSet[0]["SC Referral Contact Id"] == "No Match Row Id") || (RecordSet[0]["SC Customer Category"] == null) || (RecordSet[0]["Revision"] > 1) || (RecordSet[0]["SC Sub-Type"]!="Employee") || (RecordSet[0]["SC Customer Category"] != Lov[0])){
+		//(RecordSet[0]["SC Customer Category"] != LookupValue("SC_CUSTOMER_CATEGORY", "Insider")) 
+			$("#SC-search-icon-referreby").addClass("refer");
+		}*/
+		if((RecordSet[0]["Revision"] == 1) && (RecordSet[0]["SC Sub-Type"]!="Employee") && (RecordSet[0]["SC Customer Category"] != Lov[0])){
+		//(RecordSet[0]["SC Customer Category"] != LookupValue("SC_CUSTOMER_CATEGORY", "Insider")) 
+			$("#SC-search-icon-referreby").addClass("refer");
+		}
+		
+		var scaddrDropdown="N";
+		
+		$("#addressto").click(function(){
+			//to make bill to address as a dropdown
+			if(scaddrDropdown=='N'){
+				$("#addressto").html(AttachAddresses());
+				scaddrDropdown="Y";
+			}
+		});
+		
+		//Add store Location modal open
+		$("#SC-add-store-location").click(function(){
+			//StoreLocation = SC_OUI_Methods.StoreName(LoginId);
+			StoreLocation = SC_OUI_Methods.SCGetProfileAttrValue("SC Store Name OUI");
+			$("#SC-add-storelocation").modal({
+				backdrop: 'static'
+			});
+			if(StoreLocation!=""){
+				document.getElementById('StoreTitle').innerHTML = StoreLocation;
+				$("#StoreTitle").attr("title",StoreLocation);
+			}else{
+				document.getElementById('StoreTitle').innerHTML = "Add Store Location";
+			}
+		});
+		//Ngolla Defect #756
+		/*$(document).on('change',"#csubtype",function () {
+			if(this.value = "QVC")
+			{  
+             $(".QVC_fileds").show();		
+			}else{
+			 $(".QVC_fileds").show();	
+				
+			}
+			});*/
+		
+		// on click of the enter in contact search
+		$(".search-box").keyup(function(event) {
+			if (event.keyCode === 13) {
+				if(!$("#sc-search").hasClass("SC-disabled")){
+					searchContact();
+				}
+			}
+		});
+		
+		//on click of enter on store search
+		$("#SC-Store-Search").keyup(function(event) {
+			if (event.keyCode === 13) {
+				var value=document.getElementById('SC-Store-Search').value;
+				markup=SC_OUI_Markups.StoreChange2(value);
+				$("#SC-storelocation").html(markup);
+			}
+		});
+		
+		
+		//on selecting the store for change of store
+		var selectstoreid="";
+		$(document).on('click','#SC-storelocation tr',function(){
+			$(this).addClass('cti-active').siblings().removeClass('cti-active');
+			selectstoreid=$(this).attr('id');
+		});
+		
+		//on click of the store
+		$(document).on('click','#SC-selectstore',function(){
+			$("#SC-Store-Search").val("");
+		    selectstoreid=$("#"+selectstoreid+" td:first-child").text();
+			if(selectstoreid.length!=0){
+				SC_OUI_Methods.SetStore(selectstoreid);
+				SC_OUI_Methods.SCGetProfileAttr("SC Primary Division Type,SC Store Number,MachineInfo,SC Store User,LoginFirstTimeOUI,PoleDisplayOUI,SC Store Name OUI,Login Name,Last Name,First Name,SC Primary Division Sub Type,DISALocFound,Primary responsibility Name,SC Primary Division Name,SCHCMerchantId,SCGEMerchantId,SC Primary Division Id,IP");
+				//StoreLocation = SC_OUI_Methods.StoreName(LoginId);
+				StoreLocation = SC_OUI_Methods.SCGetProfileAttrValue("SC Store Name OUI");
+				if(StoreLocation!=""){
+					document.getElementById('storename').innerHTML = selectstoreid.substring(0,10);
+					$("#SC-add-store-location").attr("title","Change Store");
+					$("#storename").attr("title",selectstoreid);
+					StoreLocation = selectstoreid;
+				}else{
+					 $("#SC-add-store-location").attr("title","Add Store");
+				}
+			}
+			$("#SC-add-storelocation").modal('hide');
+			$("#SC-storelocation").html("");
+			});
+		
+		
+		//NGollA defect for 663
+		$(document).on('click','#SC-Clear-store',function(){
+				SC_OUI_Methods.SetStore("");
+				SC_OUI_Methods.SCGetProfileAttr("SC Primary Division Type,SC Store Number,MachineInfo,SC Store User,LoginFirstTimeOUI,PoleDisplayOUI,SC Store Name OUI,Login Name,Last Name,First Name,SC Primary Division Sub Type,DISALocFound,Primary responsibility Name,SC Primary Division Name,SCHCMerchantId,SCGEMerchantId,SC Primary Division Id,IP");
+				//StoreLocation = SC_OUI_Methods.StoreName(LoginId);
+				StoreLocation = SC_OUI_Methods.SCGetProfileAttrValue("SC Store Name OUI");
+				$("#storename").text('Add Store');
+				$("#StoreTitle").text('Add Store Location');
+				$("#StoreTitle").attr("title","Add Store Location");
+			});
+		
+		// Getting Store location
+		StoreLocation = SC_OUI_Methods.SCGetProfileAttrValue("SC Store Name OUI");
+		 
+		if($("#SC-add-store-location").is(":visible")){
+			if(StoreLocation!=""){
+			document.getElementById('storename').innerHTML = StoreLocation.substring(0,10);
+			$("#SC-add-store-location").attr("title","Change Store Location");
+			$("#storename").attr("title",StoreLocation);
+			 }else{
+				$("#SC-add-store-location").attr("title","Add Store Location");
+			 }
+		}
+		
+		 //SPATIBAN:added code for update the user location with DISA Location
+		var scdisaloc="";
+		scdisaloc=SC_OUI_Methods.SCGetProfileAttrValue("DISALocFound");
+		if(scdisaloc=="Y"){
+			$("#SC-add-store-location").addClass("SC-readonly");
+		}
+		 // nullifying Store markup
+		$(".SC-close-popup").click(function() {
+			$("#SC-Store-Search").val('');
+			$("#SC-storelocation").html("");
+		});
+	}//showui
+
+    SCiPadSalesOrderCreateFormAppletPR.prototype.BindData = function (bRefresh) {
+     SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR.superclass.BindData.apply(this, arguments);
+	 localStorage.setItem('OrderId',RecordSet[0]["Id"]);
+	 
+	 //to hide the edit details block
+	 var status_val=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status");
+	 if((responsibilityadmin=='Y')||(revision<2 && (status_val=="In Progress" || status_val=="Siebel Error"))){
+		 $('#SC-SO-edit-block').show();
+	 }
+	 else{
+		 $('#SC-SO-edit-block').hide();
+	 }
+    }
+
+    SCiPadSalesOrderCreateFormAppletPR.prototype.BindEvents = function () {
+     SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR.superclass.BindEvents.apply(this, arguments);
+		 //SNARRA 11-12-2018 Added code for Custom backdrop
+		     $(".modal").on('show.bs.modal', function () {
+				    $(".modal-backdrop").css("z-index","-1");
+			  	$("#custom-backdrop").show();
+			   });
+
+			$(".modal").on('hide.bs.modal', function () {
+				$("#custom-backdrop").hide();
+			}); 
+		//sushma 19-07-2018:Added for Resizing CTI Toolbar
+	   $(document).on('click','#commPanelDockToShowUnpin',function(){
+		  $("#CommunicationPanelContainer").css("cssText", "padding-top: 0px !important;");
+	   })
+	   $(document).on('click','#commPanelDockToShowPin',function(){
+		  $("#CommunicationPanelContainer").css("cssText", "padding-top: 77px !important;");
+	   })
+	    
+		$(document).on('change','#manualreason', function(event){
+			if($("#manualreason").val()!=""){
+				$("#manualreasoncomm").show();
+				$("#SC-manual-commnets").removeClass("SC-readonly");
+				$("#SC-manual-commnets").css({
+						"pointer-events": 'all'
+				});
+				$("#SC-manual-commnets").attr('name','ordercomments');
+			}else{
+				$("#SC-manual-commnets").addClass("SC-readonly");
+				$("#SC-manual-commnets").css({
+						"pointer-events": 'none'
+				});
+				$("#SC-manual-commnets").val("");
+			}	
+			
+		});	
+		
+		$(document).on("click","#SC-SO-cancel-block",function() {
+		//$("#SC-SO-cancel-block").click(function() {
+			var cancelrsn=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Cancel Reason");
+			if(cancelrsn!=""){
+				$('#SC-Cancel-SelectBox').val(cancelrsn);
+				$('#cancelheadertext').text("Update the Cancel Reason?");
+			}
+			else{
+				$('#cancelheadertext').text("Cancel Order?");
+			}
+			$("#SC-SO-Cancel-order").modal({
+				backdrop: 'static'
+			});
+			$(".modal-backdrop").css('background', '#ffffff');
+
+			$("#SC-SO-Cancel-order").css({
+				"display": "flex",
+				"justify-content": "center",
+				"align-items": "center"
+			});
+			$("#SC-cancel-yes-button").addClass("SC-disabled");
+		});
+		
+		
+		//checkbox with image hide/show
+		$("input").on('click', function() {
+			if ($('#teoh').is(':checked')) {
+				$("#clip-img").show();
+			} else {
+				$("#clip-img").hide();
+			}
+		});
+		
+		 $('#teoh').change(function() {
+			 taxExeChange = "Y";
+		});
+		
+		////on changing of Cancel reason popup
+		/*$(document).on("click","#SC-Cancel-SelectBox",function() {
+			if (!$("#SC-Cancel-SelectBox").val()) {
+				$("#SC-cancel-yes-button").addClass("SC-disabled");
+			} else {
+				$("#SC-cancel-yes-button").removeClass("SC-disabled");
+			}
+		});*/
+		//on change of the value in cancel reason of line
+		$("#SC-Cancel-SelectBox").change(function() {
+			$("#SC-cancel-yes-button").removeClass("SC-disabled");
+		});
+		
+		
+		//on click of yes of cancel order popup
+		$(document).on("click","#SC-cancel-yes-button",function() {
+		//$("#SC-cancel-yes-button").click(function() {
+			$("#SC-SO-Cancel-order").modal('hide');
+			$("#SC-SO-Cancel-order").css({
+				"display": "",
+				"justify-content": "",
+				"align-items": ""
+			});
+			$("#custommaskoverlay").show();
+			setTimeout(function() {
+			billToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
+			var orderId=billToContactRecordSet[0]["Id"];
+			if($("#SC-Cancel-SelectBox").val()!=""){
+				var SC_Cancel_Reason=$("#SC-Cancel-SelectBox").val();
+				SiebelJS.Log("SC_Cancel_Reason"+SC_Cancel_Reason);
+				
+				/*var inPS="",outPS="",Bservice="",fieldnames,fieldvalues;
+				fieldvalues=SC_Cancel_Reason;
+				fieldnames="Cancel Reason"
+				inPS = SiebelApp.S_App.NewPropertySet();
+				outPS = SiebelApp.S_App.NewPropertySet();
+				inPS.SetProperty("BO","Order Entry (Sales)");
+				inPS.SetProperty("BC","Order Entry - Orders");
+				inPS.SetProperty("FieldsArray",fieldnames );
+				inPS.SetProperty("ValuesArray",fieldvalues);
+				inPS.SetProperty("SearchSpecification","[Id] = '" + orderId +"'" );
+				Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+				outPS = Bservice.InvokeMethod("Insert", inPS);
+				
+				var lineItemsPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM()
+				var lineItemsRS = lineItemsPM.Get("GetRecordSet");
+				var lineItemsId = lineItemsPM.Get("GetFullId");
+				//var lineItemSeq = lineItemsId[lineItemsId.length -1];
+				var lineItemSeq = lineItemsId.split("_A");
+				lineItemSeq=lineItemSeq[1];
+				var bNextRecSet = false;
+				var recNum =0;
+				var cancelControl = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetControls()["Cancel Reason"];
+				do{
+					for(recNum=0;recNum < lineItemsRS.length;recNum++){
+						if(lineItemsRS[recNum]["Product Line"] != "DELIVERY" && lineItemsRS[recNum]["SC Cancel Reason Calc"] != 'Y'){
+							SiebelJS.Log("Product Line:"+lineItemsRS[recNum]["Product Line"]);
+							$("#s_"+lineItemSeq+"_l tr#"+(recNum+1)+"").trigger("click");
+							SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().ExecuteMethod("SetFormattedValue", cancelControl,SC_Cancel_Reason);
+						}
+						lineItemsRS = lineItemsPM.Get("GetRecordSet");
+					}
+					bNextRecSet = lineItemsPM.ExecuteMethod("CanInvokeMethod","GotoNextSet");
+					if(bNextRecSet){
+						lineItemsRS = lineItemsPM.ExecuteMethod("InvokeMethod","GotoNextSet",null,false);
+						recNum = 0;
+					}
+				}while(bNextRecSet);*/
+
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Cancel Reason",SC_Cancel_Reason);
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+				
+				$("#refundordernumber").html("Sales Order#"+billToContactRecordSet[0]["Order Number"]);
+				var inPS  = SiebelApp.S_App.NewPropertySet();
+				var outPS = SiebelApp.S_App.NewPropertySet();
+				var Bservice="";
+				inPS.SetProperty("OrderId",orderId)
+				SiebelJS.Log("Invoking Business Service");
+				//SBOORLA:Added condition for defect 782
+				if(orderId!=null&&orderId!=""&&orderId!="undefined"){
+				Bservice = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
+				outPS = Bservice.InvokeMethod("Query",inPS); //invoke the method
+				lineitemsmarkup=getlineitems(outPS);
+				}
+				$("#sc-refund-lineitems").html(lineitemsmarkup);
+				$("#SC-refund-popup").modal({
+					backdrop: 'static'
+				});
+			}
+			else{
+				billToContactRecordSet = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetRecordSet();
+				var orderId=billToContactRecordSet[0]["Id"];
+				var inPS="",outPS="",Bservice="",fieldnames,fieldvalues;
+				fieldvalues="";
+				fieldnames="Cancel Reason"
+				inPS = SiebelApp.S_App.NewPropertySet();
+				outPS = SiebelApp.S_App.NewPropertySet();
+				inPS.SetProperty("BO","Order Entry (Sales)");
+				inPS.SetProperty("BC","Order Entry - Line Items");
+				inPS.SetProperty("FieldsArray",fieldnames );
+				inPS.SetProperty("ValuesArray",fieldvalues);
+				inPS.SetProperty("SearchSpecification","[Id] = '" + orderId +"'" );
+				Bservice = SiebelApp.S_App.GetService("SC Custom Query Simplified"); //get service
+				outPS = Bservice.InvokeMethod("Insert", inPS);
+				
+				var lineItemsPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM();
+				var lineItemsRS = lineItemsPM.Get("GetRecordSet");
+				var lineItemsId = lineItemsPM.Get("GetFullId");
+				//var lineItemSeq = lineItemsId[lineItemsId.length -1];
+				var lineItemSeq = lineItemsId.split("_A");
+				lineItemSeq=lineItemSeq[1];
+				var bNextRecSet = false;
+				var recNum =0;
+				var cancelControl = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetControls()["Cancel Reason"];
+				do{
+					for(recNum=0;recNum<lineItemsRS.length;recNum++){
+						if(lineItemsRS[recNum]["Product Line"] != "DELIVERY" && lineItemsRS[recNum]["SC Cancel Reason Calc"] != 'Y'){
+							SiebelJS.Log("Product Line:"+lineItemsRS[recNum]["Product Line"]);
+							$("#s_"+lineItemSeq+"_l tr#"+(recNum+1)+"").trigger("click");
+							SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().ExecuteMethod("SetFormattedValue", cancelControl,"");
+						}
+						lineItemsRS = lineItemsPM.Get("GetRecordSet");
+					}
+					bNextRecSet = lineItemsPM.ExecuteMethod("CanInvokeMethod","GotoNextSet");
+					if(bNextRecSet){
+						lineItemsRS = lineItemsPM.ExecuteMethod("InvokeMethod","GotoNextSet",null,false);
+						recNum = 0;
+					}
+				}while(bNextRecSet);
+				
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Cancel Reason","");
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+				
+				$("#sc-cancelreason").text("");
+				var inPS  = SiebelApp.S_App.NewPropertySet();
+				var outPS = SiebelApp.S_App.NewPropertySet();
+				var Bservice="",Lov_Dis="",Lov_Per="";
+				inPS.SetProperty("OrderId",billToContactRecordSet[0]["Id"])
+				SiebelJS.Log("Invoking Business Service");
+				Bservice = SiebelApp.S_App.GetService("SC Get Line Items"); //get service
+				outPS = Bservice.InvokeMethod("Query",inPS); //invoke the method
+				Lov_Dis=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_MANUAL_DISCOUNT_REASON' and [Active] = 'Y'");
+				Lov_Per=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'DISCNT_PERCENT' and [Active] = 'Y'");
+				isStoreUser=RecordSet[0]["SC Store User"];
+				SC_OUI_Markups.prodmarkup(outPS,Lov_Dis,Lov_Per,isStoreUser);
+
+			}
+			$("#custommaskoverlay").hide();
+		}, 200);
+		});
+		
+		//on click of no of cancel order popup
+		$(document).on("click","#SC-cancel-no-button",function() {
+			$("#SC-SO-Cancel-order").modal("hide");
+		});
+		
+		//on click of issue refund
+		$(document).on("click","#SC-issue-refund",function() {
+			//to hide refund popup
+			$("#SC-refund-popup").modal("hide");
+			$("#SC-refund-popup").css({
+				"display": "",
+				"justify-content": "",
+				"align-items": ""
+			});
+			
+			$("body").trigger('Custom.Start');
+			setTimeout(function(){
+				var lineItemsPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Order Entry Line Item List Applet"].GetPModel().GetRenderer().GetPM();
+				var invokeFrieght = lineItemsPM.ExecuteMethod("CanInvokeMethod","SC Calculate Shipping");
+				if(invokeFrieght){
+					lineItemsPM.ExecuteMethod("InvokeMethod","SC Calculate Shipping",null,false);
+				}
+				
+				var orderHeaderPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM();
+				var invokeVerify = orderHeaderPM.ExecuteMethod("CanInvokeMethod","QuotesAndOrdersValidate");
+				if(invokeVerify){
+					orderHeaderPM.ExecuteMethod("InvokeMethod","QuotesAndOrdersValidate",null,false);
+				}
+				
+				$("body").trigger('Custom.End');
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("QuotesAndOrdersValidate");
+				SiebelApp.S_App.GotoView("SC Order Entry - Payment View Sales OUI");
+			},100);
+		});
+		//sandeep
+		 
+		//on click of order date change
+		$("#SC-order-date").click(function() {
+			$("#SC-order-date").datetimepicker({
+				maxDate: OrderDate,
+				changeMonth: true,
+				changeYear: true,
+				dateFormat: 'mm/dd/yy',
+				timeFormat: 'HH:mm:ss',
+				use24hours: true,
+				onSelect: function(dateText, inst) {
+					$("#SC-order-date").val(dateText);
+					if ($("#SC-order-date").val() != "")
+					fvalue = $("#SC-order-date").val();
+				},
+				 showButtonPanel: true
+			});
+		});
+		//Start:on scroll hiding the datepicker
+			$("html, body").on("DOMMouseScroll MouseScrollEvent MozMousePixelScroll wheel scroll", function ()
+			{
+				if($("#SC-order-date").hasClass("hasDatepicker"))
+			  $("#SC-order-date").datepicker("hide");
+			});
+		  //End:on scroll hiding the datepicker
+		  //START SNARRA 28/05/2018 Added code for hiding DatePicker on tab
+		    $("#SC-order-date").on('keydown', function(ev){
+				if(ev.keyCode === 9){ //tab
+					if($("#SC-order-date").hasClass("hasDatepicker"))
+			          $("#SC-order-date").datepicker("hide");
+				}
+			});
+			//END SNARRA 28/05/2018 Added code for hiding DatePicker on tab
+		
+		//on click of goto Contact
+		$("#gotoContact").click(function() {
+			//Start loader 
+			$("body").trigger('Custom.Start');
+			setTimeout(function(){
+			//SBOORLA:Added code for Pole Display
+			if(localStorage.getItem("InvokepoleDisplay")=="Y"){
+				var poleJSON=[];
+				SC_OUI_Methods.PoleDisplay(poleJSON,"P");
+			}
+			if(AccountOrder==true){
+				InPut.SetProperty("View","SC Account 360 View OUI");
+				InPut.SetProperty("Business Component","Account");
+				InPut.SetProperty("Row Id",Account_Id);
+			}
+			else if(AccountOrder==false){
+				InPut.SetProperty("View","SC Contact 360 Degree View OUI");
+				InPut.SetProperty("Business Component","Contact");
+				InPut.SetProperty("Row Id",Contact_Id);
+			}
+			BService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
+			OutPut = BService.InvokeMethod("GotoView",InPut);
+			//hiding the Loader
+			$("body").trigger('Custom.End');
+			},1000);
+		});
+		/*$("#scbillToaccdrilldown").click(function(){
+			$("body").trigger('Custom.Start');
+			setTimeout(function(){
+				localStorage.setItem('whitescreen', 1);
+				var InPut_Bill="",OutPut_Bill="",AccBService;
+				InPut_Bill=SiebelApp.S_App.NewPropertySet();
+				OutPut_Bill=SiebelApp.S_App.NewPropertySet();
+				InPut_Bill.SetProperty("View","Account Detail - Contacts View");
+				InPut_Bill.SetProperty("Business Component","Account");
+				InPut_Bill.SetProperty("Row Id",Account_Id);
+				AccBService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
+				OutPut_Bill = AccBService.InvokeMethod("GotoView",InPut_Bill);
+			$("body").trigger('Custom.End');
+			},100);
+		});*/
+		
+		//on click of save and exit
+		$("#savenexit").click(function() {
+			//SBOORLA:Added code for Pole Display
+			if(localStorage.getItem("InvokepoleDisplay")=="Y"){
+				var poleJSON=[];
+				SC_OUI_Methods.PoleDisplay(poleJSON,"P");
+			}			
+			InPut.SetProperty("View","SC Sales Order 360 Degree View OUI");
+			InPut.SetProperty("Business Component","Order Entry - Orders");
+			InPut.SetProperty("Row Id",localStorage.getItem('OrderId'));
+			BService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
+			OutPut = BService.InvokeMethod("GotoView",InPut);
+		});
+		
+		//on change of bill to address
+		$(document).on('change','#addressto', function(){
+			var val = $("#addressto").val();
+			var addrid	= parentAddrJSON[val];
+			SiebelJS.Log(addrid);
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Bill To Address Id",addrid);
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+			$("#sc-billtoaddr-tittle").attr("title", $(this).val());
+		});
+		//on click of delete Order
+		$("#deleteorder").click(function() {	
+			$("#SC-SO-Delete-order").modal({
+				backdrop: 'static'
+			})
+			$("#SC-SO-Delete-order").css({
+			"display": "flex",
+			"justify-content": "center",
+			"align-items": "center"
+			})
+			$(".modal-backdrop").css('background', '#ffffff');
+		});
+		
+		$(document).on("click","#SC-delete-yes",function() {
+			$("#SC-SO-Delete-order").modal('hide');
+			$("#SC-SO-Delete-order").css({
+			"display": "",
+			"justify-content": "",
+			"align-items": ""
+			});
+			//Start loader 
+			$("body").trigger('Custom.Start');
+			setTimeout(function(){
+			//SBOORLA:Added code for Pole Display
+			if(localStorage.getItem("InvokepoleDisplay")=="Y"){
+				var poleJSON=[];
+				SC_OUI_Methods.PoleDisplay(poleJSON,"P");
+			}
+			InPut.SetProperty("OrderId",localStorage.getItem('OrderId'));
+			Bservice = SiebelApp.S_App.GetService("SC Cart OUI");
+			OutPut = Bservice.InvokeMethod("RemoveOrder",InPut);
+
+			if(AccountOrder==true){
+				InPut.SetProperty("View","SC Account 360 View OUI");
+				InPut.SetProperty("Business Component","Account");
+				InPut.SetProperty("Row Id",Account_Id);
+			}
+			else if(AccountOrder==false){
+				InPut.SetProperty("View","SC Contact 360 Degree View OUI");
+				InPut.SetProperty("Business Component","Contact");
+				InPut.SetProperty("Row Id",Contact_Id);
+			}
+			BService = SiebelApp.S_App.GetService("CUT eSales Order Entry Toolkit Service");
+			OutPut = BService.InvokeMethod("GotoView",InPut);
+			//hiding the Loader
+			$("body").trigger('Custom.End');
+			},1000);
+		});
+		
+		
+		$(document).on("click","#SC-delete-no",function(){
+			$("#SC-SO-Delete-order").modal('hide');
+			$(".SC-SO-add-popup").css({
+			 "display": "",
+			 "justify-content": "",
+			 "align-items": ""
+			});   
+		});
+		
+		$(document).on("click","#expand-collapse",function() {
+			if($(this).hasClass("iconClosed")){
+				$(".cancel-title-head").show();
+				// $("#SC-SO-edit-block").show();
+				 $("#SC-SO-cancel-block").show();
+				 $("#expand-collapse").addClass('iconOpen');
+				 $("#expand-collapse").removeClass('iconClosed');
+				 $("#sales-header").hide(350);
+				 $("#sales-info").show();
+			}else{
+				$("#sales-header").show(350);
+				$("#expand-collapse").addClass('iconClosed');
+				$("#expand-collapse").removeClass('iconOpen');
+				$(".cancel-title-head").hide();
+				$("#SC-SO-save-block").hide();
+				$("#SC-SO-cancel-block").hide();
+				$("#corderdate").text(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Date"));
+				$("#csalesteam").text(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sales Team Login"));
+				$("#cstatus").text(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status"));
+				$("#csubtype").text(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sub-Type"));
+				$("#csubchan").text(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Location Sub-Channel"));
+				$("#clocation").text(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sale Location"));
+				$("#sales-info").hide();
+			}
+		});
+
+		//on click of referreby insider
+		/*$("#SC-search-icon-referreby").click(function() {
+			/*SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"),SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Referred By"]);
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().AttachNotificationHandler("g", function(o) {
+				var Field_Name = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Referred By"]);
+				document.getElementById("referreby").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Referred By");
+			});	
+			$("#SC-search-contacts").modal({
+	 		  backdrop: 'static'
+	 	    });
+			refByName="searchiconrefby";
+		});*/
+
+
+      //on click of last-name Ngolla defect #756
+		$("#SC-last-name-pickApplet").click(function() {
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"),SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Sold To Last Name"]);
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().AttachNotificationHandler("g", function(o) {
+				var Field_Name = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Sold To Last Name"]);
+				document.getElementById("SC-Sold-last-name").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sold To Last Name");
+					document.getElementById("SC-Sold-First-name").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sold To First Name");
+			});		
+		});
+
+       $("#SC-Address-pickApplet").click(function() {
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"),SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Pay To Contact Address"]);
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().AttachNotificationHandler("g", function(o) {
+				var Field_Name = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Pay To Contact Address"]);
+				document.getElementById("#SC_Sold_Address").value=Field_Name;
+			});		
+		});
+
+
+      $("#SC-coupon-icon").click(function(e) {
+		  e.stopImmediatePropagation();
+		  var Field_Name = "";
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"),SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["Coupon Name"]);
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().AttachNotificationHandler("g", function(o) {
+				Field_Name = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["Coupon Name"]);
+				if(Field_Name!=""){
+					document.getElementById("SC-coupon-name").value=Field_Name;
+				}
+			});
+            			
+		});		
+		
+			//on click of sales order team
+		//SCHERKU: For Defect no 629
+		$("#SC-sales-team-icon").click(function() {
+			$(".read-mode-human").css({
+				"pointer-events": 'all',
+				"border-bottom": "1px dashed #ffffff"
+			});
+			if(responsibilityadmin=='Y')
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"),SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Sales Team Login Admin"]);
+			else
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"),SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Sales Team Login"]);
+		});	
+		
+		//on click of sale location
+		$("#SC-sales-location-icon").click(function() {
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().OnControlEvent(SiebelApp.Constants.get("PHYEVENT_INVOKE_PICK"),SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Sale Location"]);
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().AttachNotificationHandler("g", function (o) {
+			var Field_Name = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("GetFieldValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["SC Sale Location"]);			
+			SiebelJS.Log("Field_Name"+Field_Name);
+			$("#sc-cahnge-loaction").text(Field_Name);
+			$("#clocation").text(Field_Name);
+			$("#SC-store-number").val(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Location Store Number"));
+			$("#SC-order-channel").text(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Location Type"));
+			$("#SC-order-subchannel").text(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Location Sub-Channel"));
+			$("#csubchan").text($("#SC-order-subchannel").text());
+			});
+		});
+		
+		
+		//on click of edit details
+		//$("#SC-SO-edit-block").click(function() {
+		$(document).on('click','#SC-SO-edit-block', function(){
+			var SCManualReason = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Manual Order Reason");
+			var manualmarkup="";
+			   manualmarkup += '  <label class="item-label">Manual Order Reason:</label>';
+				manualmarkup += '<select class="SC-SO-input inherit read-mode" name="" id="manualreason" >';
+				 var Lov_Res="";
+		         Lov_Res=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_MANUAL_ORDER_REASON' and [Active] = 'Y'");
+				for (var r = 0; r < Lov_Res.length; r++) {
+					if (Lov_Res[r] == SCManualReason){
+						manualmarkup += ' <option class="SC-SO-Option" selected>' + SCManualReason + '</option>';}
+					else
+					manualmarkup += '<option class="SC-SO-Option" value="'+Lov_Res[r]+'">' + Lov_Res[r] + '</option>';
+				}
+				manualmarkup += '</select>';
+			$('#manualreasonblock').html(manualmarkup);
+			
+			if(SCManualReason==""){
+			  $("#manualreason").val("");	
+			}
+			var locationchange=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Location Change");
+			 $("#SC-coupon-icon").show();
+			$("#SC-coupon-code").removeClass("SC-readonly");
+			 $("#SC-coupon-code").css({
+					"pointer-events": 'all'
+			  });
+			   $("#SC-coupon-name").css({
+					"pointer-events": 'all'
+			  });
+			   if($("#manualreason").val()!=""){
+				 $("#SC-manual-commnets").removeClass("SC-readonly"); 
+				 $("#SC-manual-commnets").css({
+					"pointer-events": 'all'
+				});
+			  }
+			  if(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Show Number Readonly")=="N"){
+				$("#SC-show-num").removeClass("SC-readonly");
+				$("#SC-shownum-icon").show();
+			}
+			 $("#SC-coupon-name").removeClass("SC-readonly");
+			if(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision")>1&&responsibilityadmin=='Y'){
+				  $(".read-mode-revise").css({
+					"pointer-events": 'all',
+					"border-bottom": "1px dashed #ffffff"
+				});
+				$("#SC-sales-team-icon").show();
+				$("#SC-sales-show-store-icon").show();
+				$("#SC-SO-edit-block").hide();
+				$("#SC-SO-save-block").show();
+			}
+			else if(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision")<2){
+				$(".attachmentitem").show();
+				$("#SC-add-new-Attach").show();
+				$("#SC-SO-edit-block").hide();
+				$("#SC-SO-save-block").show();
+				if(RecordSet[0]["SC Referred By"] ==""){
+				$("#SC-search-icon-referreby").show();
+				}
+				$("#SC-search-icon-Address").show();
+				$(".read-mode").css({
+					"pointer-events": 'all',
+					"border-bottom": "1px dashed #ffffff"
+				});
+				$(".SC-checkbox-white-square").css({
+				   "pointer-events": 'all'
+				});
+				$(".SC-applets").css({
+				 "border-bottom": "1px dashed #ffffff"
+				});
+				//SBOORLA:Added code for defect 710
+				$(".SC-readonly-date").css({
+				   "pointer-events": 'none'
+				});
+				//SCHERKU: DEFECT 629 : Inactivated as part of defect fix 
+				$(".read-mode-human").css({
+					"pointer-events": 'all',
+					"border-bottom": "1px dashed #ffffff"
+				});
+				if(responsibilityadmin=='Y' || locationchange=='Y'){
+					$(".read-mode-admin").css({
+						"pointer-events": 'all',
+						"border-bottom": "1px dashed #ffffff"
+					});
+					$("#SC-sales-location-icon").show();	
+				}//Ngolla for defect NO:#756
+		}else if(responsibilityadmin=='Y'&& SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision")==1 && (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status")== in_progress_value||SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status")==siebel_error_value)){
+			$("#SC-last-name-pickApplet").show();
+			$("#SC-Address-pickApplet").show();
+            $(".SC_QVC_edit").css({
+				"pointer-events": 'all',
+				"border-bottom": "1px dashed #ffffff"
+			});			
+			}
+			else if(responsibilityadmin=='Y'&& SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Revision")==1 && (SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status")== in_progress_value||SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status")==siebel_error_value)){
+				$(".SC_WholeSale_edit").css({
+				"pointer-events": 'all',
+				"border-bottom": "1px dashed #ffffff"
+			  });
+				
+				
+			}
+		});
+		
+		//for formatting the phone number
+		SC_OUI_Methods.PH_USFormat("prefconmethod");
+		SC_OUI_Methods.PH_USFormat_Save("prefconmethod",SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Preferred Contact"));
+		
+		$("#SC-SO-sales-save-changes").click(function() {
+			if($("#SC-SO-save-block").is(":visible") ){
+			  $("#sc-SalesOrder-Details").submit();	
+			}
+		 
+		});
+		//on click of save changes
+		//$("#SC-SO-sales-save-changes").click(function() {
+			var errorCodes = SCErrorCodes.errorcodes();
+			$("#sc-SalesOrder-Details").validate({
+			  rules: {
+                       ordercomments: {
+                                    required: true,
+                            }
+                     },
+			messages: {
+						ordercomments: {
+							required: errorCodes.SC_REQUIRED_ORDER_COMMENTS
+						}
+				
+			        },
+            tooltip_options: {
+				 ordercomments: {
+                                trigger: 'focus',
+                                placement: 'bottom',
+                                html: true
+                            }
+		    },
+            submitHandler: function(form) {
+		   if($("#SC-SO-save-block").is(":visible") ){
+			$(".attachmentitem").hide();
+			$("#SC-add-new-Attach").hide();
+			$("#SC-sales-team-icon").hide();
+			$("#SC-shownum-icon").hide();
+			$("#SC-coupon-icon").hide();
+			$("#SC-show-num").addClass("SC-readonly");
+			$("#SC-coupon-code").addClass("SC-readonly");
+			 $("#SC-coupon-name").addClass("SC-readonly");
+			 $("#SC-order-date").datepicker("hide");
+			  $("#SC-coupon-code").css({
+					"pointer-events": 'none'
+			  });
+			   $("#SC-coupon-name").css({
+					"pointer-events": 'none'
+			  });
+			  
+			 if(fvalue == ""){
+				fvalue=$("#SC-order-date").val();
+			 }
+			SiebelJS.Log(pm);
+			if(AccountOrder==true){
+				c=document.getElementById("ponumber").value;					 
+				b=document.getElementById("prefconmethod").value;
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Purchase Order Number",c);
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Preferred Contact",b);
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Location Store Number",z);							 
+			}
+			else{
+				a=document.getElementById("omuseronly").value;
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Comments",a);
+				//SBOORLA:Added code for defect 707
+				if(!$("#referreby").hasClass("SC-readonly"))
+				{
+					SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Referred By",$("#referreby").val());	
+				}
+			}
+			
+			if(document.getElementById('teoh').checked){
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Tax Exempt",'Y');
+				if(taxExeChange == "Y"){
+					var OrderHeaderPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM();
+					OrderHeaderPM.ExecuteMethod("InvokeMethod", "SetTaxFlagToY", null, false);
+					taxExeChange = "N";
+				}
+			}
+			else{
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Tax Exempt",'N');
+				if(taxExeChange == "Y"){
+					var OrderHeaderPM = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM();
+					OrderHeaderPM.ExecuteMethod("InvokeMethod", "SetTaxFlagToN", null, false);
+					taxExeChange = "N";
+				}
+			}
+			
+			if(fvalue!=""&&fvalue!=undefined){
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Order Date",fvalue);
+				fvalue="";
+			}
+				
+			a=document.getElementById("holdreason").value;
+			
+			//if hold reason is selected hold flag should get updated
+			if(a=="")
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Hold Flag",'N');
+			else
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Hold Flag",'Y');
+			b=document.getElementById("subtype").value;
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Sub-Type",b);
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Delivery Block",a);
+			var val = $("#addressto").val();
+			var addrid	= parentAddrJSON[val];
+			SiebelJS.Log(addrid);
+			
+			
+			var Status=document.getElementById("orderstatus").value;
+			//RCHATHAR: For defect number 710
+			var sourceorder = document.getElementById("SC-source-order").value;
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Status",Status);
+			//RCHATHAR: For defect number 710
+			var hasAdminResp=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Admin Responsibility");
+			if(hasAdminResp== "Y")
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Ext Order Number",sourceorder);
+			//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("Bill To Address Id",addrid);
+			Reason=$("#manualreason").val();
+			if($("#manualreason").val()!="" && $("#manualreason").val()!=null){
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Manual Order Reason",Reason);
+			var Comments=$("#SC-manual-commnets").val();	
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Manual Comments",Comments);	
+			}else{
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Manual Order Reason","");
+				$("#manualreason").val("");	
+			}
+			var custDetails_Markup = '';
+			custDetails_Markup += '  <label class="item-label">Manual Order Reason:</label>';
+			if($("#manualreason").val()!="" && $("#manualreason").val()!=null)
+			custDetails_Markup += '  <input type="text" name="" class="SC-SO-input SC-applets" id="manualreason" value="'+Reason+'">';
+		     else
+		    custDetails_Markup += '  <input type="text" name="" class="SC-SO-input SC-applets" id="manualreason" value="">';
+     		$('#manualreasonblock').html(custDetails_Markup);
+			//SNARRA:19 JUN 2018 Added Fileds for NFL Project
+			var couponName = document.getElementById("SC-coupon-name").value;
+			if(couponName != null && couponName != "" && couponName.length != 0){
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("SetFormattedValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["Coupon Name"],couponName);
+			}else{
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("SetFormattedValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["Coupon Name"],"");
+				var couponCode = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Coupon Code");
+				if(couponCode != undefined && couponCode != null && couponCode.length != 0){
+					SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("SetFormattedValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["Coupon Code"],"");
+				}
+			}
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");
+			document.getElementById("subtype").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sub-Type");
+			//RCHATHAR: For defect number 710
+			document.getElementById("SC-source-order").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Ext Order Number");
+			SC_OUI_Methods.PH_USFormat_Save("prefconmethod",SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Preferred Contact"));
+			SiebelJS.Log("Req Flag:"+SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Coupon Code Req"));
+			if(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Coupon Code Req")=="Y"){
+				 $("#SC-SO-Coupon-popup").modal({
+					backdrop: 'static'
+				});
+				$(".modal-backdrop").css('background', '#ffffff');
+
+				$("#SC-SO-Coupon-popup").css({
+					"display": "flex",
+					"justify-content": "center",
+					"align-items": "center"
+				});
+			}
+			$("#SC-SO-save-block").hide();
+			$("#SC-SO-edit-block").show();
+			$("#SC-search-icon-referreby").hide();
+			$("#SC-search-icon-Address").hide();
+			$("#SC-sales-show-store-icon").hide();
+			$(".SC-SO-input").css({
+				"pointer-events": 'none',
+				"border": "1px solid #194571"
+			});
+			$(".SC-checkbox-white-square").css({
+               "pointer-events": 'none'
+			});
+			OrderId=localStorage.getItem('OrderId');
+			if(OrderId!=null && OrderId!=""){
+				var inPS = SiebelApp.S_App.NewPropertySet();
+				var outPS = SiebelApp.S_App.NewPropertySet();
+				inPS.SetProperty("OrderId",OrderId);
+				SiebelJS.Log("Invoking Business Service");
+				Bservice = SiebelApp.S_App.GetService("SC Get Line Items");
+				outPS = Bservice.InvokeMethod("Query",inPS); 
+				SiebelJS.Log("exiting Business Service");
+				//to show refreshed line items
+				Lov1=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_MANUAL_DISCOUNT_REASON' and [Active] = 'Y'");
+				Lov2=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'DISCNT_PERCENT' and [Active] = 'Y'");
+				isStoreUser=RecordSet[0]["SC Store User"];
+				SC_OUI_Markups.prodmarkup(outPS,Lov1,Lov2,isStoreUser);
+			
+				//to get order total and discounts 
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+				SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+				if($("#scproductinfodiv").is(":visible")){
+				document.getElementById('bottotal').innerHTML = "$"+(parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")).toFixed(2))-parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")).toFixed(2))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+				document.getElementById('toptotal').innerHTML = "$"+((Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")))-(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+				document.getElementById('topdisc').innerHTML = "$"+Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Item Discount")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+				document.getElementById('topstart').innerHTML = "$"+Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Base Price")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+			  }
+			}
+			
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Cancel Reason");
+			$(".read-mode-admin,.read-mode-human,.read-mode-revise").css({
+				"pointer-events": 'none',
+				"border-bottom": "1px solid #194571"
+			});
+			$("#SC-sales-team-icon").hide();
+			$("#SC-sales-location-icon").hide();
+			$("#SC-sales-show-store-icon").show();
+			}
+			}
+			});
+		//});
+		
+		//on click of cancel changes
+		 $("#SC-SO-sales-cancel-changes").click(function() {
+			$(".attachmentitem").hide();
+			$("#SC-add-new-Attach").hide();
+			$("#SC-sales-team-icon").hide();
+			$("#SC-shownum-icon").hide();
+			$("#SC-sales-show-store-icon").hide();
+			$("#SC-coupon-icon").hide();
+			$("#SC-coupon-code").addClass("SC-readonly");
+			 $("#SC-coupon-name").addClass("SC-readonly");
+			  $("#SC-coupon-code").css({
+					"pointer-events": 'none'
+			  });
+			   $("#SC-coupon-name").css({
+					"pointer-events": 'none'
+			  });
+			  var manualreason = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Manual Order Reason");
+		     var custDetails_Markup = '';
+			custDetails_Markup += '  <label class="item-label">Manual Order Reason:</label>';
+			custDetails_Markup += '  <input type="text" name="" class="SC-SO-input SC-applets" id="manualreason" value="'+manualreason+'">';
+     		$('#manualreasonblock').html(custDetails_Markup);
+			if(manualreason==""){
+			  $("#manualreason").val("");	
+			}
+			var Addrid=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Bill To Address Id");
+			var markup="";
+			if(Addrid!=="No Match Row Id"&&Addrid!==""){
+				if(!parentJSON.hasOwnProperty(Addrid)){
+					var BilltoAddrDetails;
+					if(AccountOrder==true)
+						BilltoAddrDetails=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Primary Bill To Address");
+					else
+						BilltoAddrDetails=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Con Bill To Address");
+					$("#sc-billtoaddr-tittle").attr("title", BilltoAddrDetails);
+					markup += '<option class="SC-SO-Option">' + BilltoAddrDetails + '</option>';
+				}
+				else{
+					$("#sc-billtoaddr-tittle").attr("title", parentJSON[Addrid]);
+					markup += '<option class="SC-SO-Option">' + parentJSON[Addrid] + '</option>';
+				}
+			}
+		else{
+			$("#sc-billtoaddr-tittle").attr("title","");
+			markup += '<option class="SC-SO-Option"></option>';
+		}			
+		for (var j = 0; j < billAddList.length; j++) {
+			if(billAddList[j] != "")
+			{
+				var addr_JSON = JSON.parse(billAddList[j]);
+				if(addr_JSON["Id"]!=Addrid)
+				{
+				markup += '<option class="SC-SO-Option">' + addr_JSON["Address Name"] + '</option>';
+				}
+			}
+		}
+		if(markup == '')
+			markup += '<option class="SC-SO-Option"></option>';
+		   $("#addressto").html(markup);
+			SiebelJS.Log(pm);
+			document.getElementById("orderstatus").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Status");
+			document.getElementById("holdreason").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Delivery Block");
+			document.getElementById("subtype").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Sub-Type");
+			document.getElementById("SC-coupon-name").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Coupon Name");
+			//document.getElementById("manualreason").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Manual Order Reason");
+			document.getElementById("SC-manual-commnets").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Manual Comments");
+			if(AccountOrder==false){
+			document.getElementById("omuseronly").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Comments");
+			}
+			else{
+			document.getElementById("ponumber").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Purchase Order Number");
+			//document.getElementById("storeshow").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Location Store Number");
+			document.getElementById("prefconmethod").value=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Preferred Contact");
+			}
+			SC_OUI_Methods.PH_USFormat_Save("prefconmethod",SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Preferred Contact"));
+			
+			if(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Tax Exempt")=='Y'){
+				$('#teoh').prop('checked', true);
+				$("#clip-img").show();
+			}
+			else{
+				$('#teoh').prop('checked', false);
+				$("#clip-img").hide();
+			}
+			
+			$("#SC-order-date").val(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Date"));
+			
+			$("#SC-SO-save-block").hide();
+			$("#SC-SO-edit-block").show();
+			$("#SC-search-icon-referreby").hide();
+			$("#SC-search-icon-Address").hide();
+			$(".SC-SO-input").css({
+				"pointer-events": 'none',
+				"border": "1px solid #194571"
+			});
+			$(".SC-checkbox-white-square").css({
+               "pointer-events": 'none'
+			});
+			$(".read-mode-admin,.read-mode-human,.read-mode-revise").css({
+				"pointer-events": 'none',
+				"border-bottom": "1px solid #194571"
+			});
+			$("#SC-sales-location-icon").hide();
+			$("#SC-sales-team-icon").hide();
+			$("#SC-sales-show-store-icon").show();
+		});
+		
+		$("#sc-cp-apply").click(function() {
+				$('#custommaskoverlay').show();
+				setTimeout(function(){
+					//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Coupon Code",document.getElementById("SC-Coupon-value").value);
+					SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().ExecuteMethod("SetFormattedValue", SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetControls()["Coupon Code"],document.getElementById("SC-Coupon-value").value);
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().InvokeMethod("RefreshRecord");
+				//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("WriteRecord");	
+					if(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("SC Coupon Code Req")== "N"){
+					OrderId=localStorage.getItem('OrderId');
+					if(OrderId!=null && OrderId!=""){
+						var inPS = SiebelApp.S_App.NewPropertySet();
+						var outPS = SiebelApp.S_App.NewPropertySet();
+						inPS.SetProperty("OrderId",OrderId);
+						SiebelJS.Log("Invoking Business Service");
+						Bservice = SiebelApp.S_App.GetService("SC Get Line Items");
+						outPS = Bservice.InvokeMethod("Query",inPS); 
+						SiebelJS.Log("exiting Business Service");
+						//to show refreshed line items
+						Lov1=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'SC_MANUAL_DISCOUNT_REASON' and [Active] = 'Y'");
+						Lov2=SC_OUI_Methods.SCGetOrderLoVs("[Type]= 'DISCNT_PERCENT' and [Active] = 'Y'");
+						isStoreUser=RecordSet[0]["SC Store User"];
+						SC_OUI_Markups.prodmarkup(outPS,Lov1,Lov2,isStoreUser);
+					
+						//to get order total and discounts 
+						SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().GetRenderer().GetPM().ExecuteMethod("InvokeMethod", "RefreshBusComp", null, false);
+						//SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].InvokeMethod("RefreshBusComp");
+						if($("#scproductinfodiv").is(":visible")){
+						document.getElementById('bottotal').innerHTML = "$"+(parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")).toFixed(2))-parseFloat(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")).toFixed(2))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+						document.getElementById('toptotal').innerHTML = "$"+((Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Order Total")))-(Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Third Party Tax Amount")))).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+						document.getElementById('topdisc').innerHTML = "$"+Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Item Discount")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+						document.getElementById('topstart').innerHTML = "$"+Number.parseFloat(SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Current Order Total Base Price")).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+					  }
+					}
+					$("#SC-SO-Coupon-popup").modal('hide');
+						$("#SC-SO-Coupon-popup").css({
+							"display": "",
+							"justify-content": "",
+							"align-items": ""
+						});
+					//document.getElementById("SC-coupon-code").value = document.getElementById("SC-Coupon-value").value;
+					document.getElementById("SC-Coupon-value").value="";
+				 }
+				 $('#custommaskoverlay').hide();
+				},500);
+				
+			
+			
+		});
+		$("#sc-cp-cancel").click(function() {
+			$('#custommaskoverlay').show();
+			setTimeout(function(){
+			 document.getElementById("SC-Coupon-value").value="";
+			document.getElementById("SC-coupon-name").value="";
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Coupon Name","");
+			SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().SetFieldValue("SC Coupon Code","");
+				$("#SC-SO-Coupon-popup").modal('hide');
+				$("#SC-SO-Coupon-popup").css({
+					"display": "",
+					"justify-content": "",
+					"align-items": ""
+				});
+				$('#custommaskoverlay').hide();
+			},500);
+		});
+    }//bindevents
+
+    SCiPadSalesOrderCreateFormAppletPR.prototype.EndLife = function () {
+     SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR.superclass.EndLife.apply(this, arguments);
+		$(document).unbind();
+		$("#"+Appletid).html("");
+		localStorage.setItem("isNewSalesOrder","N");
+	 }
+	
+	//get line items for Order summmary
+	function getlineitems(outPS){
+		var lineitems_markup="";
+		var order_refundtotal=0.00;
+		SiebelJS.Log("entered");
+		for(var pr=0;pr<outPS.GetChild(0).GetChildCount();pr++){
+			SiebelJS.Log(outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code"));
+			if(outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")!="Shipped"){
+				lineitems_markup+='                                    <tr class="refund-bg">';
+				lineitems_markup+='                                        <td class="so-padding-left">'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description")+'</td>';
+				lineitems_markup+='                                        <td class="so-sec-padding-left">'+outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")+'</td>';
+				lineitems_markup+='                                        <td class="so-thd-padding-left">$'+Number.parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("SC Line Total NRC")).toFixed(2)+'</td>';
+				lineitems_markup+='                                    </tr>';
+				order_refundtotal+=outPS.GetChild(0).GetChild(pr).GetProperty("SC Line Total NRC")!=""?parseFloat(outPS.GetChild(0).GetChild(pr).GetProperty("SC Line Total NRC")):0.00;
+			}
+			else{
+				lineitems_markup+='                                    <tr class="disabled-bg">';
+				lineitems_markup+='                                        <td class="so-padding-left">'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Calc Long Description")+'</td>';
+				lineitems_markup+='                                        <td class="so-sec-padding-left">'+outPS.GetChild(0).GetChild(pr).GetProperty("Fulfillment Status Code")+'</td>';
+				lineitems_markup+='                                        <td class="so-thd-padding-left">$'+outPS.GetChild(0).GetChild(pr).GetProperty("SC Line Total NRC")+'</td>';
+				lineitems_markup+='                                    </tr>';
+			}
+		}
+		$("#refundamount").html("$"+order_refundtotal.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
+		return lineitems_markup;
+	}
+		
+		
+	//this fucntion fetches all the addresses for bill to address dropdown	
+	function AttachAddresses() {
+		var RecordSetb=SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetPModel().Get("GetRecordSet");
+		var Addrid=RecordSetb[0]["Bill To Address Id"];
+		if(AccountOrder!=true){
+			conId = RecordSetb[0]["Bill To Contact Id"];
+			var search_Spec="[Contact Id] = '" + conId + "'";
+			var Fields = "Id,Address Name";
+			//var Addrid=RecordSetb[0]["SC Bill To Contact Address Id"];
+			var addList = SC_OUI_Methods.GetContactAddressesList("Contact","FINS Contact Address",search_Spec,Fields);
+			billAddList=addList;
+		}
+		else{
+			BillToAccid = RecordSetb[0]["Bill To Account Id"];
+			var search_Spec="[Account Id] = '" + BillToAccid + "'";
+			var Fields = "Id,Address Name";
+			//var Addrid=RecordSetb[0]["SC Bill To Account Address Id"];
+			var addList = SC_OUI_Methods.GetContactAddressesList("Account","CUT Address for Account/Contact",search_Spec,Fields);
+		}
+		markup="";
+		for (var j = 0; j < addList.length; j++){
+			if(addList[j] != ""){
+				var addr_JSON = JSON.parse(addList[j]);
+				var DetailAddlist={};
+				parentAddrJSON[addr_JSON["Address Name"]]=addr_JSON["Id"];
+				parentJSON[addr_JSON["Id"]]=addr_JSON["Address Name"];
+			}	
+		}
+		if(Addrid!=="No Match Row Id"&&Addrid!==""){
+			$("#sc-billtoaddr-tittle").attr("title", parentJSON[Addrid]);
+			markup += '<option class="SC-SO-Option">' + parentJSON[Addrid] + '</option>';
+		}
+		else{
+			$("#sc-billtoaddr-tittle").attr("title","");
+			markup += '<option class="SC-SO-Option"></option>';
+		}			
+		for (var j = 0; j < addList.length; j++) {
+			if(addList[j] != "")
+			{
+				var addr_JSON = JSON.parse(addList[j]);
+				if(addr_JSON["Id"]!=Addrid)
+				{
+				markup += '<option class="SC-SO-Option">' + addr_JSON["Address Name"] + '</option>';
+				}
+			}
+		}
+		if(markup == '')
+			markup += '<option class="SC-SO-Option"></option>';
+		return 	markup;
+	}
+	
+	
+	
+	
+    return SCiPadSalesOrderCreateFormAppletPR;
+   }()
+  );
+  return "SiebelAppFacade.SCiPadSalesOrderCreateFormAppletPR";
+ })
+}

@@ -1,0 +1,2133 @@
+if (typeof(SiebelApp.SCPaymentsMarkup) === "undefined") {  
+
+ SiebelJS.Namespace("SiebelApp.SCPaymentsMarkup");
+ define("siebel/custom/SelectComfort/SCPaymentsMarkup", ["siebel/phyrenderer","siebel/custom/SelectComfort/SC_OUI_Methods"],
+  function () {
+   SiebelApp.SCPaymentsMarkup = (function () {
+	   
+	var SCOUIMethods = SiebelJS.Dependency("SiebelApp.SC_OUI_Methods");
+	var SCPaymentsMarkupobj=new SCPaymentsMarkup();
+    function SCPaymentsMarkup(pm) {}
+	 
+    //Method returning Member Basic Information Markup
+	SCPaymentsMarkup.prototype.PaymentMarkup=function(){
+	var P2PEFlag = theApplication().GetProfileAttr("P2PEFlag");
+	var terminalSeleted = SiebelApp.S_App.GetProfileAttr('TerminalSelected');
+	//Venkat 10/26/2020 for Secure Payment added sChatUser variable
+	//var sChatUser = theApplication().GetProfileAttr("SC Chat User");
+	//var scVoiceUser=theApplication().GetProfileAttr("SC Voice User");;
+	var sChatUser=localStorage.getItem("SCChatUser");
+	var scVoiceUser=localStorage.getItem("SCVoicerUser");
+	//var sChatUser = 'Y';
+	var featureFlg = SiebelApp.S_App.GetProfileAttr('FeatureFlag');
+	var resumeOrderFlg = SiebelApp.S_App.GetProfileAttr('ResumeOrder');
+	
+	var divsubtype = SCOUIMethods.SCGetProfileAttrValue('SC Primary Division Sub Type');
+	var Markup = '';
+	Markup += '<div id="applet1">';
+        Markup += '<div class="container-fluid no-margin no-padding">';
+            Markup += '<!-- Header starts here/ make a common function for this header. so you can use anywhere in the app -->';
+            Markup += '<div class="main-header-container">';
+                Markup += '<div class="nav-header">';
+                    Markup += '<div class="apply-for-finance">';
+                        Markup += '<img src="images/custom/sc-logo.png" class="sc-icon"/>';
+                        Markup += '<div>';
+                            Markup += '<p class="no-margin">Sales Order</p>';
+							 var orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
+							 var ordernum = orderBC.GetFieldValue("Order Number");
+                            Markup += '<span id="SC-OrderId">#'+ordernum+'</span>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                    Markup += '<div class="profile-block">';
+					if(featureFlg == "Y" && resumeOrderFlg != "Y")
+					{
+						//Start: SHARATH: Added code for Terminal US.
+									Markup+='<div class="add-contact" id="SC-terminal-tile">';
+									Markup+='<div class="image-block account">';
+									Markup+='<img src="images/custom/add-contact-new.png" class="add-icon">                            </div>';
+									Markup+='<span>'+terminalSeleted+'</span>';
+									Markup+='</div>';
+						//End: SHARATH: Added code for Terminal US.
+					}
+					else if(featureFlg == "Y" && resumeOrderFlg == "Y")
+					{
+							//Start: SHARATH: Added code for Terminal US.
+									Markup+='<div class="add-contact" id="SC-terminal-tile" style="display:none">';
+									Markup+='<div class="image-block account">';
+									Markup+='<img src="images/custom/add-contact-new.png" class="add-icon">                            </div>';
+									Markup+='<span>No Terminal Available</span>';
+									Markup+='</div>';
+						//End: SHARATH: Added code for Terminal US.
+						
+					}
+						
+					
+					if(divsubtype == "CSC" || divsubtype == "CS"){
+						
+						
+						 Markup += '   <div class="add-contact">';
+						Markup += '<div class="image-block account" id="SC-ANI-CTItool">';
+						Markup += '<img src="images/custom/cti-toolbar-orange-new.png" class="add-icon" style="display:none"/>';
+						Markup += '<img src="images/custom/cti-toolbar-white-new.png" class="add-icon"/>';
+						Markup += '</div>';
+						Markup += '<span>CTI Toolbar</span>';
+						Markup += ' </div>';	
+			         }
+						Markup += '<div id="SC-add-store-location" title="Change Store Location" class="profile margin-right10">';
+                            Markup += '<div class="image-block account">';
+                                Markup += '<img src="images/custom/storelocation.png" class="cancel-finance">';
+                            Markup += '</div>';
+                            Markup += '<span id="storename">Add Store</span>';
+                        Markup += '</div>';
+						
+                        Markup += '<div id="order360" class="profile margin-right10">';
+                            Markup += '<div class="image-block finance-cancel-block">';
+                                Markup += '<img src="images/custom/profile_round_white.png" class="cancel-finance">';
+                            Markup += '</div>';
+                            Markup += '<span id="scnaviagtetext">View Contact</span>';
+                        Markup += '</div>';
+                        Markup += '<div id="saveandexit" class="profile margin-right10">';
+                            Markup += '<div class="image-block finance-cancel-block">';
+                                Markup += '<img src="images/custom/download.png" class="cancel-finance">';
+                            Markup += '</div>';
+                            Markup += '<span>Save & exit</span>';
+                        Markup += '</div>';
+						Markup += '<div>';
+						//NTHARRE:29-JUN-2021:Added disabled class for STRY0122298
+						var CreatedBy = orderBC.GetFieldValue("Created By Name");
+						var loginName = SCOUIMethods.SCGetProfileAttrValue('Login Name');
+						if(CreatedBy == loginName)
+                        Markup += '<div id="deleteorder" class="profile">';
+						else
+                        Markup += '<div id="deleteorder" class="profile SC-disabled">';
+                            Markup += '<div class="image-block finance-cancel-block">';
+                                Markup += '<img src="images/custom/icon-cancel.png" class="cancel-finance">';
+                            Markup += '</div>';
+                            Markup += '<span>Delete Order</span>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- Header ends here -->';
+            Markup += '<div class="container-fluid no-margin sc-main-data-container SC-data-container no-recents white-bg">';
+                Markup += '<div class="SC-SO-main-block">';
+                    Markup += '<div class="SC-SO-panel no-padding-left-right  no-tb-padding border-radius0">';
+                        Markup += '<div class="SC-SO-panel-head orginal-color">';
+                            Markup += '<div class="SC-SO-panel-title">';
+                                Markup += '<div class="SC-title-button">';
+                                    Markup += '<p class="no-margin">Order Summary</p>';
+                                Markup += '</div>';
+                            Markup += '</div>';
+						Markup += '<div class="payment-buttons">';
+							Markup += '<div id="clip-img" class="attachment_div" >';
+								Markup += '<div class="attach_drop" id="list_item">';
+										Markup += '<img src="images/custom/attachment-clips.png">';
+										Markup += '<div class="attach_word" style="color:white;padding-left: 7px;">Attachments</div>';
+										Markup += '<div class="arrow-down" id="SC-contact-arrow"></div>';
+									Markup += '</div>';
+									Markup += '<div class="list_option" id="SC-Attachment-list">';
+									Markup += '</div>';
+								Markup += '</div>';
+
+                                Markup += '<button id="SC-Quote-Payments" class="quote">Create Quote</button>';
+								 var orderBC = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp();
+								 if((orderBC.GetFieldValue("Status") === "Booked")||(orderBC.GetFieldValue("Status") === "Submitted")||(orderBC.GetFieldValue("Status") === "Complete")||(orderBC.GetFieldValue("Status") === "Cancelled")||(orderBC.GetFieldValue("Status") === "Closed")){
+								    Markup += '<button class="edit SC-disabled" id="Sc-Editorder-payments">Edit Order</button>';	 
+								 }else{
+									 Markup += '<button class="edit" id="Sc-Editorder-payments">Edit Order</button>'; 
+								 } 
+                               
+                            Markup += '</div>';
+                        Markup += '</div>';
+                        Markup += '<div class="SC-SO-panel-body  not-collapsble no-left-padding">';
+                            Markup += '<div id="SC-Order-Summary" class="SC-SO-Prod-info-main panel-bg clearfix no-margin-top">';
+                                
+                            Markup += '</div>';
+                        Markup += '</div>';
+                        Markup += '<div class="payment-due-block" style="display:none">';
+                            Markup += '<label class="no-margin main-label">Payment Due:</label>';
+                            Markup += '<p id="sc-payment-due" class="no-margin due-amount">$0.00</p>';
+                        Markup += '</div>';
+                        Markup += '<div class="payment-refund-block">';
+                            Markup += '<div class="row margin-bottom">';
+                                Markup += '<div class="col-md-6 col-lg-6 col-sm-6">';
+                                    Markup += '<div class="payment-refund-button" style="display: flex;justify-content: center;align-items: center;">';
+                                        Markup += '<button class="payment-refund-button button-bg" id="SC-refund" style="display: none" >Generate Refund</button>';
+                                        Markup += '<button class="payment-refund-button" id="SC-complete">Submit Order</button>';
+										Markup+='<button class="payment-refund-button button-bg" id="SN-Ava-Dates" style="margin-left: 20px!important;">Get Arrival Dates</button>';
+                                    Markup += '</div>';
+                               Markup += ' </div>';
+                                Markup += '<div class="col-md-6 col-lg-6 col-sm-6">';
+                                    Markup += '<div id="SC-payment-details" class="payment-due-details">';
+                                        
+                                    Markup += '</div>';
+									//START: SPATIBAN: SEPT:Added Secure Payments for CC and GC
+									if(SCOUIMethods.SCGetProfileAttrValue('SC Store User')=='Y'){
+										Markup +='<div  class="payment-due-details" id="SN-store-SceureCheck-sec">';
+										Markup +='<div class="row"><div class="payment-due-item" ><div class="col-md-4 col-lg-4 col-sm-4"></div><div class="col-md-4 col-lg-4 col-sm-4">';
+										Markup +='<div class="payment-label"><label class="no-margin main-label" style="font-size: 16px !important;">Secure Payment</label></div>';
+										Markup +='<div class="payment-label"><label class="no-margin main-label" style="font-size: 16px !important;">Credit card or gift card</label></div>';
+										Markup +='</div>';
+										Markup +='<div class="col-md-4 col-lg-4 col-sm-4 no-padding">';
+										Markup +='<input type="checkbox" id="SN-store-SceureCheck" style="margin-left: 72%;margin-top: 6%;"></div></div></div></div>';
+									}
+									//END: SPATIBAN: SEPT:Added Secure Payments for CC and GC
+									
+                                Markup += '</div>';
+                           Markup += '</div>';
+                           Markup += ' <div class="row">';
+                               Markup += ' <p>Bill To Address</p>';
+                            Markup += '</div>';
+                            Markup += '<div class="row">';
+                             Markup += '<div class="col-md-3 col-lg-3 col-sm-3">';
+                                    Markup += '<div class="sc-address add-margin-left">';
+                                        Markup += '<span>Name:</span>';
+                                        Markup += '<p id="SC-name" class="no-margin">XXXXX XXXXX</p>';
+                                    Markup += '</div>';
+                                Markup += '</div>';
+                                Markup += '<div class="col-md-2 col-lg-2 col-sm-2">';
+                                    Markup += '<div class="sc-address">';
+                                        Markup += '<span>Phone:</span>';
+                                        Markup += '<p id="SC-phone" class="no-margin">(XXX)XXX-XXXX</p>';
+                                    Markup += '</div>';
+                                Markup += '</div>';
+                                Markup += '<div class="col-md-7 col-lg-7 col-sm-7">';
+                                    Markup += '<div class="sc-address">';
+                                        Markup += '<span>Address:</span>';
+                                        Markup += '<p id="SC-address" class="no-margin">XX XXXXXX XXXX-XXX</p>';
+                                    Markup += '</div>';
+                                Markup += '</div>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                        Markup += '<div class="payment-panel-container pending-bg" id="SC-failed-payment-details" style="display: block; background-color:#35B9E8!important">';
+                            
+                        Markup += '</div>';
+                        Markup += '<div class="SC-Payment-nav-tabs">';
+                            Markup += '<div class="SC-Payment-nav-item" id="credit-card-paymnet">Credit Card</div>';
+                            Markup += '<div class="SC-Payment-nav-item" id="check-payment">Check</div>';
+                            Markup += '<div class="SC-Payment-nav-item" id="financing-payment">Financing</div>';
+                            Markup += '<div class="SC-Payment-nav-item" id="giftcard-payment">Sleep Number Gift Card</div>';
+                            Markup += '<div class="SC-Payment-nav-item" id="reward-payment">Reward</div>';
+                            Markup += '<div class="SC-Payment-nav-item" id="accounting-payment">Accounting</div>';
+                            Markup += '<div class="SC-Payment-nav-item" id="cash-payment">Cash</div>';
+                        Markup += '</div>';
+                        Markup += '<div id="credit-card-paymnet-data" class="payment-data inactive-tab">';
+                            Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-head">';
+                                    Markup += '<label class="no-margin payment-panel-head-title">Credit Card Details</label>';
+									//SNARRA:Added Auth botton
+									 Markup += '<div class="payment-buttons">';
+									//SBOORLA:Added condition for defect 790
+									var storeuser=SCOUIMethods.SCGetProfileAttrValue('SC Store User');
+									if(storeuser != 'Y' && sChatUser != 'Y' && scVoiceUser!="Y") //Venkat added for Secure Payment
+										Markup += '<button id="CCManualInput" type="button" class="orange-btn no-margin SC-disabled">Manual input</button>';
+									else{
+										if(P2PEFlag != 'Y' && sChatUser != 'Y' && scVoiceUser!="Y"){  //Venkat added for Secure Payment
+											Markup += '<button id="CCManualInput" type="button" class="orange-btn no-margin">Manual input</button>';
+										}
+									}
+								     Markup += ' <button id="SC-CreditCard" type="button" class="auth-button no-margin">Authorize</button>';
+								     Markup += '</div>';
+                                Markup += '</div>';
+                                Markup += '<div class="payment-panel-body clearfix">';
+								Markup+='<form name="creditCardDetails" id="creditCardDetails">';
+								//START: SPATIBAN: SEPT:Added Secure Payments for CC and GC
+                                        var storeuser=SCOUIMethods.SCGetProfileAttrValue('SC Store User');
+										if(storeuser =='Y'){
+                                           
+											Markup += '<div class="input-group securevoice" style="display: none !important">';
+												Markup += '<label class="input-title">Account Number</label>';
+												Markup += '<input type="text" name="CCAccNumber" id="sc-Payment-AccNum-CC" style="width:470px" class="input-box big" readonly>';
+											Markup += '</div>';
+									          
+										}
+										//END: SPATIBAN: SEPT:Added Secure Payments for CC and GC
+									//Vamsi 23082018 Added below condition to support P2PE Devices
+									if(P2PEFlag == "Y"){
+										Markup += '<div class="input-group">';
+										Markup += '<label class="input-title">payment amount</label>';
+										Markup += '<input type="text" name="creditAmount" autocomplete="off" id="creditPaymentDue" class="input-box big icon-pading">';
+										Markup += '<span class="input-icon">$</span>';
+										Markup += '</div>';
+									}else{
+										if(sChatUser != 'Y' && scVoiceUser!="Y"){ //Venkat 10/26/2020 Added for Secure payment Chat User
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title mandatory">credit card #</label>';
+												Markup += '<input type="text" name="creditCardNum" id="Creditcard-Number" class="input-box big" readonly>';
+											Markup += '</div>';
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title mandatory">exp month</label>';
+												Markup += '<select name="creditExpMonth" autocomplete="off" id="creditExpM" class="input-box small">';
+													for(var i=1;i<=9;i++){
+														Markup += '<option value=0'+i+'>0'+i+'</option>';
+													}
+													for(var i=10;i<=12;i++){
+														Markup += '<option value='+i+'>'+i+'</option>';
+													}
+												Markup += '</select>';
+											Markup += '</div>';
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title mandatory">exp year</label>';
+												Markup += '<select name="creditExpYear" autocomplete="off" id="creditExpY" class="input-box small">';
+												var d = new Date();
+												var n = d.getFullYear();
+												for(var i=n;i<=n+30;i++){
+													Markup += '<option value='+i+'>'+i+'</option>';
+												}
+												Markup += '</select>';
+											Markup += '</div>';
+											 Markup += '<div class="input-group">';
+												Markup += '<label class="input-title mandatory">CVV #</label>';
+												Markup += '<input id="creditCVV" type="text" autocomplete="off" name="creditcvv" class="input-box small" style="-webkit-text-security:disc;" readonly>';
+											Markup += '</div>';
+										}//Venkat 10/26/2020 Added for Secure payment Chat User
+										else if(sChatUser == 'Y'){ //Venkat 10/26/2020 Added for Secure payment Chat User
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title">Payment Link</label>';
+												Markup += '<input type="text" name="PaymentLink" id="Payment-Link-CC" style="width:470px" class="input-box big" readonly>';
+											Markup += '</div>';
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title">Capture Status</label>';
+												Markup += '<input type="text" name="creditCaptStatus" id="CreditCapt-Status" style="width:285px" class="input-box big" readonly>';
+											Markup += '</div>';
+											/*Markup += '<div class="input-group">';
+												Markup += '<label class="input-title">Payment amount</label>';
+												Markup += '<input type="text" name="transamt" id="checkPaymentDue" autocomplete="off" class="input-box medium icon-pading">';
+												Markup += '<span class="input-icon">$</span>';
+											Markup += '</div>';*/
+										}
+										else if(scVoiceUser == 'Y'){ //Venkat 10/26/2020 Added for Secure payment Chat User
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title">Account Number</label>';
+												Markup += '<input type="text" name="CCAccNumber" id="sc-Payment-AccNum-CC" style="width:470px" class="input-box big" readonly>';
+											Markup += '</div>';
+											
+										}
+										
+										// Vamsi: 26-Sept-18 : Added back for the call center users
+										var storeuser=SCOUIMethods.SCGetProfileAttrValue('SC Store User');	  
+										if(storeuser != "Y" && sChatUser != 'Y'){ //Venkat 10/26/2020 Added for Secure payment Chat User
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title">Payment type</label>';
+												Markup += '<button class="payment-button paymenttype" type="button" id="SC-credit-payment">Select</button>';
+											Markup += '</div>';
+										}
+										Markup += '<div class="input-group">';
+											Markup += '<label class="input-title">payment amount</label>';
+											Markup += '<input type="text" name="creditAmount" autocomplete="off" id="creditPaymentDue" class="input-box big icon-pading">';
+											Markup += '<span class="input-icon">$</span>';
+										Markup += '</div>';
+										//NGOLLA:defect N0 802
+										/*Markup += '<div class="input-group">';
+											Markup += '<label class="input-title">manual authorization</label>';
+											Markup += '<div class="SC-checkbox-grey-square">';
+												Markup += '<input type="checkbox" id="cc-manual-auth" name="cc-manual-auth" class="input-checkbox" disabled="disabled">';
+												Markup += '<label for="cc-manual-auth"></label>';
+											Markup += '</div>';
+										Markup += '</div>';*/
+										if(sChatUser != 'Y' && scVoiceUser!="Y"){
+											Markup += '<div class="input-group">';
+												Markup += '<input type="text" id="credit-hidden" tabindex="-1" autocomplete="off" style="opacity:0" class="input-box big" oncopy="return false" onpaste="return false" oncut="return false">';
+											Markup += '</div>';
+										}
+										
+									}
+                                Markup += '</div>';
+                            Markup += '</div>';
+							Markup += '<div id="SC-CreditDetails" class="payment-panel-container input-bg">';
+                                
+                            Markup += '</div>';
+                           /* Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-body payment-button clearfix">';
+                                    Markup += '<!--if you want to disabled the button add "disabled class to button"-->';
+                                    Markup += '<button class="authorise-button" type="button" id="SC-CreditCard">AUTHORIZE</button>';
+                                    Markup += '<button class="authorise-button orange-bg" type="button" id="SC-Add-payment-button" style="display:none">Add To Payment</button>';
+                                Markup += '</div>';
+                            Markup += '</div>';*/
+							Markup += '</form>';
+							
+							
+
+                        Markup += '</div>';
+                        Markup += '<div id="check-payment-data" class="payment-data inactive-tab">';
+                            Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-head">';
+                                    Markup += '<label class="no-margin payment-panel-head-title">Check details</label>';
+									//SNARRA Added Auth button 
+									 Markup += '<div class="payment-buttons">';
+									  Markup += ' <button id="SC-Check" type="button" class="auth-button no-margin">Authorize</button>';
+									  Markup += '</div>';
+                                Markup += '</div>';
+								//start:check tab markup
+                                Markup += '<div class="payment-panel-body clearfix">';
+                                    Markup+='<form name="checkDetails" id="sc-check-Details">';
+                                     Markup += '<div class="input-group">';
+                                       Markup += ' <label class="input-title mandatory">bank routing #</label>';
+                                        Markup += '<input type="text" name="checkbankrouting" autocomplete="off" class="input-box medium" id="bankrouting">';
+                                    Markup += '</div>';                                   
+								   Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title mandatory">bank account #</label>';
+                                        Markup += '<input type="text" name="checkbankacc" autocomplete="off" class="input-box big" id="bankaccountnumber">';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                       Markup += ' <label class="input-title mandatory">Check #</label>';
+                                        Markup += '<input type="text" name="scchecknumber" autocomplete="off" class="input-box medium" id="checknumber">';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                       Markup += '<label class="input-title mandatory">date of birth</label>';
+                                       // Markup += '<label id="check-DOB"><span id="DOBVALUE">select </span><input type="image" src="images/custom/calendar.png" id="DOB-img" width="16" height="16"></label>';
+										//Markup += '<img src="images/custom/calendar-grey.png" class="calendar-icon" id="DOBVALUE">';
+										Markup += '<input type="text" name="checkDOB" autocomplete="off" class="input-box medium padding-for-calendar" id="DOB-img">';  
+								   Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += "<label class='input-title mandatory'>driver's license</label>";
+                                        Markup += '<input type="text" name="checkdrivinglic" autocomplete="off" class="input-box medium" id="driverlicence">';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += "<label class='input-title mandatory'>driver's license state</label>";
+                                        Markup += '<select type="text" name="checkdrivinglicstate" autocomplete="off" class="input-box medium" id="driverlicencedate"></select>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment amount</label>';
+                                        Markup += '<input type="text" name="transamt" id="checkPaymentDue" autocomplete="off" class="input-box medium icon-pading">';
+                                        Markup += '<span class="input-icon">$</span>';
+                                    Markup += '</div>';
+                                     var paymentrecordset = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Payment Sales List Applet OUI"].GetBusComp();
+									Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment type</label>';
+                                        Markup += '<button class="payment-button paymenttype" type="button" id="SC-check-payment">Select</button>';
+                                    Markup += '</div>';
+                                    //NGOLLA:defect N0 802
+                                   /* Markup += '<div class="input-group">';
+                                       Markup += ' <label class="input-title">deposited at store</label>';
+                                        Markup += '<div class="SC-checkbox-grey-square">';
+                                        if(paymentrecordset.GetFieldValue('SC Deposited at Store') == "Y"){
+											Markup += '<input type="checkbox" id="ck-dep-str" name="ck-dep-str" class="input-checkbox" checked="checked" disabled="disabled">';
+										}else{
+											Markup += '<input type="checkbox" id="ck-dep-str" name="ck-dep-str" class="input-checkbox" disabled="disabled">';
+										}
+										 Markup += '<label for="ck-dep-str"></label>';
+                                        Markup += '</div>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">manual authorization</label>';
+                                        Markup += '<div class="SC-checkbox-grey-square">';
+                                            if(paymentrecordset.GetFieldValue('Manual Authorization Flag')=="Y"){
+												Markup += '<input type="checkbox" id="ck-manual-auth" name="ck-manual-auth" class="input-checkbox" checked="checked" disabled="disabled">';
+											}else{
+												Markup += '<input type="checkbox" id="ck-manual-auth" name="ck-manual-auth" class="input-checkbox" disabled="disabled">';
+											}
+											Markup += '<label for="ck-manual-auth"></label>';
+                                        Markup += '</div>';
+                                    Markup += '</div>';*/
+                                Markup += '</div>';
+                            Markup += '</div>';
+                            Markup += '<div id="sc-check-payment-details" class="payment-panel-container input-bg">';
+                               /*Markup += ' <div class="payment-panel-body clearfix">';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title mandatory">payment status:</label>';
+                                        Markup += '<label class="input-title">NONE</label>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">settlement amount:</label>';
+                                        Markup += '<label class="input-title">NONE</label>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">settlement date:</label>';
+                                        Markup += '<label class="input-title">NONE</label>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">invoice reference#:</label>';
+                                        Markup += '<label class="input-title">NONE</label>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">account code:</label>';
+                                        Markup += '<label class="input-title">NONE</label>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">account number:</label>';
+                                        Markup += '<label class="input-title">NONE</label>';
+                                   Markup += ' </div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">authorisation date:</label>';
+                                        Markup += '<label class="input-title">NONE</label>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">payment receipt text:</label>';
+                                        Markup += '<label class="input-title">NONE</label>';
+                                    Markup += '</div>';
+                                Markup += '</div>';*/
+                            Markup += '</div>';
+                           /* Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-body payment-button clearfix">';
+                                    Markup += '<!--if you want to disabled the button add "disabled class to button"-->';
+									
+									//if(paymentrecordset.GetFieldValue('SC Payment Admin User Flag')=="Y"){
+                                    Markup += '<button class="authorise-button" type="button" id="SC-Check">AUTHORIZE</button>';
+									//}
+									//else{
+									//Markup += '<button class="authorise-button disabled" id="SC-Check">AUTHORIZE</button>';	
+									//}
+                                    Markup += '<button class="authorise-button orange-bg" type="button" id="SC-Add-payment-button" style="display:none">Add To Payment</button>';
+                                Markup += '</div>';
+                           Markup += ' </div>';*/
+						    Markup += '</form>';
+                        Markup += '</div>';
+						//End:check tab markup
+                        Markup += '<div id="financing-payment-data" class="payment-data inactive-tab">';
+                            Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-head">';
+                                    Markup += '<label class="no-margin payment-panel-head-title">Financing</label>';
+									//SNARRA Added Auth button 
+									 Markup += '<div class="payment-buttons" style="width:30% !important">';
+									  Markup += ' <button id="SC-finance-lookup" type="button" style="width:170px" class="orange-btn no-margin">Account Lookup</button>';
+									  Markup += ' <button id="SC-financeapp" type="button" style="width:170px" class="orange-btn no-margin">Apply for Financing</button>';
+									  Markup += ' <button id="SC-financing" type="button" class="auth-button no-margin">Authorize</button>';
+									  Markup += '</div>';
+                                Markup += '</div>';
+                                Markup += '<div class="payment-panel-body clearfix">';
+									Markup+='<form name="checkDetails" id="sc-finance-Details">';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title mandatory">Account number</label>';
+                                        Markup += '<input type="text" name="FINAcc" autocomplete="off" class="input-box big" id="financeaccountnumber">';
+                                    Markup += '</div>';
+									//VALLA: 27-Nov-2020: STRY0035133 : Moved the payment amount to the last and payment type to the middle
+									Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment type</label>';
+                                        Markup += '<button class="payment-button paymenttype" type="button" id="SC-finance-payment">Select</button>';
+                                    Markup += '</div>';
+									Markup += '<div class="input-group">'
+										Markup += '<label class="input-title">Payment Description</label><span id="financePaymentDesc" autocomplete="off" name="FINAmt" class="big icon-pading" style=" font-size: 14px; padding: 8px;"></span>'
+									Markup += '</div>'
+                                    Markup += ' <div class="input-group">';
+                                        Markup += '<label class="input-title">Payment amount</label>';
+                                        Markup += '<input type="text" id="financePaymentDue" autocomplete="off" name="FINAmt" class="input-box big icon-pading">';
+                                        Markup += '<span class="input-icon">$</span>';
+                                    Markup += '</div>';
+									Markup += '<div class="input-group">';
+										Markup += '<label class="input-title">Monthly Payment</label><span id="financeMonthlyPayment" autocomplete="off" name="FINAmt" class="big icon-pading" style=" font-size: 14px; padding: 8px;"></span>';
+									Markup += '</div>';
+									
+                                   
+									//NGOLLA:defect N0 802
+                                    /*Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">manual authorization</label>';
+                                        Markup += '<div class="SC-checkbox-grey-square">';
+                                        	if(paymentrecordset.GetFieldValue('Manual Authorization Flag')=="Y"){
+												Markup += '<input type="checkbox" id="fc-manual-auth" name="" class="input-checkbox" checked="checked" disabled="disabled">';
+											}else{
+												Markup += '<input type="checkbox" id="fc-manual-auth" name="" class="input-checkbox" disabled="disabled">';
+											}
+											 Markup += '<label for="fc-manual-auth"></label>';
+                                        Markup += '</div>';
+                                    Markup += '</div>';*/
+                                Markup += '</div>';
+                            Markup += '</div>';
+                            Markup += '<div id="financing-payment-details" class="payment-panel-container input-bg">';
+                                
+                            Markup += '</div>';
+                           /* Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-body payment-button clearfix">';
+                                    Markup += '<!--if you want to disabled the button add "disabled" class to button-->';
+                                    Markup += '<button class="authorise-button" type="button" id="SC-financing">AUTHORIZE</button>';
+                                    Markup += '<button class="authorise-button orange-bg" type="button" id="SC-Add-payment-button" style="display:none">Add To Payment</button>';
+                                Markup += '</div>';
+                            Markup += '</div>';*/
+							Markup+='</form>';
+                        Markup += '</div>';
+						// GiftCard Markup
+                       Markup += ' <div id="giftcard-payment-data" class="payment-data inactive-tab">';
+							Markup+='<form name="giftCardDetails" id="SC-GiftCard-Details">';
+                            Markup += '<div class="payment-panel-container no-margin panel-bg">';
+								Markup += '<div class="payment-panel-head no-padding">';
+								   Markup += ' <div class="payment-title-input">';
+										Markup += '<label class="no-margin payment-panel-head-title">Gift Card balance</label>';
+										
+										//if(P2PEFlag != "Y"){ //VAMSI: 21-sept-18 : Added below condition to support P2PE devices
+											Markup += ' <div class="input-button">';
+												if(P2PEFlag != "Y" && sChatUser != "Y" && scVoiceUser!="Y"){ //VAMSI: 21-sept-18 : Added below condition to support P2PE devices. Venkat 11/12/2020
+													Markup += '<input type="text" autocomplete="off" name="" id="giftcardNumber" class="input-box big icon-pading" placeholder="gift card number" readonly>';
+													Markup += '<input type="password" autocomplete="off" name="" id="giftcardPIN" class="input-box small icon-pading" placeholder="PIN number" readonly>';
+												}
+												//if (sChatUser != "Y"){ //Venkat 11/12/2020 for Secure Payment
+													Markup += '<button class="main-bg-button no-margin" type="button" id="SC-check-card-balance">Check card balance</button>';
+												//}
+											Markup += '</div>';
+										//}
+									Markup += '</div>';
+								Markup += '</div>';
+							Markup += '</div>';
+                            Markup += '<div class="payment-panel-container no-margin main-bg" style="display:none" id="SC-giftcard-details">';
+                                Markup += '<div class="payment-card-details">';
+                                    Markup += '<div class="payment-card-number">';
+										// VAMSI: 6-OCT-18 : Cardnumber rename to show Inquiry Balance
+                                       //Markup += ' Card number:';
+									    Markup += 'Inquiry Balance:';
+                                        Markup += '<p id="GCNumber"></p>';
+                                    Markup += '</div>';
+                                    Markup += '<div id="GCBalance" class="payment-card-amount">$2,000.00</div>';
+                                Markup += '</div>';
+                            Markup += '</div>';
+                            Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-head">';
+                                    Markup += '<label class="no-margin payment-panel-head-title">Gift Card details</label>';
+									//SNARRA Added Auth button 
+									 Markup += '<div class="payment-buttons">';
+									//SBOORLA:Added condition for defect 790
+									var storeuser=SCOUIMethods.SCGetProfileAttrValue('SC Store User');
+									if(storeuser!="Y" && sChatUser != 'Y' && scVoiceUser!="Y")//Venkat 10/26/2020 Added for Secure payment Chat User
+										Markup += '<button id="GCManualInput" type="button" class="orange-btn no-margin SC-disabled">Manual input</button>';	
+									else{  //VAMSI: 21-sept-18 : Added below condition to support P2PE devices
+										if(P2PEFlag == "Y"){
+											//Markup += '<button class="auth-button" style="margin-right: 15px!important;" type="button" id="SC-check-card-balance">Check card balance</button>';
+										}else if (sChatUser != 'Y' && scVoiceUser!="Y"){ //Venkat 10/26/2020 Added for Secure payment Chat User
+											Markup += '<button id="GCManualInput" type="button" class="orange-btn no-margin">Manual input</button>';
+										}
+									}
+                                    Markup += ' <button id="SC-giftcard" type="button" class="auth-button no-margin">Authorize</button>';
+								  Markup += '</div>';                               
+							   Markup += '</div>';
+                                Markup += '<div class="payment-panel-body clearfix">';
+									if(sChatUser == 'Y'){ //Venkat 10/26/2020 Added for Secure payment Chat User
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title">Payment Link</label>';
+												Markup += '<input type="text" name="PaymentLink" id="Payment-Link-GC"  style="width:470px" class="input-box big" readonly>';
+											Markup += '</div>';
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title">Capture Status</label>';
+												Markup += '<input type="text" name="creditCaptStatus" id="Gift-Capt-Status" style="width:285px" class="input-box big" readonly>';
+											Markup += '</div>';
+									}
+									if(scVoiceUser == 'Y'){ //Venkat 10/26/2020 Added for Secure payment Chat User
+											Markup += '<div class="input-group">';
+												Markup += '<label class="input-title">Account Number</label>';
+												Markup += '<input type="text" name="PaymentGcAccNum" id="sc-Payment-AccNum-GC"  style="width:470px" class="input-box big" readonly>';
+											Markup += '</div>';
+									}
+									 var storeuser=SCOUIMethods.SCGetProfileAttrValue('SC Store User');
+								     if(storeuser =='Y'){
+									        Markup += '<div class="input-group securevoice" style="display: none !important">';
+												Markup += '<label class="input-title">Account Number</label>';
+												Markup += '<input type="text" name="PaymentGcAccNum" id="sc-Payment-AccNum-GC" style="width:470px" class="input-box big" readonly>';
+											Markup += '</div>';
+									          
+									}
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label name="giftCardAmount" class="input-title">Payment amount</label>';
+                                        Markup += '<input type="text" autocomplete="off" name="" id="giftPaymentDue" class="input-box medium icon-pading">';
+                                        Markup += '<span class="input-icon">$</span>';
+                                    Markup += '</div>';
+
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment type</label>';
+                                        Markup += '<button class="payment-button paymenttype" type="button" id="SC-gift-payment">Select</button>';
+                                    Markup += '</div>';
+									
+									//NGOLLA:defect N0 802
+									/*Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">manual authorization</label>';
+                                        Markup += '<div class="SC-checkbox-grey-square">';
+                                            Markup += '<input type="checkbox" id="gc-manual-auth" name="gc-manual-auth" class="input-checkbox" disabled="disabled">';
+                                            Markup += '<label for="gc-manual-auth"></label>';
+                                        Markup += '</div>';
+                                    Markup += '</div>';*/
+									if(sChatUser != 'Y' && scVoiceUser!="Y"){ //Venkat 10/26/2020 Added for Secure payment Chat User
+										Markup += '<div class="input-group">';
+											Markup += '<input type="text" autocomplete="off" tabindex="-1" id="Gift-hidden" style="opacity:0" class="input-box big" oncopy="return false" onpaste="return false" oncut="return false">';
+										Markup += '</div>';
+									}
+                                Markup += '</div>';
+                           Markup += ' </div>';
+                            Markup += '<div id="sc-giftcardTxnDetails" class="payment-panel-container input-bg">';
+                                
+                            Markup += '</div>';
+                           /* Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-body payment-button clearfix">';
+                                    Markup += '<!--if you want to disabled the button add "disabled class to button"-->';
+                                    Markup += '<button class="authorise-button" type="button" type="button" id="SC-giftcard">AUTHORIZE</button>';
+                                    Markup += '<button class="authorise-button orange-bg" type="button" id="SC-Add-payment-button" style="display:none">Add To Payment</button>';
+                                Markup += '</div>';
+                            Markup += '</div>';*/
+                        Markup += '</div>';
+						Markup+='</form>';
+                        Markup += '<div id="reward-payment-data" class="payment-data inactive-tab">';
+                            Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-head">';
+                                    Markup += '<label class="no-margin payment-panel-head-title">Rewards</label>';
+									//SNARRA Added Auth button 
+									 Markup += '<div class="payment-buttons">';
+									  Markup += ' <button id="SC-reward" type="button" class="auth-button no-margin">Authorize</button>';
+									  Markup += '</div>';
+                                Markup += '</div>';
+                                Markup += '<div class="payment-panel-body clearfix">';
+                                    Markup+='<form name="checkDetails" id="sc-Innercricle-Details">';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title mandatory">Sleep Number Reward Certificate</label>';
+										var sResp_Input = SiebelApp.S_App.NewPropertySet();
+										var nResp_OutPut = SiebelApp.S_App.NewPropertySet();
+										sResp_Input.SetProperty("sRespCheck","SC Admin Order Management - SE,SC ADMIN Loyalty,SC Admin Order Management");
+										var BService = SiebelApp.S_App.GetService("SC HasResponsibility");
+										nResp_OutPut = BService.InvokeMethod("sRespCheck",sResp_Input);
+										var nRespCheck = nResp_OutPut.GetChild(0).GetProperty("Result");
+										if(nRespCheck != 1){
+											Markup += '<input id="sc-reward-type-input" type="password" autocomplete="off" name="SCInnRWD" class="input-box big search-padding">';
+										}else{
+											Markup += '<input id="sc-reward-type-input" type="text" autocomplete="off" name="SCInnRWD" class="input-box big search-padding">';
+										}
+                                         Markup += '<img id="sc-reward-type" src="images/custom/search.png" class="search-icon">';
+                                    Markup += '</div>';
+									/*if(storeuser != "Y"){
+										Markup += '<div class="input-group">';
+											Markup += '<label class="input-title mandatory">Account number</label>';
+											Markup += '<input id="rewardaccountnumber" type="text" autocomplete="off" name="INNAccNum" class="input-box big SC-readonly">';
+										Markup += '</div>';
+									}*/
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment amount</label>';
+                                        Markup += '<input type="text" autocomplete="off" id="rewardPaymentDue" name="INNPayAmt" class="input-box big icon-pading">';
+                                        Markup += '<span class="input-icon">$</span>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment type</label>';
+                                        Markup += '<button class="payment-button paymenttype" type="button" id="SC-reward-payment">Select</button>';
+                                    Markup += '</div>';
+                                Markup += '</div>';
+                           Markup += ' </div>';
+                            Markup += '<div id="reward-payment-details" class="payment-panel-container input-bg">';
+                                
+                           Markup += ' </div>';
+                          /* Markup += ' <div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-body payment-button clearfix">';
+                                    Markup += '<!--if you want to disabled the button add "disabled" class to button-->';
+                                    Markup += '<button class="authorise-button" type="button" id="SC-reward">AUTHORIZE</button>';
+                                    Markup += '<button class="authorise-button orange-bg" type="button" id="SC-Add-payment-button" style="display:none">Add To Payment</button>';
+                                Markup += '</div>';
+                            Markup += '</div>';*/
+							Markup+='</form>';
+                        Markup += '</div>';
+                        Markup += '<div id="accounting-payment-data" class="payment-data inactive-tab">';
+                            Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-head">';
+                                    Markup += '<label class="no-margin payment-panel-head-title">Accounting</label>';
+									//SNARRA Added Auth button 
+									 Markup += '<div class="payment-buttons">';
+									  Markup += ' <button id="SC-accounting" type="button" class="auth-button no-margin">Authorize</button>';
+									  Markup += '</div>';
+                                Markup += '</div>';
+                                Markup += '<div class="payment-panel-body clearfix">';
+                                   Markup+='<form name="checkDetails" id="sc-Accounting-Details">';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment amount</label>';
+                                        Markup += '<input type="text" autocomplete="off" id="accountPaymentDue" name="ACCPayAmt" class="input-box big icon-pading">';
+                                        Markup += '<span class="input-icon">$</span>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment type</label>';
+                                        Markup += '<button class="payment-button paymenttype" type="button" id="SC-account-payment">Select</button>';
+                                    Markup += '</div>';
+                                Markup += '</div>';
+                            Markup += '</div>';
+                            Markup += '<div id="accounting-payment-details" class="payment-panel-container input-bg">';
+                            Markup += '</div>';
+                           /* Markup += '<div class="payment-panel-container">';
+                               Markup += ' <div class="payment-panel-body payment-button clearfix">';
+                                    Markup += '<!--if you want to disabled the button add "disabled" class to button-->';
+                                    Markup += '<button class="authorise-button" type="button" id="SC-accounting">AUTHORIZE</button>';
+                                    Markup += '<button class="authorise-button orange-bg" type="button" id="SC-Add-payment-button" style="display:none">Add To Payment</button>';
+                                Markup += '</div>';
+                            Markup += '</div>';*/
+							Markup+='</form>';
+                        Markup += '</div>';
+                        Markup += '<div id="cash-payment-data" class="payment-data inactive-tab">';
+                            Markup += '<div class="payment-panel-container">';
+                                Markup += '<div class="payment-panel-head">';
+                                    Markup += '<label class="no-margin payment-panel-head-title">Cash Payment</label>';
+									//SNARRA Added Auth button 
+									 Markup += '<div class="payment-buttons">';
+									  Markup += ' <button id="SC-cash" type="button" class="auth-button no-margin">Authorize</button>';
+									  Markup += '</div>';
+                                Markup += '</div>';
+                                Markup += '<div class="payment-panel-body clearfix">';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment amount</label>';
+                                        Markup += '<input type="text" autocomplete="off" id="cashPaymentDue" name="" class="input-box big icon-pading">';
+                                        Markup += '<span class="input-icon">$</span>';
+                                    Markup += '</div>';
+                                    Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Payment Type</label>';
+                                        Markup += '<button class="payment-button paymenttype" type="button" id="SC-cash-payment">Select</button>';
+                                    Markup += '</div>';
+									//NGOLLA:defect N0 802
+                                   /* Markup += '<div class="input-group">';
+                                        Markup += '<label class="input-title">Deposited at store</label>';
+                                        Markup += '<div class="SC-checkbox-grey-square">';
+                                        if(paymentrecordset.GetFieldValue('SC Deposited at Store')=="Y"){
+											Markup += '<input type="checkbox" id="ch-dep-str" name="ch-dep-str" class="input-checkbox" checked="checked" disabled="disabled">';
+										}else{
+											Markup += '<input type="checkbox" id="ch-dep-str" name="ch-dep-str" class="input-checkbox" disabled="disabled">';
+										}
+										Markup += '<label for="ch-dep-str"></label>';
+                                        Markup += '</div>';
+                                    Markup += '</div>';*/
+                                Markup += '</div>';
+                            Markup += '</div>';
+                            Markup += '<div id="cash-payment-details" class="payment-panel-container input-bg">';
+                               
+                            Markup += '</div>';
+                           /* Markup += '<div class="payment-panel-container">';
+                               Markup += '<div class="payment-panel-body payment-button clearfix">';
+                                    Markup += '<!--if you want to disabled the button add "disabled" class to button-->';
+                                    Markup += '<button class="authorise-button" type="button" id="SC-cash">AUTHORIZE</button>';
+                                    Markup += '<button class="authorise-button orange-bg" type="button" id="SC-Add-payment-button" style="display:none">Add To Payment</button>';
+                                Markup += '</div>';
+                            Markup += '</div>';*/
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- Authorisation success popup starts here-->';
+            Markup += '<div class="modal fade SC-SO-add-popup" id="SC-auth-success" role="dialog">';
+				Markup += ' <div class="SC-modal">';
+                    Markup += '<div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += 'div class="modal-content modal-another-color">';
+                           Markup += ' <div class="icon img-color">';
+                                Markup += '<img src="images/custom/done-blue.png" class="icon-img">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                                Markup += '<p>Payment Authorized</p>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+           
+			Markup += ' <!-- Authorisation success popup ends here-->';
+            Markup += '<!-- select payment popup starts here-->';
+            Markup += '<div class="modal fade SC-add-table-popup" id="SC-payments-type" role="dialog">';
+               Markup += ' <div class="modal-dialog select-payment-width">';
+                    Markup += '<!-- Modal content-->';
+                    Markup += '<div class="modal-content">';
+                        Markup += '<div class="modal-header">';
+                            Markup += '<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal">&times;</button>';
+                            Markup += '<div class="header-content">';
+                               Markup += ' <div class="sc-head-title">';
+                                    Markup += '<div class="sc-icon-text">';
+                                        Markup += '<div>';
+                                        Markup += '<img src="images/custom/sc-logo.png" class="sc-order-icon">';
+                                   Markup += ' </div>';
+                                        Markup += '<div class="sc-header-text">';
+                                            Markup += '<p>Select payment type</p>';
+                                        Markup += '</div>';
+                                    Markup += '</div>';
+                                Markup += '</div>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                        Markup += '<div class="modal-body">';
+                            Markup += '<div class="SC-table-with-scroll-main">';
+                                Markup += '<table class="SC-table" id="SC-select-payment-type">';
+                                    Markup += '<thead>';
+                                       Markup += ' <tr>';
+                                            Markup += '<th>STACKABLE</th>';
+                                            Markup += '<th class="so-product-name">DESCRIPTION</th>';
+                                            Markup += '<th>PAYMENT TYPE</th>';
+                                        Markup += '</tr>';
+                                    Markup += '</thead>';
+                                    Markup += '<tbody>';
+                                        Markup += '<tr id="row1">';
+                                            Markup += '<td class="padding-left">Y</td>';
+                                            Markup += '<td>Lorem ipsum dolor sit amlet </td>';
+                                            Markup += '<td>B6</td>';
+                                        Markup += '</tr>';
+                                        Markup += '<tr id="row2">';
+                                            Markup += '<td class="padding-left">Y</td>';
+                                            Markup += '<td>Lorem ipsum dolor sit amlet</td>';
+                                            Markup += '<td>H5</td>';
+                                        Markup += '</tr>';
+                                        Markup += '<tr id="row3">';
+                                            Markup += '<td class="padding-left">Y</td>';
+                                            Markup += '<td>Lorem ipsum dolor sit amlet</td>';
+                                            Markup += '<td>H7</td>';
+                                        Markup += '</tr>';
+                                    Markup += '</tbody>';
+                                Markup += '</table>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                        Markup += '<div class="modal-footer">';
+                            Markup += '<div class="SC-button">';
+                                Markup += '<button id="SC-submit-select-payment" class="SC-disabled">Select payment type</button>';
+                            Markup += '</div>';
+                       Markup += ' </div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+           Markup += ' <!--select payment popup ends here-->';
+           
+		   Markup += ' <!-- generate invoice popup starts here-->';
+           Markup += ' <div class="modal fade SC-SO-add-popup" id="SC-SO-order-complete" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                   Markup += ' <div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+							
+							
+							
+                                Markup += '<p>Order Submitted</p>';
+								if(storeuser=="Y"){
+									Markup += '<span class="SC-span-width">Your order has been successfully submitted.</span>';
+									Markup += '<button class="SC-ok-button" id="SC-generate-receipt">Generate Receipt</button>';
+								}
+								else{
+									Markup += '<span class="SC-span-width">Your order has been successfully submitted. Would you like to Generate Receipt for order?</span>';
+									Markup +='<div class="SC-two-buttons">';
+									Markup += '<button  id="SC-generate-receipt" style="margin-right: 10px !important">Yes</button>';
+									Markup += '<button  id="SC-generate-receipt-no">No</button>';
+									Markup +='</div>';
+								}
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- generate invoice popup ends here-->';
+			
+			 Markup += ' <!-- generate invoice popup for store receipt starts here-->';
+            Markup += ' <div class="modal fade SC-SO-add-popup" id="SC-SO-store-receipt" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                   Markup += ' <div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                                Markup += '<p>Order Submitted</p>';
+								if(storeuser=="Y"){
+									//condition for P2PEFlag
+									if(P2PEFlag =="Y"){
+										Markup += '<span class="SC-span-width">Your order has been successfully submitted.</span>';
+										Markup += '<button class="SC-ok-button" id="SC-generate-store-receipt">Generate Store Receipt</button>';
+									}
+								}
+								else{
+									Markup += '<span class="SC-span-width">Your order has been successfully submitted. Would you like to Generate Receipt for order?</span>';
+									Markup +='<div class="SC-two-buttons">';
+									Markup += '<button  id="SC-generate-receipt-Yes" style="margin-right: 10px !important">Yes</button>';
+									Markup += '<button  id="SC-generate-receipt-no">No</button>';
+									Markup +='</div>';
+								}
+								
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- generate invoice popup  for store receipt ends here-->';
+			
+			
+			Markup += ' <!-- generate invoice popup for customer receipt starts here-->';
+           Markup += ' <div class="modal fade SC-SO-add-popup" id="SC-SO-customer-receipt" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                   Markup += ' <div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                                Markup += '<p>Order Submitted</p>';
+								
+										Markup += '<span class="SC-span-width">Your order has been successfully submitted.</span>';
+										Markup += '<button class="SC-ok-button" id="SC-generate-customer-receipt">Generate Customer Receipt</button>';
+									
+								
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- generate invoice popup for customer receipt ends here-->';	
+            Markup += ' <!-- generate invoice popup starts here-->';
+            Markup += ' <div class="modal fade SC-SO-add-popup" id="SC-SO-generate-receipt" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                    Markup += '<div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon add-margin">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                                Markup += '<span class="SC-span-width">Sales Order Receipt did not generate successfully. Please proceed with HD Scheduling if applicable. Regenerate receipt from order 360</span>';
+                                Markup += '<button class="SC-ok-button" id="SC-generate-ok">ok</button>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- generate invoice popup ends here-->';
+            Markup += '<!-- homedelivery schedule popup starts here-->';
+            Markup += '<div class="modal fade SC-SO-add-popup" id="SC-SO-schedule-hd" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                    Markup += '<div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                                Markup += '<p>Home Delivery Scheduled Options</p>';
+                                 Markup += '<button class="SC-ok-button" id="SC-proceed-delivery">Proceed</button>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- homedelivery schedule popup ends here-->';
+            Markup += '<!-- hold pop up starts here-->';
+            Markup += '<div class="modal fade SC-SO-add-popup" id="SC-SO-order-hold" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                    Markup += '<div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                               Markup += '<p>Order on Hold</p>';
+                                Markup += '<span class="SC-span-width">Your order has been put on tax exempt hold.Please upload tax exempt document to sales order for further processing</span>';
+                                 Markup += '<button class="SC-ok-button" id="SC-order-hold">OK</button>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- hold pop up ends here-->'; 
+			Markup += '<!-- hold pop up for siebel error starts here-->';
+            Markup += '<div class="modal fade SC-SO-add-popup" id="SC-SO-order-sibel-error" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                    Markup += '<div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                               Markup += '<p>Siebel Error</p>';
+                                Markup += '<span class="SC-span-width">Your order can not be processed right now. Please try again later</span>';
+                                 Markup += '<button class="SC-ok-button" id="SC-order-siebel-OK">OK</button>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+			Markup += '<!-- hold pop up for for siebel error ends here-->';
+			Markup += '<!-- hold pop up for oracle error starts here-->';
+			Markup += '<div class="modal fade SC-SO-add-popup" id="SC-SO-order-oracle-error" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                    Markup += '<div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                               Markup += '<p>Oracle Error</p>';
+                                Markup += '<span class="SC-span-width">Your order can not be processed right now. Please try again later</span>';
+                                 Markup += '<button class="SC-ok-button" id="SC-order-oracle-OK">OK</button>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- hold pop up for oracle error ends here-->';
+			Markup += '<!-- just hold pop up starts here-->';
+            Markup += '<div class="modal fade SC-SO-add-popup" id="SC-SO-order-just-hold" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                    Markup += '<div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+                            Markup += '<div class="icon">';
+                                Markup += '<img src="images/custom/printer-so.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                               Markup += '<p>Order on Hold</p>';
+                                Markup += '<span class="SC-span-width">Your order has been put on hold.</span>';
+                                 Markup += '<button class="SC-ok-button" id="SC-order-just-hold">OK</button>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- just hold pop up ends here-->';
+            Markup += '<!-- fail of HD SR start-->';
+            Markup += '<div class="modal fade SC-SO-add-popup" id="SC-SO-SR-hold" role="dialog">';
+                Markup += '<div class="SC-modal">';
+                    Markup += '<div class="modal-dialog">';
+                        Markup += '<!-- Modal content-->';
+                        Markup += '<div class="modal-content modal-another-color">';
+						 Markup += '<button type="button" class="SC-close-popup" data-dismiss="modal" id="SC-cancel-retry">&times;</button>';
+                            Markup += '<div class="img-sorce">';
+							    Markup += '<img class="border-radius" src="images/custom/sc-logo.png">';
+                            Markup += '</div>';
+                            Markup += '<div class="text">';
+                              // Markup += '<p>SR Not Created</p>';
+                                Markup += '<span class="SC-span-width">Please wait while the Home Delivery Service Request is created.</span>';
+                               // Markup += '<button class="SC-ok-button" id="SC-SR-hold-retry">Retry</button>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                    Markup += '</div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- fail of HD SR end-->';			
+			Markup += '<!-- Add Store Change Location Starts here-->';
+			Markup += '<div class="modal fade SC-add-storelocation" id="SC-add-storelocation" role="dialog">';
+			Markup += '</div>';
+			//for deleteorder popup starts
+			Markup +=' <div class="modal fade SC-SO-add-popup" id="SC-SO-Delete-order" role="dialog">';
+			Markup += '<div class="SC-modal">';
+			Markup += '                    <div class="modal-dialog">';
+			Markup += '                        <!-- Modal content-->';
+			Markup += '                        <div class="modal-content modal-red-bg">';
+			Markup += '                            <div class="icon">';
+			Markup += '                                <img src="images/custom/delete-red.png">';
+			Markup += '                            </div>';
+			Markup += '                            <div class="text">';
+			Markup += '                                <p>Delete Order?</p>';
+			Markup += '                                <span class="SC-span-width">Are you sure you want to delete this order? This action cannot be undone.</span>';
+			Markup += '                                <div class="SC-two-buttons">';
+			Markup += '                                   <button  id="SC-no-button">No</button>';
+			Markup += '                                   <button  id="SC-yes-button">Yes</button> ';
+			Markup += '                                </div>';
+			Markup += '                            </div>';
+			Markup += '                        </div>';
+			Markup += '                    </div>';
+			Markup += '                </div>';
+			Markup += '           </div>';
+			//for deleteorder popup ends
+
+			//Start:Code for Home Delivery Schedule Popup
+			Markup+='<div class="modal fade SC-S-sneakpeak" id="SC-SO-ScheduleList-popup" role="dialog">';
+			Markup+='	<div class="modal-dialog search-modal-width sr-width">';
+			Markup+='		<div class="modal-content sr-width">';
+			Markup+='			<div class="modal-header add-height">';
+			Markup+='				<button type="button" class="close" data-dismiss="modal" id="sr-close-details">×</button>';
+			Markup+='				<div class="header-content SC-header-start">';
+			Markup+='					<div class="SC-S-image-container">';
+			Markup+='						<img src="images/custom/sc-logo.png">';
+			Markup+='					</div>';
+			Markup+='					<div class="SC-S-details-container">';
+			Markup+='						<p class="name no-margin">Schedule Home Delivery</p>';
+			Markup+='					</div>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='			<div class="modal-body no-padding">';
+			Markup+='				<p class="scinstruction">Please add "Technician Instructions" then click save for each HD SR. Then click "Book Now" to schedule each Home Delivery.</p>';
+			Markup+='				<div class="SC-table-with-scroll-main">';
+			Markup+='					<table class="SC-table" id="SC-table-search-contact">';
+			Markup+='						<thead>';
+			Markup+='							<tr>';
+			Markup+='								<th>Technician Instructions</th>';
+			Markup+='								<th>HD Text Opt in</th>';
+			Markup+='								<th>Delivery Phone#</th>';
+			Markup+='								<th>Delivery Type</th>';
+			Markup+='								<th>Ship To Address</th>';
+			Markup+='								<th></th>';
+			Markup+='								<th>Status</th>';
+			Markup+='								<th>Scheduled Start Date</th>';
+			Markup+='							</tr>';
+			Markup+='						</thead>';
+			Markup+='						<tbody id="HDSR-list-Items">';
+			Markup+='						</tbody>';
+			Markup+='					</table>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='			<div class="modal-footer sn-footer">';
+			Markup+='				<div class="SC-button">';
+			Markup+='					<button id="SC-HDSR-Next" class="">Next</button>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='		</div>';
+			Markup+='	</div>';
+			Markup+=' </div>';
+			//End:Code for Home Delivery Schedule Popup
+			// Start : code for redeem ponits
+			Markup += ' <div class="modal fade SC-SO-add-popup" id="SC-reddem-reward-popup" role="dialog">';
+			Markup += '<div class="SC-modal">';
+            Markup += ' <div class="modal-dialog">';
+			Markup += '<!-- Modal content-->';
+			Markup += '<div class="modal-content">';
+						
+			Markup += '<div class="text">';
+			Markup += '<p>Redeem Rewards</p>';
+								
+			Markup += '<span class="SC-span-width">Would the customer like to redeem their Active Sleep Number Rewards for this order?</span>';
+			Markup +='<div class="SC-two-buttons">';
+			Markup += '<button  id="SC-reddempoints-no" style="margin-right: 10px !important">NO</button>';
+			Markup += '<button  id="SC-reddempoints-yes">YES</button>';
+			Markup +='</div>';
+								
+            Markup += '</div>';
+            Markup += '</div>';
+            Markup += '</div>';
+             Markup += '</div>';
+            Markup += '</div>';
+
+			Markup += ' <div class="modal fade sc-create-manual-asset" id="SC-manual-reddem-Modal" role="dialog">';							
+			Markup +=  ' <div class="modal-dialog">';
+			Markup +=  '<!-- Modal content-->';
+			Markup += '   <div class="modal-content">';
+			Markup += '  <div class="modal-header">';
+			Markup += '                        <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" >&times;</button>';
+			Markup += '  <div class="header-content">';
+			Markup +=  '<p>Redeem Rewards</p>';
+			Markup += '  </div>';
+			Markup += '  </div>';
+			Markup += '   <div class="modal-body clearfix">';
+			Markup += '  <div class="main-container">';
+
+
+			Markup += ' <div class="table-container" id="SC-Manual-ExistRdm-Parent">';
+			
+			Markup += ' <div class="SC-table-with-scroll-main">';
+			Markup += '  <table class="SC-table SC-table-manualAc">';
+			Markup += '  <thead>';
+			Markup += '      <tr>';
+			Markup += '<th>Reward amount</th>';
+			Markup += '<th >issued date</th>';
+			Markup += '<th >expiration date </th>';
+			Markup += '<th>Redeem for Order?</th>';
+			Markup += '      </tr>';
+			Markup += '  </thead>';
+			Markup += '  <tbody id="SC-exist-Rdm-Tbody">';
+			Markup += '  </tbody>';
+			Markup += '      </table>';
+			Markup += '  </div>';
+			Markup += '  </div>';
+			Markup += '  <div class="modal-footer">';
+			Markup +='  <div class="button-new-toggle" id="SC-manual-selectRdm" style="margin-top: 0% !important;">';
+			Markup +='	 <div class="Addselected" style="justify-content: center;">';
+			Markup +='	 <button id="sc-select-exRdm">Submit</button><button id="sc-cancelRed-mod" data-dismiss="modal" style="margin-left: 10px !important;background-color: #F63;border-color: #F63;">Cancel</button>';
+			Markup += '  </div>';
+			Markup += '  </div>';
+			Markup += '  </div>';
+		
+			Markup +=  '</div>';
+			Markup +=  '</div>';
+			Markup +=  '</div>';
+			Markup +=  '</div>';
+			Markup +=  '</div>';
+              // End: code for reddem points
+			//Start:Code for Account Lookup Request
+			Markup+='<div class="modal fade SC-S-sneakpeak" id="SC-AccoutLookup-popup" role="dialog">';
+			Markup+='	<div class="modal-dialog search-modal-width sr-width">';
+			Markup+='		<div class="modal-content sr-width">';
+			Markup+='			<div class="modal-header add-height">';
+			Markup+='				<button type="button" class="close" data-dismiss="modal" id="sc-fin-lookup-close">×</button>';
+			Markup+='				<div class="header-content SC-header-start">';
+			Markup+='					<div class="SC-S-image-container">';
+			Markup+='						<img src="images/custom/sc-logo.png">';
+			Markup+='					</div>';
+			Markup+='					<div class="SC-S-details-container">';
+			Markup+='						<p class="name no-margin">Synchrony Account Lookup</p>';
+			Markup+='					</div>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+= '			<div class="modal-body no-padding" style="margin-top: 25px;!important">';
+			Markup+='				<form name="FinanceAccountLookupDetails" id="sc-fin-Acc-Lookup-Details">';
+			Markup += '				<div class="row no-margin clearfix">';
+			Markup+='                <div>';
+			Markup+='                    <div class="col-sm-2 col-md-2 col-lg-2 col-xs-12" style="margin-bottom: 25px">';
+			Markup+='                        <label for="lookupMethod" class="SC-label mandatory" style="height:2rem">Lookup Method</label>';
+			Markup+='                    </div>';
+			Markup+='                    <div class="col-sm-6 col-md-6 col-lg-6 col-xs-12" style="margin-bottom: 25px">';
+			Markup+='                        <select class="select-box con-select-box margin-top valid" id="fin-lookupMethod" name="lookupMethod" style="width:100% !important; height:2rem">';
+			Markup+='                            <option id="method3" value="Phone">Phone Number</option>';
+			Markup+='                            <option id="method2" value="4-SSN-Name-Zip">4-digit SSN, First Name, Last Name & Zip Code</option>';
+			Markup+='                        </select>';
+			Markup+='                    </div>';
+			Markup+='                </div>';
+			Markup += '					<div class="col-sm-6 col-md-6 col-lg-6 col-xs-12">';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="firstName" class="SC-label fin-set1 mandatory">First Name</label>';
+			Markup += '							<input type="text" name="finfirstName" class="SC-input" id="fin-firstName">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="phoneNumber" class="SC-label fin-set2 mandatory">Phone Number</label>';
+			Markup += '							<input type="text" name="finphoneNumber" class="SC-input" id="fin-phoneNumber">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="ssn4" class="SC-label fin-set1 mandatory">Last 4 Digits of SSN</label>';
+			Markup += '							<input type="text" name="finssn4" class="SC-input" id="fin-ssn4">';
+			Markup += '						</div>';
+			Markup += '					</div>';
+			Markup += '					<div class="col-sm-6 col-md-6 col-lg-6 col-xs-12">';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="lastName" class="SC-label fin-set1 mandatory">Last Name</label>';
+			Markup += '							<input type="text" name="finlastName" class="SC-input" id="fin-lastName">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="zipCode" class="SC-label fin-set1 mandatory">Zip Code</label>';
+			Markup += '							<input type="text" name="finzipCode" class="SC-input" id="fin-zipCode">';
+			Markup += '						</div>';
+			Markup += '					</div>';
+			Markup += '				</div>';
+			Markup += '				</form>';
+			Markup += '			</div>';
+			Markup+='			<div class="modal-footer sn-footer">';
+			Markup+='				<div class="SC-button">';
+			Markup+='					<button id="SC-FinLookup-Cancel" class="" style="margin-right: 10px;background: #F63;border: 1px solid #F63;">Cancel</button>';	
+			Markup+='					<button id="SC-FinLookup-Submit" class="">Submit</button>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='		</div>';
+			Markup+='	</div>';
+			Markup+=' </div>';
+			//End:Code for Account Lookup Request
+			//Start:Code for Account Lookup Request
+			Markup+='<div class="modal fade SC-S-sneakpeak" id="SC-AccoutLookup-Response" role="dialog">';
+			Markup+='	<div class="modal-dialog search-modal-width sr-width" style="max-height: 730px !important;">';
+			Markup+='		<div class="modal-content sr-width" style="max-height:730px !important;">';
+			Markup+='			<div class="modal-header add-height">';
+			Markup+='				<button type="button" class="close" data-dismiss="modal" id="sc-fin-lookup-close">×</button>';
+			Markup+='				<div class="header-content SC-header-start">';
+			Markup+='					<div class="SC-S-image-container">';
+			Markup+='						<img src="images/custom/sc-logo.png">';
+			Markup+='					</div>';
+			Markup+='					<div class="SC-S-details-container">';
+			Markup+='						<p class="name no-margin">Synchrony Account Lookup</p>';
+			Markup+='					</div>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+= '			<div class="modal-body no-padding" style="margin-top: 25px;!important">';
+			Markup+= '			<div class="row no-margin clearfix">';
+			Markup+='           	<div class="col-sm-2 col-md-2 col-lg-2 col-xs-12" style="margin-bottom: 25px">';
+			Markup+='               	 <label for="lookupMethod" class="" style="height:2rem">Lookup Response</label>';
+			Markup+='           	</div>';
+			Markup+='           </div>';
+			Markup += '				<div class="row no-margin clearfix">';
+			Markup += '					<div class="col-sm-6 col-md-6 col-lg-6 col-xs-12">';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="firstName" class="SC-label">First Name</label>';
+			Markup += '							<input type="text" name="firstName" class="SC-input SC-readonly" id="sn-fin-firstName">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="AccNumber" class="SC-label">Account Number </label>';
+			Markup += '							<input type="text" name="AccNumber" class="SC-input SC-readonly" id="sn-fin-AccNumber">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="status" class="SC-label">Account Status</label>';
+			Markup += '							<input type="text" name="status" class="SC-input SC-readonly" id="sn-fin-status">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="addrline1" class="SC-label">Address Line 1</label>';
+			Markup += '							<input type="text" name="addrline1" class="SC-input SC-readonly" id="sn-fin-addrline1">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="state" class="SC-label">State</label>';
+			Markup += '							<input type="text" name="state" class="SC-input SC-readonly" id="sn-fin-state">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="phn" class="SC-label">Phone Number</label>';
+			Markup += '							<input type="text" name="phn" class="SC-input SC-readonly" id="sn-fin-phn">';
+			Markup += '						</div>';
+			Markup += '					</div>';
+			Markup += '					<div class="col-sm-6 col-md-6 col-lg-6 col-xs-12">';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="lastName" class="SC-label">Last Name</label>';
+			Markup += '							<input type="text" name="lastName" class="SC-input SC-readonly" id="sn-fin-lastName">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="zipCode" class="SC-label">Available Credit Limit</label>';
+			Markup += '							<input type="text" name="zipCode" class="SC-input SC-readonly" id="sn-fin-CrdLimt">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="zipCode" class="SC-label">Expiry Date</label>';
+			Markup += '							<input type="text" name="zipCode" class="SC-input SC-readonly" id="sn-fin-expirydate">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="city" class="SC-label">City</label>';
+			Markup += '							<input type="text" name="city" class="SC-input SC-readonly" id="sn-fin-city">';
+			Markup += '						</div>';
+			Markup += '						<div class="SC-input-container is-active is-completed">';
+			Markup += '							<label for="zipcode" class="SC-label">ZipCode</label>';
+			Markup += '							<input type="text" name="zipcode" class="SC-input SC-readonly" id="sn-fin-zipcode">';
+			Markup += '						</div>';
+			Markup += '					</div>';
+			Markup += '				</div>';
+			Markup += '			</div>';
+			Markup+='			<div class="modal-footer sn-footer">';
+			Markup+='				<div class="SC-button">';
+			Markup+='					<button id="SC-FinLookup-Reject" class="" style="margin-right: 10px;background: #F63;border: 1px solid #F63;">Reject</button>';	
+			Markup+='					<button id="SC-FinLookup-Accept" class="">Accept</button>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='		</div>';
+			Markup+='	</div>';
+			Markup+=' </div>';
+			//End:Code for Account Lookup Request
+			//Start:Synchrony Account lookup NotFound popup starts here
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SYNAccLookup-NotFound" role="dialog">';
+            Markup+='    <div class="SC-modal modal-orange-bg">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <div class="modal-content less-height">';
+            Markup+='               <div class="text">';
+            Markup+='                   <span id = "AccLookupResponse" class="SC-span-width add-margin"></span>';
+            Markup+='                    <button class="SC-ok-button" id="SC-SYNAccLookup-NotFound-ok">ok</button>';
+            Markup+='                </div>';
+            Markup+='           </div>';
+            Markup+='       </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+			//End:Synchrony Account lookup NotFound popup starts here
+			//Start:Synchrony Account lookup Error popup starts here
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SYNAccLookup-Error" role="dialog">';
+            Markup+='    <div class="SC-modal modal-orange-bg">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <div class="modal-content less-height">';
+            Markup+='               <div class="text">';
+            Markup+='                   <span class="SC-span-width add-margin">Error in SYF Account Lookup Process. Please try again.<span>';
+            Markup+='                    <button class="SC-ok-button" id="SC-SYNAccLookup-Error-ok">ok</button>';
+            Markup+='                </div>';
+            Markup+='           </div>';
+            Markup+='       </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+			//End:Synchrony Account lookup NotFound popup starts here
+			//Start:Attachments delete popup Start here
+			Markup+=' <div class="modal fade SC-SO-add-popup" id="SC-SO-Delete-att" role="dialog">';
+			Markup+='            <div class="SC-modal">';
+			Markup+='                <div class="modal-dialog">';
+			Markup+='                    <div class="modal-content modal-red-bg">';
+			Markup+='                        <div class="icon">';
+			Markup+='                            <img src="images/custom/delete-box.png">';
+			Markup+='                        </div>';
+			Markup+='                        <div class="text">';
+			Markup+='                            <p>Delete attachment?</p>';
+			Markup+='                            <span class="SC-span-width">Are you sure you want to delete this attachment? This action cannot be undone.</span>';
+			Markup+='                            <div class="SC-two-buttons">';
+			Markup+='                                <button id="SC-delete-no-att">No</button>';
+			Markup+='                                <button id="SC-delete-yes-att">Yes</button>';
+			Markup+='                            </div>';
+			Markup+='                        </div>';
+			Markup+='                    </div>';
+			Markup+='                </div>';
+			Markup+='            </div>';
+			Markup+='        </div>';
+			//End:Aatachments delete popup Start here
+			//Start:check popup starts here
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-Cash-open-popup" role="dialog">';
+            Markup+='    <div class="SC-modal modal-orange-bg">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <div class="modal-content less-height">';
+            Markup+='               <div class="text">';
+            Markup+='                   <span class="SC-span-width add-margin">Please process check drafts within Pay Net web application.</span>';
+            Markup+='                    <button class="SC-ok-button" id="SC-check-ok">ok</button>';
+            Markup+='                </div>';
+            Markup+='           </div>';
+            Markup+='       </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+			//End:check  popup starts here
+			//Start:Generate Receipt Error popup starts here
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-Receipt-Error" role="dialog">';
+            Markup+='    <div class="SC-modal modal-orange-bg">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <div class="modal-content less-height">';
+            Markup+='               <div class="text">';
+            Markup+='                   <span class="SC-span-width add-margin">The order receipt did not print. Please try printing from the Order Summary page by clicking Order Receipt. If this issue persists, please contact the Service Desk.<span>';
+            Markup+='                    <button class="SC-ok-button" id="SC-receipt-ok">ok</button>';
+            Markup+='                </div>';
+            Markup+='           </div>';
+            Markup+='       </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+			//End:Generate Receipt Error popup starts here
+			//Start:Subimt order Error Popup
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-Payerror-popup" role="dialog">';
+            Markup+='    <div class="SC-modal modal-orange-bg">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <div class="modal-content less-height">';
+            Markup+='               <div class="text">';
+            Markup+='                   <span class="SC-span-width add-margin">Please void payment line prior to order submission.</span>';
+            Markup+='                    <button class="SC-ok-button" id="SC-pay-error-ok">ok</button>';
+            Markup+='                </div>';
+            Markup+='           </div>';
+            Markup+='       </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+			//End:Subimt order Error Popup
+			//Start:void button Popup markup
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-void-popup" role="dialog">';
+			Markup+='	   <div class="SC-modal modal-orange-bg">';
+			Markup+='			<div class="modal-dialog">';
+			Markup+='<div class="modal-content less-height">';
+			Markup+='					<div class="text">';
+			Markup+='						<span class="SC-span-width add-margin">Are you sure you want to void this Payment Line?</span>';
+			Markup+='		<div class="SC-two-buttons">';
+			Markup+='							<button id="sc-void-no">No</button>';
+			Markup+='							<button id="sc-void-yes">Yes</button>';
+			Markup+='						</div>';
+			Markup+='					</div>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='        </div>';
+			Markup+=' </div>';	
+			//End:void button Popup markup
+			//Start:saveexit button Popup markup
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-Saveexit-popup" role="dialog">';
+			Markup+='	   <div class="SC-modal modal-orange-bg">';
+			Markup+='			<div class="modal-dialog">';
+			Markup+='<div class="modal-content less-height">';
+			Markup+='					<div class="text">';
+			Markup+='						<span class="SC-span-width add-margin">Are you sure you want to exit without submitting the order?</span>';
+			Markup+='		<div class="SC-two-buttons">';
+			Markup+='							<button id="sc-saveexit-no">No</button>';
+			Markup+='							<button id="sc-saveexit-yes">Yes</button>';
+			Markup+='						</div>';
+			Markup+='					</div>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='        </div>';
+			Markup+=' </div>';	
+			//End:saveexit button Popup markup		
+            //Start:financing error  Popup markup
+			Markup+='<div class="modal fade SC-SO-add-popup" id="sc-financing-error-popup" role="dialog">';
+			Markup+='    <div class="SC-modal modal-orange-bg">';
+			Markup+='        <div class="modal-dialog">';
+			Markup+='            <div class="modal-content less-height">';
+			Markup+='               <div class="text">';
+			Markup+='                   <span class="SC-span-width add-margin" style="font-size:13px !important">You have selected a Non Stackable Financing option. The order total is now being updated to appropriately reflect the removal of all unqualified discounts.</span>';
+			Markup+='                   <button class="SC-ok-button" id="sc-financing-error-ok">OK</button>';
+			Markup+='                </div>';
+			Markup+='           </div>';
+			Markup+='       </div>';
+			Markup+='    </div>';
+			Markup+='</div>';	
+			//End:financing error  Popup markup	
+			//Start:Buying GiftCard with Financing error Popup markup
+			Markup+='<div class="modal fade SC-SO-add-popup" id="sc-giftcard-financing-error-popup" role="dialog">';
+			Markup+='    <div class="SC-modal modal-orange-bg">';
+			Markup+='        <div class="modal-dialog">';
+			Markup+='            <div class="modal-content less-height">';
+			Markup+='               <div class="text">';
+			Markup+='                   <span class="SC-span-width add-margin" style="font-size:13px !important">As per the Sleep Number Gift Card policy, "Gift cards cannot be purchased with a Sleep Number financing account (Synchrony or Vive financial)". To proceed with the purchase, please either remove all gift cards from the order, or use an alternate payment type other than Synchrony or Vive financing.</span>';
+			Markup+='                   <button class="SC-ok-button" id="sc-giftcard-financing-error-ok">OK</button>';
+			Markup+='                </div>';
+			Markup+='           </div>';
+			Markup+='       </div>';
+			Markup+='    </div>';
+			Markup+='</div>';	
+			//End:Buying GiftCard with Financing error Popup markup
+			//Start:Financing Payments Disocunt Popup //VALLA 26th May 21
+			Markup+='<div class="modal fade SC-SO-add-popup" id="sc-financing-promo-popup" role="dialog">';
+			Markup+='    <div class="SC-modal modal-orange-bg">';
+			Markup+='        <div class="modal-dialog">';
+			Markup+='            <div class="modal-content less-height">';
+			Markup+='               <div class="text">';
+			// Markup+='                   <span class="SC-span-width add-margin" style="font-size:13px !important">You have selected a Financing payment option. The order total is now being updated to appropriately reflect the finance payment discounts.</span>';
+			Markup+='                   <span class="SC-span-width add-margin" style="font-size:13px !important">You have selected a Payment Type that will adjust this order’s discounts. Once you click "OK" below, the Order Total and Tax amounts will be recalculated. Please review these changes with your customer.</span>';
+			Markup+='                   <button class="SC-ok-button" id="sc-financing-promo-ok">OK</button>';
+			Markup+='                </div>';
+			Markup+='           </div>';
+			Markup+='       </div>';
+			Markup+='    </div>';
+			Markup+='</div>';
+			//End:Financing Payments Disocunt Popup //VALLA 26th May 21
+			//Start:cashiercheck  Popup markup
+			Markup+='<div class="modal fade SC-SO-add-popup" id="sc-cashier-check-popup" role="dialog">';
+			Markup+='    <div class="SC-modal modal-orange-bg">';
+			Markup+='        <div class="modal-dialog">';
+			Markup+='            <div class="modal-content less-height">';
+			Markup+='               <div class="text">';
+			Markup+='                   <span class="SC-span-width add-margin" style="font-size:13px !important">Cashier’s Check must be attached for the order to be processed. Please use ‘ATTACHMENTS’ button in Order Summary section above to upload.</span>';
+			Markup+='                   <button class="SC-ok-button" id="sc-cashier-check-ok">OK</button>';
+			Markup+='                </div>';
+			Markup+='           </div>';
+			Markup+='       </div>';
+			Markup+='    </div>';
+			Markup+='</div>';	
+			//End:cashiercheck  Popup markup	
+           //Start:Financing new record popup markup
+			Markup+='<div class="modal fade SC-SO-add-popup" id="sc-financing-popup" role="dialog">';
+			Markup+='    <div class="SC-modal modal-orange-bg">';
+			Markup+='        <div class="modal-dialog">';
+			Markup+='            <div class="modal-content less-height">';
+			Markup+='               <div class="text">';
+			Markup+='                   <span class="SC-span-width add-margin" style="font-size:13px !important">There is an existing Payment Line in "Entered" status.Please edit or delete that Payment Line before continuing.</span>';
+			Markup+='                   <button class="SC-ok-button" id="sc-financing-ok">OK</button>';
+			Markup+='                </div>';
+			Markup+='           </div>';
+			Markup+='       </div>';
+			Markup+='    </div>';
+			Markup+='</div>';	
+			//End:Financing new record popup markup	
+			//Start:Submit Order POPUP
+            Markup+=' <div class="modal fade SC-SO-add-popup" id="SC-SO-Add-SalesRep" role="dialog">';
+            Markup+='   <div class="SC-modal">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='          <!-- Modal content-->';
+            Markup+='          <div class="modal-content modal-another-color">';
+            Markup+='              <div>';
+            Markup+='                  <img src="images/custom/sc-logo.png" class="sc-order-icon">';
+            Markup+='              </div>';
+            Markup+='              <div class="text">';
+            Markup+='                <span class="add-margin">Please wait while we submit the order</span>';
+            Markup+='              </div>';
+             Markup+='           </div>';
+             Markup+='       </div>';
+            Markup+='    </div>';
+           Markup+=' </div>		';
+           //End:Submit Order POPUP
+			//Start: code for SemaPhone Modal
+			Markup += ' <div class="modal fade sc-create-manual-asset" id="SC-Sales-manual-voice-payment" role="dialog">';
+			Markup += ' </div>';
+			//End: code for SemaPhone Modal			
+			//saddala for gift card activation
+			Markup+='<!--GiftCard Activtivate popup starts here-->';
+			Markup+='<div class="modal fade sc-giftcard-popup" id="Activate-gift-card" role="dialog">';
+            Markup+='    <div class="modal-dialog">';
+            Markup+='        <!-- Modal content-->';
+            Markup+='        <div class="modal-content">';
+            Markup+='            <div class="modal-header">';
+            Markup+='                <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" id="SC-360-contact-fr-close">&times;</button>';
+            Markup+='                <div class="header-content">';
+            Markup+='                    <img src="images/custom/sc-logo.png">';
+            Markup+='                    <p>Activate Gift Card</p>';
+            Markup+='                </div>';
+            Markup+='            </div>';
+            Markup+='            <div class="modal-body clearfix">';
+            Markup+='                <div class="row no-margin">';
+            Markup+='                    <div class="col-md-3 col-lg-3 col-sm-3 add-height">';
+            Markup+='                        <p>Amount:</p>';
+            Markup+='                    </div>';
+            Markup+='                    <div class="col-md-4 col-lg-4 col-sm-4 add-height">';
+            Markup+='                        <p id="giftbeforeactivate">$2000.00</p>';
+            Markup+='                    </div>';
+            //Vamsi 01-OCT-18 : Added below condtions to support P2PE Changes
+			if(P2PEFlag != "Y"){
+				Markup+='                    <div class="col-md-5 col-lg-5 col-sm-5 add-height">';
+				Markup+='                        <input type="text" class="SC-gc-input" autofocus style="opacity:0" id="giftcard-token">';
+				Markup+='                    </div>';
+			}
+            Markup+='                </div>';
+			//Vamsi 01-OCT-18 : Added below condtions to support P2PE Changes
+			if(P2PEFlag != "Y"){
+				Markup+='                <div class="row no-margin">';
+				Markup+='                    <div class="col-md-3 col-lg-3 col-sm-3 add-height">';
+				Markup+='                        <p>Gift Card#:</p>';
+				Markup+='                    </div>';
+				Markup+='                    <div class="col-md-6 col-lg-6 col-sm-6 add-height">';
+				Markup+='                        <input id="activate-GC-Number" type="text" class="SC-gc-input">';
+				Markup+='                    </div>';
+				Markup+='                    <div class="col-md-3 col-lg-3 col-sm-3 add-height">';
+				Markup+='                        <button id="sc-gc-manual-input">Manual Input</button>';
+				Markup+='                    </div>';
+				Markup+='                </div>';
+			}
+            Markup+='                <div class="row no-margin">';
+			//Vamsi 01-OCT-18 : Added below condtions to support P2PE Changes
+			if(P2PEFlag != "Y"){
+				Markup+='                    <div class="col-md-6 col-lg-6 col-sm-6 add-height align-center add-padding">';
+				Markup+='                        <button class="clear-button" id="sc-clear-form">Clear Form</button>';
+				Markup+='                    </div>';
+			}
+			Markup+='                    <div class="col-md-6 col-lg-6 col-sm-6 add-height add-padding">';
+            Markup+='                        <button class="clear-button" id="sc-activate-card">Activate Card</button>';
+            Markup+='                    </div>';
+            Markup+='                </div>';
+			//Vamsi 01-OCT-18 : Added below condtions to support P2PE Changes
+			if(P2PEFlag != "Y"){
+				Markup+='                <div class="row no-margin">';
+				Markup+='                    <div class="col-md-12 col-lg-12 col-sm-12 add-height">';
+				Markup+='                        <p class="add-margin">Please swipe the Giftcard(or press "Manual input" to type)</p>';
+				Markup+='                    </div>';
+				Markup+='                </div>';
+			}else{
+				Markup+='                <div class="row no-margin">';
+				Markup+='                    <div class="col-md-12 col-lg-12 col-sm-12 add-height">';
+				Markup+='                        <p class="add-margin">Please press on "Activate Card" and swipe the Gift Card to activate</p>';
+				Markup+='                    </div>';
+				Markup+='                </div>';
+			}
+            Markup+='            </div>';
+            Markup+='        </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+			
+            Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-gift-card" role="dialog">';
+            Markup+='    <div class="SC-modal">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <!-- Modal content-->';
+            Markup+='            <div class="modal-content modal-another-color min-height">';
+            Markup+='                <div>';
+            Markup+='                    <img src="images/custom/sc-logo.png">';
+            Markup+='                </div>';
+            Markup+='                <div class="text">';
+            Markup+='                    <span class="SC-span-width add-margin add-font">Your Gift Card has been successfuly activated.</span>';
+            Markup+='                    <span class="SC-span-width add-margin add-color-font" id="giftafteractivate">Gift card balance $2000.00</span>';
+            Markup+='                </div>';
+            Markup+='            </div>';
+            Markup+='        </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+            Markup+='<!--GiftCard Activation popup ends here-->';
+			
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-CalFreigthMsg" role="dialog">';
+            Markup+='    <div class="SC-modal">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <!-- Modal content-->';
+            Markup+='            <div class="modal-content modal-another-color min-height">';
+            Markup+='                <div>';
+            Markup+='                    <img src="images/custom/sc-logo.png">';
+            Markup+='                </div>';
+            Markup+='                <div class="text">';
+			Markup+='                    <span class="SC-span-width add-margin" style="font-Size:14px">Please navigate to Shipping Details section and click NEXT</span>';
+            Markup+='          			<button class="SC-ok-button sc-select" id="unatuhOk"> OK </button>';
+            Markup+='                </div>'
+			Markup+='            </div>';
+            Markup+='        </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+            Markup+='<!--GiftCard Activation popup ends here-->';
+			
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-Cash-Overdue" role="dialog">';
+            Markup+='    <div class="SC-modal">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <!-- Modal content-->';
+            Markup+='            <div class="modal-content modal-another-color min-height">';
+            Markup+='                <div>';
+            Markup+='                    <img src="images/custom/sc-logo.png">';
+            Markup+='                </div>';
+            Markup+='                <div class="text">';
+			Markup+='                    <span class="SC-span-width add-margin" style="font-Size:20px">Cash Taken: <span style="color:#fff;font-Size:20px !important" id="cashTaken"></span></span>';
+            Markup+='                    <span class="SC-span-width add-margin" style="font-Size:20px">Change Due: <span style="color:#f63;font-Size:20px !important" id="changeBackText"></span></span>';
+            Markup+='          			<button class="SC-ok-button sc-select" id="changeBackOk"> OK </button>';
+            Markup+='                </div>'
+			Markup+='            </div>';
+            Markup+='        </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+            Markup+='<!--GiftCard Activation popup ends here-->';
+			
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-P2PE-Auth" role="dialog">';
+            Markup+='    <div class="SC-modal">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <!-- Modal content-->';
+            Markup+='            <div class="modal-content modal-another-color min-height">';
+            Markup+='                <div>';
+            Markup+='                    <img src="images/custom/sc-logo.png">';
+            Markup+='                </div>';
+            Markup+='                <div class="text">';
+			Markup+='                    <span class="SC-span-width add-margin" style="font-Size:20px">Please request the customer to proceed with payment.</span>';
+            Markup+='                </div>'
+			Markup+='            </div>';
+            Markup+='        </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+            Markup+='<!-- Authorization popup ends here-->';
+			
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-P2PE-GCCheckBal" role="dialog">';
+            Markup+='    <div class="SC-modal">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <!-- Modal content-->';
+            Markup+='            <div class="modal-content modal-another-color min-height">';
+            Markup+='                <div>';
+            Markup+='                    <img src="images/custom/sc-logo.png">';
+            Markup+='                </div>';
+            Markup+='                <div class="text">';
+			Markup+='                    <span class="SC-span-width add-margin" style="font-Size:20px">Please request the customer to enter Sleep Number Gift Card details.</span>';
+            Markup+='                </div>'
+			Markup+='            </div>';
+            Markup+='        </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+            Markup+='<!-- Gift Card balance Check notification popup ends here-->';
+			// <!-- Schedule HD popup starts here-->
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-Schedule-popup" role="dialog">';
+			Markup+='	<div class="SC-modal modal-orange-bg">';
+			Markup+='		<div class="modal-dialog">';
+			Markup+='			<!-- Modal content-->';
+			Markup+='			<div class="modal-content less-height">';
+			Markup+='				<div class="text">';
+			Markup+='					<span class="SC-span-width add-margin">Do you want to schedule Home Delivery?</span>';
+			Markup+='	<div class="SC-two-buttons">';
+			Markup+='						<button id="sc-schedule-yes">Yes</button>';
+			Markup+='						<button id="sc-schedule-no">No</button>';
+			Markup+='					</div>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='		</div>';
+			Markup+='	</div>';
+			Markup+='</div>';
+			//<!-- Schedule HD popup  ends here-->
+			//<!-- Select Schedule HD popup starts here-->
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-SelectSchedule-popup" role="dialog">';
+			Markup+='	<div class="SC-modal modal-orange-bg">';
+			Markup+='		<div class="modal-dialog">';
+			Markup+='			<div class="modal-content less-height">';
+			Markup+='				<div class="text">';
+			Markup+='					<span class="SC-span-width add-font-size">Please add Notes (Technician Instructions) then click save. Next click Book Now.</span>';
+			Markup+='					 <div class="input-group" style="top:10px; display: flex; justify-content: space-between;">';
+			Markup+='							<label class="input-title" style="color: #fff">HD Text Opt In:</label>';
+			Markup+='							<input Id="sHDOptinFlag" style="margin-left: 5px" type="checkbox" name="sHDOptin" value="Y" class="input-checkbox">'
+			Markup+='					 </div>';
+			Markup+='					<button class="SC-ok-button" id="sc-hd-booknow">Book Now</button>';
+			Markup+='					 <div class="SC-textarea">';
+			Markup+='							<label class="SC-textarea-label">Add Notes:</label>';
+			Markup+='							<textarea class="SC-textarea-notes" name="addnotes" id="SC-Add-Note" class="SC-input mandatory"></textarea>';
+			Markup+='							<button class="SC-send-button SC-disabled" id="SC-send-button">Save</button>';
+			Markup+='					 </div>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='		</div>';
+			Markup+='	</div>  ';
+			Markup+='</div>';
+			//<!-- Select Schedule HD popup  ends here-->
+			//<!-- Schedule HD popup starts here-->
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-UnSchedule-popup" role="dialog">';
+			Markup+='	<div class="SC-modal modal-orange-bg">';
+			Markup+='		<div class="modal-dialog">';
+			Markup+='			<div class="modal-content less-height">';
+			Markup+='				<div class="text">';
+			Markup+='					<span class="SC-span-width add-margin">Please select a reason for not scheduling Home Delivery?</span>';
+			Markup+='					<select class="SC-select-box" id="SC-SO-UnSchedule-item-SelectBox">';
+			Markup+='					<option value="CUSTOMER HOLD">CUSTOMER HOLD</option>';
+			Markup+='					<option value="STORE FOLLOW UP">STORE FOLLOW UP</option>';
+			Markup+='				  </select>';
+			Markup+='	<div class="SC-two-buttons">';
+			Markup+='						<button class=" SC-disabled" id="sc-unschedule-Ok">OK</button>';
+			Markup+='						<button id="sc-unschedule-Cancel">Cancel</button>';
+			Markup+='					</div>';
+			Markup+='				</div>';
+			Markup+='			</div>';
+			Markup+='		</div>';
+			Markup+='	</div>';
+			Markup+='</div>';
+			//<!-- Schedule HD popup  ends here-->
+			//START:SPATIBAN:9/27/23:SFSTRY0003012: Added Code to display HD Optout Modal
+			Markup +=' <div class="modal fade SC-SO-add-popup" id="snconfirm-HDOptOut-Modal" role="dialog">';
+			Markup+='    <div class="SC-modal modal-orange-bg">';
+            Markup+='     <div class="modal-dialog">';
+            Markup+='            <!-- Modal content-->';
+            Markup+='            <div class="modal-content less-height">';
+			Markup += '                            <div class="text">';
+			Markup += '                                <span id="sn-hd-sr-outId" style="display:none"></span>';
+			Markup += '                                <span class="SC-span-width">You are about to opt the customer out for delivery notifications. Are you sure you want to proceed?</span>';
+			Markup += '                                <div class="SC-two-buttons">';
+			Markup += '                                   <button  id="SN-HDOptout-No-button" data-dismiss="modal">No</button>';
+			Markup += '                                   <button  id="SN-HDOptoutYes-btn">Yes</button> ';
+			Markup += '                                </div>';
+			Markup += '                            </div>';
+			Markup += '                        </div>';
+			Markup += '                    </div>';
+			Markup += '                </div>';
+			Markup += '           </div>';
+			//END:SPATIBAN:9/27/23:SFSTRY0003012: Added Code to display HD Optout Modal
+			//SNARRA:02-04-2019 Added code for Phone Number Updation popup
+			
+			Markup+='<!-- Phone Number Update popup starts here-->';
+            Markup+='<div class="modal fade SC-SO-add-popup" id="SC-SO-PN-Update-popup" role="dialog">';
+            Markup+='    <div class="SC-modal modal-orange-bg">';
+            Markup+='     <div class="modal-dialog">';
+            Markup+='            <!-- Modal content-->';
+            Markup+='            <div class="modal-content less-height">';
+            Markup+='                <div class="text">';
+            Markup+='                    <span class="SC-span-width add-margin">Please Enter HD Text Opt-In Phone Number</span>';
+			Markup+='					<input Id="SCphone" type="textbox" name="sHDOptin" class="inputbox">';
+            Markup+='                   <div class="SC-two-buttons">';
+            Markup+='                        <button  id="sc-PN-Ok">Ok</button>';
+            //Markup+='                        <button id="sc-PN-Cancel">Cancel</button>';
+             Markup+='                   </div>';
+            Markup+='                </div>';
+            Markup+='            </div>';
+            Markup+='        </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+           Markup+=' <!-- Phone Number Update popup  ends here-->';
+			Markup+='<div class="modal fade SC-SO-add-popup" id="SC-P2PE-GCActivate" role="dialog">';
+            Markup+='    <div class="SC-modal">';
+            Markup+='        <div class="modal-dialog">';
+            Markup+='            <!-- Modal content-->';
+            Markup+='            <div class="modal-content modal-another-color min-height">';
+            Markup+='                <div>';
+            Markup+='                    <img src="images/custom/sc-logo.png">';
+            Markup+='                </div>';
+            Markup+='                <div class="text">';
+			Markup+='                    <span class="SC-span-width add-margin" style="font-Size:20px">To continue with Gift Card Activation, please swipe/insert the card or enter the card details in the pinpad device.</span>';
+            Markup+='                </div>'
+			Markup+='            </div>';
+            Markup+='        </div>';
+            Markup+='    </div>';
+            Markup+='</div>';
+            Markup+='<!-- Gift Card Activation notification popup ends here-->';
+			
+			//VALLA: 10-DEC-2019 : Added the below popup to show the payment terms and conditions
+			/* <!--Start--Addded popup for Payment TACOS --> */
+			 Markup += '     <div class="modal fade SC-SO-add-popup" id="SC-Payments-TACOS-Info" role="dialog">';
+             Markup += '       <div class="SC-modal"  style="width:500px !important">';
+             Markup += '           <div class="modal-dialog"  style="width:450px !important">';
+             Markup += '               <!-- Modal content-->';
+             Markup += '               <div class="modal-content modal-another-color"  style="width:450px !important">';
+			 Markup += '    			 <div >';
+             Markup += '                   <img src="images/custom/sc-logo.png">';
+             Markup += '               </div>';
+             Markup += '                   <div class="text" style="width:450px !important;text-align:left">';
+			 Markup += ' 		<span class="SC-span-width add-margin" style="width:450px !important;padding:10px !important;" id="PraymentTermsHeader"></span>';
+			 Markup += '                       <span class="SC-span-width add-margin" style="width:450px !important;padding:10px !important;text-align:left !important" id="Payment_TACOS"></span>';
+			 Markup += '                   </div>';
+             Markup += '               </div>';
+             Markup += '           </div>';
+             Markup += '        </div>';
+             Markup += '    </div>';
+			 
+		/*<!--Start--Addded popup on CreateQuote button --> */
+			 Markup += 		'<div class="modal fade SC-SO-add-popup" id="SC-salesorderquote" role="dialog">';
+			 Markup += 			'<div class="SC-modal">';
+			 Markup += 				'<div class="modal-dialog">';
+			 Markup += '					<!-- Modal content-->';
+			 Markup += 					'<div class="modal-content modal-another-color">';
+		 	 Markup += '							<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" style="display:block" id="SC-salesOrderquote-close">&times;</button>';
+			 Markup += '    			 		<div >';
+		     Markup += '                  	 <img src="images/custom/sc-logo.png" class="custom-logo-img">';
+			 Markup += '               </div>';		
+								// - For SalesQuote PopUp			 
+			var PrimDivType = SCOUIMethods.SCGetProfileAttrValue("SC Primary Division Type");
+					var DivSubType = SCOUIMethods.SCGetProfileAttrValue("SC Primary Division Sub Type");
+							if (DivSubType != "CS") {
+																																					
+		    Markup += ' <span class="dateInput">';
+            Markup += '  <span style="color: #fff;"> Select Quote Valid Until Date </span> <input type="input" id="SC_QuoteValidDt" name="Validdate">';
+            Markup += ' </span>';													
+								
+								}
+						if (DivSubType == "CS" && PrimDivType =="ECOM") {
+																																					
+		    Markup += ' <span class="dateInput">';
+            Markup += '  <span style="color: #fff;"> Select Quote Valid Until Date </span> <input type="input" id="SC_QuoteValidDt" name="Validdate">';
+            Markup += ' </span>';													
+								
+								}
+			 Markup += '					<div class="text">';
+			 Markup += ' 					<span class="add-margin">Select Quote Option</span>';
+			 Markup += '							<div class="SC-two-buttons">';			 
+			 Markup += '								<button id="sc-email" class="SC-Create">Email</button>';
+			 Markup += '								<button id="sc-print" class="SC-Create">Print</button>';
+			 Markup += '								<button id="sc-both" class="SC-Create">Email/Print</button>';
+			 Markup += '							</div>';
+			 Markup += '						</div>'
+			 Markup += '					</div>';
+			 Markup += '				</div>';
+			 Markup += '			</div>';
+			 Markup += '		</div>';
+			 /*<!--End--Addded popup on CreateQuote button-->*/
+			 
+			/*<!--Start--Addded popup on sendemail button --> */
+			
+                    Markup += '<div class="modal fade SC-SO-add-popup" id="SC-send-message-popup" role="dialog">';
+                    Markup += '  <div class="SC-modal">';
+                    Markup += '   <div class="modal-dialog">';
+                    Markup += '     <div class="modal-content modal-another-color">';
+                    Markup += '		  <button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal" style="display:block" id="SC-sales-sendemailquote-close">&times;</button>';
+					Markup += '        <div>';
+                    Markup += '                <img src="images/custom/sc-logo.png" class="sc-order-icon">';
+                    Markup += '         </div>';
+                    Markup += '          <div class="text">';
+                    Markup += '            <span class="add-margin"> This request will be sent to</span>';
+					var contactAddr = SiebelApp.S_App.GetActiveView().GetAppletMap()["SC Sales Order Entry Form Applet OUI"].GetBusComp().GetFieldValue("Primary Bill To Email Address");
+					Markup += '             <div class="main-email">';
+					Markup += '               <div class="email-id">';
+					Markup += '                  <input type="text" id="SC-qemailaddr" class="emialnot sc-upemailadd" value="'+contactAddr+'">';
+		            Markup += '                   <img src="images/custom/revise-orange.png" id="SC-qeditemailadress" class="email-img">';
+		            Markup += '               </div>';
+		            Markup += '                  <div id="email-id-popup" class="error">';
+		            Markup += '                      <span id="email-id-popup1" class="email-id-contact">This email address will be updated on the contact.</span>';
+		            Markup += '                      <span id="email-id-popup2" class="emial-id-valid">Email address is required to complete this request.Please enter contact email address.</span>';
+					Markup += '                      <span id="email-id-popup3" class="emial-id-validate">Please enter valid contact email address.</span>';
+		            Markup += '                  </div>';
+					Markup += '                  </div>';
+				   var PrimDivType = SCOUIMethods.SCGetProfileAttrValue("SC Primary Division Type");
+					var DivSubType = SCOUIMethods.SCGetProfileAttrValue("SC Primary Division Sub Type");
+								if (DivSubType != "CS") {                   
+					Markup += '                         <label class="emailtext-color">Please type personal message here</label>';
+					Markup += '                        	<textarea id="SC_personlizedtxt" class="SC_Personalizedtxt" cols="50" rows="19" maxlength="500">';
+					Markup += '                           </textarea>';
+					Markup += '                    <div  class="SC_PersonalizedtxtCnt">';
+					Markup += '	                      <span id="SC_personlizedtxtCnt" >0/500 </span>';
+					Markup += '                  </div>';
+														}
+														
+						   if (DivSubType == "CS" && PrimDivType =="ECOM") {                 
+					Markup += '                         <label class="emailtext-color">Please type personal message here</label>';
+					Markup += '                        	<textarea id="SC_personlizedtxt" class="SC_Personalizedtxt" cols="50" rows="19" maxlength="500">';
+					Markup += '                           </textarea>';
+					Markup += '                    <div  class="SC_PersonalizedtxtCnt">';
+					Markup += '	                      <span id="SC_personlizedtxtCnt" >0/500 </span>';
+					Markup += '                  </div>';
+														}	
+                    Markup += '                <div class="SC-two-buttons" style="margin-bottom: 10px !important">';
+                    Markup += '               <button id="SC-Sendemail" style="margin-right: 55px !important">Send Email</button>';
+                    Markup += '               <button id="sc-Cancelsend-button">Cancel</button>';
+                    Markup += '          </div>';
+                    Markup += '         </div>'
+                    Markup += '       </div>';
+                    Markup += '      </div>';
+                    Markup += '    </div>';
+					Markup += '    </div>';
+                   				
+			 /*<!--End--Addded popup on Sendemail button-->*/
+			
+			/* <!--Start--Addded popup for E-Signature Decline--> */
+			 Markup += '     <div class="modal fade SC-SO-add-popup" id="SC-esignature-Decline" role="dialog">';
+             Markup += '       <div class="SC-modal">';
+             Markup += '           <div class="modal-dialog">';
+             Markup += '               <!-- Modal content-->';
+             Markup += '               <div class="modal-content modal-another-color">';
+			 Markup += '    			 <div >';
+             Markup += '                   <img src="images/custom/sc-logo.png">';
+             Markup += '               </div>';
+             Markup += '                   <div class="text">';
+             Markup += '                       <span class="SC-span-width add-margin" id="SC-esignature-Decline-header">The customer has declined the terms and conditions. Please direct the customer to Customer Service to change their payment line, or cancel their order.</span>';
+			 Markup += '                       <button class="SC-ok-button" id="SC-esignature-Decline-ok">OK</button>';
+			 Markup += '                   </div>';
+             Markup += '               </div>';
+             Markup += '           </div>';
+            Markup += '        </div>';
+            Markup += '    </div>';
+			/* <!--End--Addded popup for E-Signature Decline--> */
+			
+			Markup += '<!-- Add commissionable Sales Rep Starts here-->';
+            Markup += '<div class="modal fade SC-add-storelocation" id="SC-sales-rep" role="dialog">';
+                Markup += '<div class="modal-dialog sc-sales-rep">';
+                    Markup += '<!-- Modal content-->';
+                    Markup += '<div class="modal-content modal-sales-height">';
+                        Markup += '<div class="modal-header">';
+                            Markup += '<button type="button" class="close SC-close-popup blue-bg" data-dismiss="modal">&times;</button>';
+                            Markup += '<div class="header-content">';
+                                    Markup += '<div class="sc-head-title">';
+                                    Markup += '<!--<img src="images/custom/Icon_add.png" />-->';
+                                    Markup += '<div class="img-sorce"><img class="border-radius" src="images/custom/sc-logo.png" /></div>';
+                                    Markup += '<p class="no-margin sc-add-font">Choose Commissionable Sales Rep</p>';
+                                Markup += '</div>';
+                           Markup += ' </div>';
+                        Markup += '</div>';
+                        Markup += '<div class="modal-body">';
+                            Markup += '<p>Enter Last Name, First Name or Login ID to search: </p>';
+                           Markup += ' <div class="row no-margin">';
+                               Markup += ' <div class="col-md-12 col-lg-12 col-sm-12">';
+                                    Markup += '<div class="col-md-6 col-lg-6 col-sm-6 sc-add-border sc-border-right">';
+                                        Markup += '<div class="SC-add-store-container">';
+                                            Markup += '<label for="Lead Rank" class="sc-add-label sc-label-font">First Name</label>';
+                                            Markup += '<input type="text" name="" id="sc-sales-fst" class="sc-add-input sc-input-width sc-sales-search-box">';
+                                        Markup += '</div>';
+                                        Markup += '<div class="SC-add-store-container">';
+                                            Markup += '<label for="Lead Rank" class="sc-add-label sc-label-font">Last Name</label>';
+                                            Markup += '<input type="text" name="" id="sc-sales-lst" class="sc-add-input sc-input-width sc-sales-search-box">';
+                                        Markup += '</div>';
+                                    Markup += '</div>';
+                                     Markup += '    <div class="col-md-6 col-lg-6 col-sm-6 sc-add-border">';
+                                      Markup += '   <div class="SC-add-store-container">';
+                                       Markup += '      <label for="Lead Rank" class="sc-add-label sc-label-font">Login ID</label>';
+                                       Markup += '      <input type="text" name="" class="sc-add-input sc-input-width" id="sc-sales-login">';
+                                       Markup += '  </div>';
+                                       Markup += '  <div class="SC-add-store-container">';
+                                      Markup += '       <button class="sc-button" id="sc-search-salesrep">Search</button>';
+                                      Markup += '   </div>';
+                                  Markup += '   </div>';
+                               Markup += ' </div>';
+                            Markup += '</div>';
+                            Markup += '<p class="clearfix"></p>';
+                            Markup += '<div class="SC-table-with-scroll-main">';
+                                Markup += '<table class="SC-table" id="SC-SalesRep">';
+                                    Markup += '<thead>';
+                                        Markup += '<tr>';
+                                            Markup += '<th>Last Name</th>';
+                                            Markup += '<th>First Name</th>';
+                                            Markup += '<th>Login ID</th>';
+                                        Markup += '</tr>';
+                                    Markup += '</thead>';
+                                    Markup += '<tbody id="sc-sales-rep-table">';
+                                        Markup += '<tr>';
+                                            Markup += '<td>Last Name</td>';
+                                            Markup += '<td>First Name</td>';
+                                            Markup += '<td>Login ID</td>';
+                                        Markup += '</tr>';
+                                        Markup += '<tr>';
+                                            Markup += '<td>Last Name</td>';
+                                            Markup += '<td>First Name</td>';
+                                            Markup += '<td>Login ID</td>';
+                                        Markup += '</tr>';
+                                        Markup += '<tr>';
+                                            Markup += '<td>Last Name</td>';
+                                            Markup += '<td>First Name</td>';
+                                            Markup += '<td>Login ID</td>';
+                                        Markup += '</tr>';
+                                        Markup += '<tr>';
+                                            Markup += '<td>Last Name</td>';
+                                            Markup += '<td>First Name</td>';
+                                            Markup += '<td>Login ID</td>';
+                                        Markup += '</tr>';
+                                        Markup += '<tr>';
+                                            Markup += '<td>Last Name</td>';
+                                            Markup += '<td>First Name</td>';
+                                            Markup += '<td>Login ID</td>';
+                                        Markup += '</tr>';
+                                    Markup += '</tbody>';
+                               Markup += ' </table>';
+                               Markup += ' <div class="pagination sc-pagination pull-right">';
+                                    Markup += '<li id="salesrepfirst"><img src="images/custom/previous-set.png" /></li>';
+                                    Markup += '<li id="salesrepprev"><img src="images/custom/previous.png" /></li>';
+                                    Markup += '<li id="salesrepnext"><img src="images/custom/next.png" /></li>';
+                                    Markup += '<li id="salesreplast"><img src="images/custom/next-set.png" /></li>';
+                                Markup += '</div>';
+                                Markup += '<div class="SC-single-button-container less-padding">';
+                                    Markup += '<button class="sc-select SC-disabled" id="SC-select-salesrep">Select</button>';
+                                Markup += '</div>';
+                            Markup += '</div>';
+                        Markup += '</div>';
+                   Markup += ' </div>';
+                Markup += '</div>';
+            Markup += '</div>';
+            Markup += '<!-- Add commissionable Sales Rep ends here-->';
+			Markup += '<!-- Fetch Global Token Popup starts  here-->';
+			Markup += '<div class="modal fade SC-SO-add-popup" id="SC-SO-GetAuth-Token" role="dialog">';
+			Markup+='<div class="SC-modal">';
+			Markup+='<div class="modal-dialog">';
+			Markup+='<div class="modal-content modal-another-color">';
+			Markup+='<div>';
+			Markup+='<img src="images/custom/sc-logo.png">';
+			Markup+='</div>';
+			Markup+='<div class="text">';
+			Markup+='<span class="add-margin">Please wait...</span>';
+			Markup+='</div>';
+			Markup+='</div>';
+			Markup+=' </div>';
+			Markup+='</div>';
+			Markup+='</div>';
+			Markup += '<!-- Fetch Global Token Popup ends here-->';
+			Markup += '</div>';
+        Markup += '</div>';
+      Markup += '</div>';
+	 return(Markup);
+	};
+	//Start:Added code for Attachments markup
+	SCPaymentsMarkup.prototype.GetAttchmentrecordset=function(Attachment_RS){
+		var Attachmentmarkup="";
+		Attachmentmarkup+='<ul class="menu">';
+		for (var loop=0; loop<Attachment_RS.length; loop++)
+        Attachmentmarkup+='<li class="items overflow" title="'+Attachment_RS[loop]["OrderFileName"]+'"><img src="images/custom/delete.png" class="attachmentitem" id="attachments'+(loop+1)+'">'+Attachment_RS[loop]["OrderFileName"]+'</li>';
+        Attachmentmarkup+='<li class="attachment_list" id="SC-add-new-Attach"> ADD ATTACHMENT   </li>';
+        Attachmentmarkup+='</ul>';  
+		$("#SC-Attachment-list").html(Attachmentmarkup);
+	};
+	//Start:Added code for Attachments markup
+	return SCPaymentsMarkupobj;
+   }()
+  );
+  
+ return "SiebelApp.SCPaymentsMarkup";
+ })
+}
